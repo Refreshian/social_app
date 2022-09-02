@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang='en-US' xmlns="http://www.w3.org/1999/html" xmlns="http://www.w3.org/1999/html"
+      xmlns="http://www.w3.org/1999/html">
+  <head>
+    <link rel="stylesheet" href="/static/css/multi-checkbox-select.css" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Information stream in {{ theme }} </title>
+<!--    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous">-->
+      <!--https://www.highcharts.com/blog/chartchooser/network-graph-categorical-relationship/-->
+
+    <style>
+  body {
+    margin: 0;
+    color: #313131;
+    font-family: sans-serif;
+    min-width: 300px;
+  }
+  body.toc{
+    font-family: 'Roboto', sans-serif;
+    font-size: 15px;
+  }
+  h1 {
+    font-size: 2em;
+    margin: 0.67em 0;
+    font-weight: bolder;
+    text-transform: uppercase;
+  }
+  h2 {
+    font-size: 1.5em;
+    margin: 0.83em 0;
+    font-weight: bolder;
+    text-transform: uppercase;
+  }
+  h3 {
+    font-size: 1.17em;
+    margin: 1em 0;
+    font-weight: bolder;
+    text-transform: uppercase;
+  }
+  h4 {
+    font-weight: bolder;
+    text-transform: uppercase;
+  }
+
+  .highcharts-samples-navbar {
+    background-color: #47475C;
+    height: 50px;
+  }
+  .highcharts-samples-navbar .sample-navbar-brand img {
+    height: 66px;
+    margin-top: auto;
+    margin-bottom: auto;
+    height: auto;
+    max-height: 95%;
+    margin-left: 5px;
+    width: auto;
+    max-width: 50vw;
+  }
+  .actions {
+    float: right;
+    max-width: 50vw;
+  }
+  .action {
+    float: right;
+    line-height: 50px;
+    margin-right: 10px;
+    text-decoration: none;
+    font-size: 0.8em;
+  }
+  a.action {
+    color: #424BCD;
+  }
+  a.action:hover {
+    text-decoration: underline;
+  }
+  .action i.fab {
+    font-size: 1.6em;
+  }
+  .action i.fa-jsfiddle {
+    font-weight: 700;
+  }
+  .highcharts-samples-navbar a.action {
+    color: #eeeaea;
+  }
+  .description {
+    max-width: 800px;
+    margin: 1em auto;
+    padding: 10px;
+  }
+  .error {
+    text-align: center;
+    font-style: italic;
+    color: red;
+  }
+
+  .embed .highcharts-samples-navbar {
+    background-color: #EBEBEB;
+    color: #3d3d3d;
+    height: 50px;
+  }
+  .embed .sample-navbar-brand {
+    display: none;
+  }
+  .embed a.action {
+    color: #424BCD;
+  }
+
+  .nonav .highcharts-samples-navbar {
+    display: none;
+  }
+
+  li{
+    max-width: 60rem;
+  }
+
+  ul, menu, dir {
+    display: block;
+    list-style-type: disc;
+    margin-block-start: 1em;
+    margin-block-end: 1em;
+    margin-inline-start: 0px;
+    margin-inline-end: 0px;
+    padding-inline-start: 40px;
+    line-height: 1.25rem;
+}
+
+@media only screen and (max-width: 800px) {
+  .actions .action {
+    font-size: 0.65em;
+  }
+}
+
+.inline {
+display: inline;
+}
+
+</style>
+    <style>
+      #container {
+    min-width: 1000px;
+    max-width: 2000px;
+    margin: 0 auto;
+    height: 800px;
+}
+
+    </style>
+
+  </head>
+    <div class="text-right" style="margin-left: 1500px">
+    <h4> <a href="{{ url_for('index') }}"> Home </a> </h4>
+</div>
+  <body class="embed">
+
+<form action="/information_graph" method="POST" style="margin-top: 30px">
+    <select name="file_choose" class="form-select-sm" aria-label="Пример выбора по умолчанию">
+    <option selected>select File</option>
+        {% for i in range(0, len_files) %}
+            <option value="{{ files[i] }}">{{ files[i] }}</option>
+        {% endfor %}
+    </select>
+    <!--    <input type="hidden" name="filename" value="{{ files[i] }}">-->
+    <input type="text" name="daterange" value="01/01/2022 - 01/12/2022" />
+    <script>
+        $(function() {
+          $('input[name="daterange"]').daterangepicker({
+            opens: 'left'
+          }, function(start, end, label) {
+            console.log("A new date selection was made: " + start.format('YYYY-MM-DD') + ' to ' + end.format('YYYY-MM-DD'));
+          });
+        });
+        </script>
+   <div style = "padding: 10px 0px 10px;">
+               <div class = "col-lg-6" style="width: 1000px">
+                  <div class = "input-group">
+                     <input type = "text" class = "form-control" name="text_search" size="61" placeholder="Поиск по графу: платон или система взимания платы, пробка или затор">
+<!--                     <span class = "input-group-btn">-->
+<!--                        <button class = "btn btn-default" type = "button" name="send">-->
+<!--                           Запуск-->
+<!--                        </button>-->
+<!--                     </span>-->
+                        <input type="checkbox" class="form-check-input" id="dropdownCheck1" name="posts">
+                        <label class="form-check-label" for="dropdownCheck2">
+                        Посты
+                      </label>
+                      <input type="checkbox" class="form-check-input" id="dropdownCheck2" name="reposts">
+                        <label class="form-check-label" for="dropdownCheck2">
+                        Репосты
+                      </label>
+                      <input type="checkbox" class="form-check-input" id="dropdownCheck3" name="smi">
+                        <label class="form-check-label" for="dropdownCheck2">
+                        СМИ
+                      </label>
+                  </div>
+               </div>
+       <div>
+
+        <p style="scroll-margin-top: -5px"> Найдено {{ data.len_messages }} текстов и {{ data.authors_count }} авторов </p>
+        <select id="example" name="hub_select" id="hub_select"></select>
+        <script src="https://code.jquery.com/jquery-3.6.0.slim.min.js"></script>
+        <script src="/static/js/multiCheckboxSelect.js"></script>
+        <script>
+        var data = JSON.parse('{{ data|tojson }}');
+        var options = {
+            placeholder: 'Выбрать источник',
+            entryName: 'Источник',
+            data: data.data_hub,
+            multiple: true
+        }
+
+        $('#example').multiCheckboxSelect(options)
+
+        </script>
+        <script>
+        try {
+          fetch(new Request("https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js", { method: 'HEAD', mode: 'no-cors' })).then(function(response) {
+            return true;
+          }).catch(function(e) {
+            var carbonScript = document.createElement("script");
+            carbonScript.src = "//cdn.carbonads.com/carbon.js?serve=CK7DKKQU&placement=wwwjqueryscriptnet";
+            carbonScript.id = "_carbonads_js";
+            document.getElementById("carbon-block").appendChild(carbonScript);
+          });
+        } catch (error) {
+          console.log(error);
+        }
+        </script>
+        <script type="text/javascript">
+
+          var _gaq = _gaq || [];
+          _gaq.push(['_setAccount', 'UA-36251023-1']);
+          _gaq.push(['_setDomainName', 'jqueryscript.net']);
+          _gaq.push(['_trackPageview']);
+
+          (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+          })();
+
+        </script>
+       </div>
+   </div>
+        <input type="text" class="inline" placeholder="Анализировать текстов (от)" name="text_min" id="text_min">
+        <input type="text" class="inline" placeholder="Анализировать текстов (до)" name="text_max" id="text_max">
+
+       <input type="submit" class="btn btn-light" href="{{ url_for('tonality_landscape') }}" name="send" value="Запуск">
+
+</form>
+<!--<div class="highcharts-samples-navbar">-->
+  <a href="https://www.highcharts.com" class="sample-navbar-brand" title="Highcharts">
+    <img src="https://wp-assets.highcharts.com/svg/highcharts-logo-padded.svg" alt="Highcharts">
+  </a>
+<!--  <div class="actions">-->
+<!--    <a href="/samples/highcharts/chartchooser/categorical-relationship-network-graph?codepen" id="codepenButton" target="_blank" rel="noreferrer noopener" class="action">-->
+<!--      <i class="fab fa-codepen"></i> CodePen-->
+<!--    </a>-->
+
+<!--      <a href="https://jsfiddle.net/gh/get/library/pure/highcharts/highcharts/tree/master/samples/highcharts/chartchooser/categorical-relationship-network-graph" class="action" target="_blank" rel="noreferrer noopener">-->
+<!--      <i class="fab fa-jsfiddle"></i> jsFiddle-->
+<!--    </a>-->
+<!--  </div>-->
+<!--</div>-->
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://code.highcharts.com/modules/networkgraph.js"></script>
+<script src="https://code.highcharts.com/modules/accessibility.js"></script>
+
+<div id="container"></div>
+    <script>
+    /* eslint-disable default-case */
+var dirDist50 = "#E8544E",
+    dirDist10 = "#FFD265",
+    dirDistLess10 = "#2AA775";
+
+var data = JSON.parse('{{ data|tojson }}');
+
+var node = []
+node.push({
+                    id: data.data_authors[0],
+                    marker: {
+                        radius: data.data_rep_er[0]
+                    },
+                    hubs: data.all_hubs[0],
+                    er: data.data_rep_er[0],
+                    audience: data.data_rep_audience[0],
+                    author_name: data.data_authors[0],
+                    color: dirDistLess10
+                })
+
+for (i = 1; i < data.data_rep_er.length; i++) {
+node.push({
+                    id: data.data_authors[i],
+                    marker: {
+                        radius: data.data_rep_er[i]
+                    },
+                    hubs: data.all_hubs[i], 
+                    er: data.data_rep_er[i],
+                    audience: data.data_rep_audience[i],
+                    author_name: data.data_authors[i],
+                    color: dirDist10
+                })
+}
+
+Highcharts.chart("container", {
+    chart: {
+        type: "networkgraph",
+        marginTop: 80
+    },
+
+    title: {
+        text: "Information Stream {{ theme }}"
+    },
+
+    tooltip: {
+        useHTML: true,
+        pointFormat: '<b>{point.author_name}:</b> Вовлеченность: {point.marker.radius}'
+    },
+
+    accessibility: {
+          point: {
+              valueDescriptionFormat:
+            "Hubs: {point.hubs}, Вовлеченность: {point.radius}, Аудитория: {point.audience}"
+          }
+      },
+
+    plotOptions: {
+        networkgraph: {
+            keys: ["from", "to"],
+            layoutAlgorithm: {
+                enableSimulation: true,
+                integration: "euler",
+                linkLength: 20
+            }
+        }
+    },
+
+
+    series: [
+        {
+            marker: {
+                radius: 13
+            },
+            dataLabels: {
+                enabled: true,
+                format: '{point.author_name}, Аудитория: {point.audience}',
+                linkFormat: '',
+                allowOverlap: false,
+                style: {
+                    textOutline: false
+                }
+            },
+            data: data.df_rep_auth,
+            
+            nodes: node
+        }
+    ]
+});
+
+    </script>
+    <script>
+    window.addEventListener('DOMContentLoaded', (event) => {
+      /* Script for setting iframe height when on Highcharts.com */
+          try {
+
+            // Allow hiding the description by search param
+            const search = window.location.search;
+            if(search && search.includes('hide-description')){
+              const description = document.querySelector('.highcharts-description, .highcharts-linked-description');
+              if(description){
+                description.style.display = 'none';
+              }
+            }
+
+            const iframes = window.parent.document.getElementsByTagName('iframe');
+
+            for(let iframe of iframes){
+              const { height } = iframe.contentWindow.document.body.getBoundingClientRect();
+              if (
+                height &&
+                height > iframe.height
+              ) {
+                iframe.setAttribute('height', height);
+                iframe.style.setProperty('height', height + 25 + 'px')
+              }
+            }
+          } catch (e) {}
+    });
+    </script>
+  </body>
+</html>

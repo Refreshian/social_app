@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang='en-US'>
+  <head>
+    <!-- <link rel="icon" type="image/x-icon" href="https://www.highcharts.com/demo/static/favicon.ico"> -->
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>MediaIndex</title>
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous">
+
+    <style>
+  body {
+    margin: 0;
+    color: #313131;
+    font-family: sans-serif;
+    min-width: 600px;
+  }
+  body.toc{
+    font-family: 'Roboto', sans-serif;
+    font-size: 15px;
+  }
+  h1 {
+    font-size: 2em;
+    margin: 0.67em 0;
+    font-weight: bolder;
+    text-transform: uppercase;
+  }
+  h2 {
+    font-size: 1.5em;
+    margin: 0.83em 0;
+    font-weight: bolder;
+    text-transform: uppercase;
+  }
+  h3 {
+    font-size: 1.17em;
+    margin: 1em 0;
+    font-weight: bolder;
+    text-transform: uppercase;
+  }
+  h4 {
+    font-weight: bolder;
+    text-transform: uppercase;
+  }
+
+  .highcharts-samples-navbar {
+    background-color: #4e5c47;
+    height: 50px;
+  }
+  .highcharts-samples-navbar .sample-navbar-brand img {
+    height: 66px;
+    margin-top: auto;
+    margin-bottom: auto;
+    height: auto;
+    max-height: 95%;
+    margin-left: 5px;
+    width: auto;
+    max-width: 50vw;
+  }
+  .actions {
+    float: right;
+    max-width: 50vw;
+  }
+  .action {
+    float: right;
+    line-height: 50px;
+    margin-right: 10px;
+    text-decoration: none;
+    font-size: 0.8em;
+  }
+  a.action {
+    color: #424BCD;
+  }
+  a.action:hover {
+    text-decoration: underline;
+  }
+  .action i.fab {
+    font-size: 1.6em;
+  }
+  .action i.fa-jsfiddle {
+    font-weight: 700;
+  }
+  .highcharts-samples-navbar a.action {
+    color: #eeeaea;
+  }
+  .description {
+    max-width: 800px;
+    margin: 1em auto;
+    padding: 10px;
+  }
+  .error {
+    text-align: center;
+    font-style: italic;
+    color: red;
+  }
+
+  .embed .highcharts-samples-navbar {
+    background-color: #EBEBEB;
+    color: #3d3d3d;
+    height: 50px;
+  }
+  .embed .sample-navbar-brand {
+    display: none;
+  }
+  .embed a.action {
+    color: #424BCD;
+  }
+
+  .nonav .highcharts-samples-navbar {
+    display: none;
+  }
+
+  li{
+    max-width: 60rem;
+  }
+
+  ul, menu, dir {
+    display: block;
+    list-style-type: disc;
+    margin-block-start: 1em;
+    margin-block-end: 1em;
+    margin-inline-start: 0px;
+    margin-inline-end: 0px;
+    padding-inline-start: 40px;
+    line-height: 1.25rem;
+}
+
+@media only screen and (max-width: 800px) {
+  .actions .action {
+    font-size: 0.65em;
+  }
+}
+
+
+</style>
+    <style>
+      .highcharts-figure,
+.highcharts-data-table table {
+    min-width: 520px;
+    max-width: 800px;
+    margin: 1em auto;
+}
+
+.highcharts-data-table table {
+    font-family: Verdana, sans-serif;
+    border-collapse: collapse;
+    border: 1px solid #ebebeb;
+    margin: 10px auto;
+    text-align: center;
+    width: 100%;
+    max-width: 500px;
+}
+
+.highcharts-data-table caption {
+    padding: 1em 0;
+    font-size: 1.2em;
+    color: #555;
+}
+
+.highcharts-data-table th {
+    font-weight: 600;
+    padding: 0.5em;
+}
+
+.highcharts-data-table td,
+.highcharts-data-table th,
+.highcharts-data-table caption {
+    padding: 0.5em;
+}
+
+.highcharts-data-table thead tr,
+.highcharts-data-table tr:nth-child(even) {
+    background: #f8f8f8;
+}
+
+.highcharts-data-table tr:hover {
+    background: #f1f7ff;
+}
+
+    </style>
+
+  </head>
+  <body class="embed">
+
+
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://code.highcharts.com/highcharts-more.js"></script>
+<script src="https://code.highcharts.com/modules/exporting.js"></script>
+<script src="https://code.highcharts.com/modules/accessibility.js"></script>
+<figure class="highcharts-figure">
+
+  <div class="container">
+    <div class="row my-3">
+        <div class="text-right">
+            <h5> <a href="{{ url_for('index') }}"> Home </a> </h5>
+        </div>
+    </div>
+    <form action="/media_rating" method="POST">
+        <select name="file_choose" class="form-select-sm" aria-label="Пример выбора по умолчанию">
+        <option selected>select File</option>
+            {% for i in range(0, len_files) %}
+                <option value="{{ files[i] }}">{{ files[i] }}</option>
+            {% endfor %}
+        </select>
+        <!--    <input type="hidden" name="filename" value="{{ files[i] }}">-->
+        <input type="text" name="daterange" value="01/01/2022 - 01/12/2022" />
+
+        <script>
+        $(function() {
+          $('input[name="daterange"]').daterangepicker({
+            opens: 'left'
+          }, function(start, end, label) {
+            console.log("A new date selection was made: " + start.format('YYYY-MM-DD') + ' to ' + end.format('YYYY-MM-DD'));
+          });
+        });
+        </script>
+        <input type="submit" class="btn btn-light" href="{{ url_for('media_rating') }}" name="send" value="Запуск">
+    </form>
+
+<div id="container"></div>
+  </div>
+</figure>
+
+    <script>
+    var data = JSON.parse('{{ data|tojson }}');
+
+    var smi_pos = []
+    var smi_neg = []
+
+    for (i = 0; i < data.pos_smi_name.length; i++) {
+    smi_pos.push({
+            name: data.pos_smi_name[i],
+            value: data.pos_smi_rating[i],
+            count: data.pos_smi_count[i],
+            color: "#32ff32"
+        })
+    }
+
+    for (i = 0; i < data.neg_smi_name.length; i++) {
+    smi_neg.push({
+            name: data.neg_smi_name[i],
+            value: data.neg_smi_rating[i],
+            count: data.neg_smi_count[i],
+            color: "#FF3232"
+            
+        })
+    }
+
+
+    Highcharts.chart('container', {
+    chart: {
+        type: 'packedbubble',
+        height: '100%'
+    },
+    title: {
+        text: '{{ theme }}: Tonality Media'
+    },
+    tooltip: {
+        useHTML: true,
+        pointFormat: '<b>{point.name}:</b> Соцмедиа индекс: {point.value} Публикаций: {point.count}'
+    },
+    plotOptions: {
+        packedbubble: {
+            minSize: '20%',
+            maxSize: '100%',
+            layoutAlgorithm: {
+                gravitationalConstant: 0.05,
+                splitSeries: true,
+                seriesInteraction: false,
+                dragBetweenSeries: true,
+                parentNodeLimit: true
+            },
+            dataLabels: {
+                enabled: true,
+                format: '{point.name}',
+                style: {
+                    textOutline: 'none',
+                    fontWeight: 'normal'
+                }
+            }
+        }
+    },
+
+    series: [{
+        name: 'Negative',
+        data: smi_neg,
+        color: "#b23700"
+    }, {
+        name: 'Positive',
+        data: smi_pos,
+        color: "#005a04"
+    }]
+});
+    </script>
+    <script>
+    window.addEventListener('DOMContentLoaded', (event) => {
+      /* Script for setting iframe height when on Highcharts.com */
+          try {
+
+            // Allow hiding the description by search param
+            const search = window.location.search;
+            if(search && search.includes('hide-description')){
+              const description = document.querySelector('.highcharts-description, .highcharts-linked-description');
+              if(description){
+                description.style.display = 'none';
+              }
+            }
+
+            const iframes = window.parent.document.getElementsByTagName('iframe');
+
+            for(let iframe of iframes){
+              const { height } = iframe.contentWindow.document.body.getBoundingClientRect();
+              if (
+                height &&
+                height > iframe.height
+              ) {
+                iframe.setAttribute('height', height);
+                iframe.style.setProperty('height', height + 25 + 'px')
+              }
+            }
+          } catch (e) {}
+    });
+    </script>
+
+
+<div>
+  <style>
+    body {
+      margin: 0;
+      color: #313131;
+      font-family: sans-serif;
+      min-width: 300px;
+    }
+    body.toc{
+      font-family: 'Roboto', sans-serif;
+      font-size: 15px;
+    }
+    h1 {
+      font-size: 2em;
+      margin: 0.67em 0;
+      font-weight: bolder;
+      text-transform: uppercase;
+    }
+    h2 {
+      font-size: 1.5em;
+      margin: 0.83em 0;
+      font-weight: bolder;
+      text-transform: uppercase;
+    }
+    h3 {
+      font-size: 1.17em;
+      margin: 1em 0;
+      font-weight: bolder;
+      text-transform: uppercase;
+    }
+    h4 {
+      font-weight: bolder;
+      text-transform: uppercase;
+    }
+  
+    .highcharts-samples-navbar {
+      background-color: #4b5c47;
+      height: 50px;
+    }
+    .highcharts-samples-navbar .sample-navbar-brand img {
+      height: 66px;
+      margin-top: auto;
+      margin-bottom: auto;
+      height: auto;
+      max-height: 95%;
+      margin-left: 5px;
+      width: auto;
+      max-width: 50vw;
+    }
+    .actions {
+      float: right;
+      max-width: 50vw;
+    }
+    .action {
+      float: right;
+      line-height: 50px;
+      margin-right: 10px;
+      text-decoration: none;
+      font-size: 0.8em;
+    }
+    a.action {
+      color: #424BCD;
+    }
+    a.action:hover {
+      text-decoration: underline;
+    }
+    .action i.fab {
+      font-size: 1.6em;
+    }
+    .action i.fa-jsfiddle {
+      font-weight: 700;
+    }
+    .highcharts-samples-navbar a.action {
+      color: #eeeaea;
+    }
+    .description {
+      max-width: 800px;
+      margin: 1em auto;
+      padding: 10px;
+    }
+    .error {
+      text-align: center;
+      font-style: italic;
+      color: red;
+    }
+  
+    .embed .highcharts-samples-navbar {
+      background-color: #EBEBEB;
+      color: #3d3d3d;
+      height: 50px;
+    }
+    .embed .sample-navbar-brand {
+      display: none;
+    }
+    .embed a.action {
+      color: #424BCD;
+    }
+  
+    .nonav .highcharts-samples-navbar {
+      display: none;
+    }
+  
+    li{
+      max-width: 60rem;
+    }
+  
+    ul, menu, dir {
+      display: block;
+      list-style-type: disc;
+      margin-block-start: 1em;
+      margin-block-end: 1em;
+      margin-inline-start: 0px;
+      margin-inline-end: 0px;
+      padding-inline-start: 40px;
+      line-height: 1.25rem;
+  }
+  
+  @media only screen and (max-width: 800px) {
+    .actions .action {
+      font-size: 0.65em;
+    }
+  }
+  
+  
+  </style>
+      <style>
+        .highcharts-figure,
+  .highcharts-data-table table {
+      min-width: 310px;
+      max-width: 800px;
+      margin: 1em auto;
+  }
+  
+  #container {
+      height: 900px;
+      margin-top: 50px;
+  }
+
+  #container2 {
+      height: 800px;
+      margin-top: 20px;
+  }
+  
+  .highcharts-data-table table {
+      font-family: Verdana, sans-serif;
+      border-collapse: collapse;
+      border: 1px solid #ebebeb;
+      margin: 10px auto;
+      text-align: center;
+      width: 100%;
+      max-width: 500px;
+  }
+  
+  .highcharts-data-table caption {
+      padding: 1em 0;
+      font-size: 1.2em;
+      color: #555;
+  }
+  
+  .highcharts-data-table th {
+      font-weight: 600;
+      padding: 0.5em;
+  }
+  
+  .highcharts-data-table td,
+  .highcharts-data-table th,
+  .highcharts-data-table caption {
+      padding: 0.5em;
+  }
+  
+  .highcharts-data-table thead tr,
+  .highcharts-data-table tr:nth-child(even) {
+      background: #f8f8f8;
+  }
+  
+  .highcharts-data-table tr:hover {
+      background: #f1f7ff;
+  }
+
+      </style>
+
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://code.highcharts.com/modules/exporting.js"></script>
+<script src="https://code.highcharts.com/modules/export-data.js"></script>
+<script src="https://code.highcharts.com/modules/accessibility.js"></script>
+<script src="https://code.highcharts.com/modules/annotations.js"></script>
+
+<body>
+
+  <figure>
+    <figure>
+      <div id="container2"></div>
+
+      <script>
+
+      var databobble = []
+
+      for (i = 0; i < data.date_bobble.length; i++) {
+            databobble.push({ x: data.date_bobble[i], 
+            y: data.index_bobble[i], 
+            z: data.z_index_bobble[i], 
+            name: data.name_bobble[i],
+            color: data.tonality_index_bobble[i] })  
+      }
+
+      // for (i = 0; i < data.tonality_index_bobble.length; i++) {
+      //   if(data.data.tonality_index_bobble[i] === 1) {
+      //     databobble[i].push({color: "#32ff32"})
+      //   }
+      // }
+      
+      // Highcharts.setOptions({
+      // global: {
+      //   useUTC: false,
+      // }
+      // })
+
+      Highcharts.chart("container2", {
+
+      chart: {
+          type: "bubble",
+          plotBorderWidth: 1,
+          zoomType: "xyz"
+      },
+  
+      legend: {
+          enabled: false
+      },
+  
+      title: {
+          text: "{{ theme }}: Dynamics in Media"
+      },
+  
+      // subtitle: {
+      //     text:
+      //     'Source: <a href="https://techcrunch.com/2019/05/18/big-revenues-huge-valuations-and-major-losses-charting-the-era-of-the-unicorn-ipo/" target="_blank">TechCrunch</a>'
+      // },
+  
+      accessibility: {
+          point: {
+              valueDescriptionFormat:
+            "{index}. {point.name}, Медиа Индекс: {point.y}, Публикаций за период: {point.z}."
+          }
+      },
+  
+      xAxis: {   
+        type: 'datetime',
+               dateTimeLabelFormats: { // don't display the dummy year
+                  month: '%e. %b',
+                  year: '%b'
+               },
+              //  title: {
+              //     text: 'Date'
+              //  },
+
+          // labels: {
+          //     format: "${value}B"
+          // },
+          // accessibility: {
+          //     rangeDescription: "Range: $2B to $18B."
+          // }
+      },
+  
+      yAxis: {
+          startOnTick: false,
+          endOnTick: false,
+          crosshair: true,
+          title: {
+              text: "Socmedia Index", 
+              style: "bold"
+          },
+          labels: {
+              format: "{value}"
+          },
+          accessibility: {
+              rangeDescription: "Range: $0 to $2B."
+          }
+      },
+
+      tooltip: {
+          useHTML: true,
+          headerFormat: "<table>",
+          pointFormat:
+          '<tr><th colspan="2"><h3>{point.name}</h3></th></tr>' +
+          "<tr><th>Медиа Индекс:</th><td>{point.y}</td></tr>" +
+          "<tr><th>Публикаций за период:</th><td>{point.z}</td></tr>",
+          footerFormat: "</table>",
+          followPointer: true,
+          shared: true
+      },
+  
+      plotOptions: {
+          series: {
+              dataLabels: {
+                  enabled: false,
+                  format: "{point.name}"
+              }
+          }
+      },
+  
+      series: [
+          {
+              color: "#FF3232",
+              data: databobble
+          }
+      ]
+  });
+  
+      </script>
+      <script>
+      window.addEventListener('DOMContentLoaded', (event) => {
+        /* Script for setting iframe height when on Highcharts.com */
+            try {
+  
+              // Allow hiding the description by search param
+              const search = window.location.search;
+              if(search && search.includes('hide-description')){
+                const description = document.querySelector('.highcharts-description, .highcharts-linked-description');
+                if(description){
+                  description.style.display = 'none';
+                }
+              }
+  
+              const iframes = window.parent.document.getElementsByTagName('iframe');
+  
+              for(let iframe of iframes){
+                const { height } = iframe.contentWindow.document.body.getBoundingClientRect();
+                if (
+                  height &&
+                  height > iframe.height
+                ) {
+                  iframe.setAttribute('height', height);
+                  iframe.style.setProperty('height', height + 25 + 'px')
+                }
+              }
+            } catch (e) {}
+      });
+      </script>
+</div>
+  </body>
+</html>

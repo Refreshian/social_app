@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<!--https://bootsnipp.com/snippets/4MN2R-->
+<head>
+    <meta charset="utf-8">
+    <meta name="robots" content="noindex, nofollow">
+
+    <title>Datalake</title>
+</head>
+<body>
+    <!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Datalake</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+  
+</head>
+<body>
+
+<header>
+<!--  <div class="logo">DATA FILES</div>-->
+
+<!--<div class="text-left" style="margin: 10px">-->
+<!--    <h4> <a href="{{ url_for('index') }}" style="margin-left: 20px"> Home </a> </h4>-->
+<!--</div>-->
+
+<div class="text-right" style="margin-right: 1000px">
+    <h4> <a href="{{ url_for('index') }}"> Home </a> </h4>
+</div>
+
+    <h3 style="margin: 28px">Data Files</h3>
+</header>
+
+<ul>
+    {% for key in files_dict.keys() %}
+     <li style="margin-top: 20px">{{key}}
+         {% for val in files_dict[key] %}
+           <ul style="margin-top: 5px">
+                <a href="/return-files/{{val}}" target="blank"><button class='btn-link'> {{ val }} </button></a>
+           </ul>{% endfor %}</li>
+    {% endfor %}
+</ul>
+<br>
+<h4 style="margin-left: 25px">Загрузить файл</h4>
+
+<form action="{{ url_for('datalake') }}" method="POST" enctype="multipart/form-data" style="margin-left: 25px" id="category" name="filenames">
+        <p><input type='file' name='filename' multiple='' id="element1"></p>
+        <input type='submit' value='upload' id="element2">
+</form>
+
+
+
+<style type="text/css">
+#element1 {float:left;margin-right:-5px;}
+#element2 {float:left;}
+ </style>
+
+</body>
+</html>

@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}
+Authors Clustering
+{% endblock %}
+
+{% block body %}
+<br>
+<form action="/authors" method="POST">
+    <select name="file_choose" class="form-select" aria-label="Пример выбора по умолчанию" style="width: 270px; height: 40px">
+        <option selected>Выберите файл для анализа</option>
+        {% for i in range(0, len_files) %}
+            <option value="{{ files[i] }}">{{ files[i] }}</option>
+        {% endfor %}
+    </select>
+<!--    <input type="hidden" name="filename" value="{{ files[i] }}">-->
+    <input type="submit" href="{{ url_for('authors') }}" name="go" value="Запуск" style="height: 30px; width: 70px">
+</form>
+
+{% endblock %}
