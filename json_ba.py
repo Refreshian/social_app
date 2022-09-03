@@ -17,6 +17,7 @@ class json_ba():
 
         self.df = pd.DataFrame()
         self.embed = hub.load("universal-sentence-encoder-multilingual_3")
+        a = []
         
 
     def open_file(self, filename):
