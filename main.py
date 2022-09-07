@@ -8,20 +8,16 @@ import re
 from collections import Counter, OrderedDict, defaultdict
 from operator import itemgetter
 import time
-
 import flask
-import numpy
+import numpy 
 import pandas as pd
-import dash
 import jaal
 from jaal import Jaal
 from json_ba import json_ba
 from io import BytesIO
-from dash import Dash
-from dash import dcc
-from dash import html
+from dash import Dash, dcc, html
 
-from flask import Flask, render_template, request, redirect, url_for, send_file, send_from_directory
+from flask import Flask, render_template, request, redirect, url_for, send_file, send_from_directory, flash
 from jaal import Jaal
 
 app = Flask(__name__)
@@ -31,6 +27,13 @@ app.secret_key = 'a(d)fs#$T12eF#4-key'
 path_to_files = "C:\\Users\\NUC\\PycharmProjects\\clusters\\data"
 session = flask.session
 app.config['UPLOAD_FOLDER'] = path_to_files
+
+regex = re.compile("[А-Яа-яЁё:=!\).\()A-z\_\%/|0-9]+")
+def words_only(text, regex=regex):
+    try:
+        return " ".join(regex.findall(text))
+    except:
+        return ""
 
 
 @app.route("/")
@@ -286,12 +289,34 @@ def information_graph():
         df = pd.DataFrame(dict_train)
 
         # метаданные
-        columns = ['text', 'er', 'timeCreate', 'type', 'hubtype', 'hub']
+        columns = ['text', 'er', 'timeCreate', 'type', 'hubtype', 'hub', 'audienceCount']
         # columns.remove('text')
         df_meta = pd.concat([pd.DataFrame.from_records(df['authorObject'].values), df[columns]], axis=1)
         # timestamp to date
         df_meta['timeCreate'] = [datetime.datetime.fromtimestamp(x).strftime('%Y-%m-%d %H:%M:%S') for x in
                                  df_meta['timeCreate'].values]
+        df_meta = df_meta.set_index(['timeCreate'])  # индекс - время создания поста
+
+        def date_reverse(date): # фильтрация по дате/календарик
+            lst = date.split('-')
+            temp = lst[1]
+            lst[1] = lst[2]
+            lst[2] = temp
+            return lst
+
+        if 'daterange' in request.values.to_dict(flat=True) and request.values.to_dict(flat=True)['daterange'] != '01/01/2022 - 01/12/2022': 
+            data_start = '-'.join(date_reverse('-'.join(
+                [x.strip() for x in request.values.to_dict(flat=True)['daterange'].split('-')[0].split('/')][::-1])))
+            data_stop = '-'.join(date_reverse('-'.join(
+                [x.strip() for x in request.values.to_dict(flat=True)['daterange'].split('-')[1].split('/')][::-1])))
+
+            df_meta = df_meta.loc[data_stop: data_start] # фильтрация данных по дате в календарике
+        
+        df_meta['timeCreate'] = list(df_meta.index)
+
+        if df_meta.shape[0] == 0: # если по запросу найдено 0 сообщений - вывести flash 
+            flash('По запросу найдено 0 сообщений')
+            return redirect(url_for('information_graph'))
 
         if 'hub_select' in request.values.to_dict(flat=True):
             hub_select = request.form.getlist('hub_select')
@@ -306,10 +331,11 @@ def information_graph():
         if request.values.to_dict(flat=True)['text_min'] != '' and request.values.to_dict(flat=True)['text_max'] != '':
             df_meta = df_meta.iloc[int(request.values.to_dict(flat=True)['text_min']):int(
                 request.values.to_dict(flat=True)['text_max'])]
-
-        df_meta_filter = df_meta.set_index(['timeCreate'])  # индекс - время создания поста
-
+        
+        df_meta_filter = df_meta
         df_meta = pd.DataFrame()
+
+        # фильтрация по типу сообщения
         if 'posts' in request.values.to_dict(flat=True):
             if request.values.to_dict(flat=True)['posts'] == 'on':
                 df_meta = pd.concat([df_meta, df_meta_filter[
@@ -330,7 +356,11 @@ def information_graph():
                 flat=True) and 'smi' not in request.values.to_dict(flat=True):
             df_meta = df_meta_filter
 
-        df_data_rep = df_meta[['fullname', 'url', 'author_type', 'text', 'er', 'hub']]
+        if df_meta.shape[0] == 0: # если по запросу найдено 0 сообщений - вывести flash 
+            flash('По запросу найдено 0 сообщений')
+            return redirect(url_for('information_graph'))
+
+        df_data_rep = df_meta[['fullname', 'url', 'author_type', 'text', 'er', 'hub', 'audienceCount']]
         if 'smi' in request.values.to_dict(flat=True):
             df_rep_auth = list(df_data_rep['hub'].values)
         else:
@@ -338,18 +368,10 @@ def information_graph():
         data_rep_er = list(df_data_rep['er'].values)
 
 
-        regex = re.compile("[А-Яа-я:=!\).\()A-z\_\%/|ёЁ]+")
-        def words_only(text, regex=regex):
-            try:
-                return " ".join(regex.findall(text))
-            except:
-                return ""
-
-
         all_hubs = list(df_data_rep['hub'].values)
-
         all_hubs = [words_only(x) for x in all_hubs]
         df_rep_auth = [words_only(x) for x in df_rep_auth]
+        data_audience = list(df_data_rep['audienceCount'].values)
 
         for i in range(len(df_rep_auth) - 1):
             if df_rep_auth[i + 1] == df_rep_auth[i]:
@@ -369,19 +391,19 @@ def information_graph():
         hubs = Counter(df_meta['hub'].values)
         hubs = hubs.most_common()
         hubs = [x[0] for x in hubs]
-
         hubs = [words_only(x) for x in hubs]
+        data_audience = [int(z) for z in [int(y) for y in [5 if x == 0 else x for x in data_audience]]]
 
         data = {
             "df_rep_auth": df_rep_auth_inverse,
             "data_rep_er": er,
+            "data_rep_audience": data_audience,
             "data_authors": df_rep_auth,
             "authors_count": len(set(df_rep_auth)),
             "len_messages": df_meta.shape[0],
             "data_hub": hubs,
             "all_hubs": all_hubs
         }
-
 
         return render_template('information_graph.html', theme=theme, len_files=len_files, files=json_files,
                                data=data)
@@ -398,7 +420,7 @@ def information_graph():
         df = pd.DataFrame(dict_train)
 
         # метаданные
-        columns = ['text', 'er', 'timeCreate', 'hub', 'audienceCount']
+        columns = ['text', 'er', 'timeCreate', 'hub', 'audienceCount', 'type']
         # columns.remove('text')
         df_meta = pd.concat([pd.DataFrame.from_records(df['authorObject'].values), df[columns]], axis=1)
         # timestamp to date
@@ -406,7 +428,31 @@ def information_graph():
                                  df_meta['timeCreate'].values]
         df_meta = df_meta.set_index(['timeCreate'])  # индекс - время создания поста
 
-        if set(df_meta['hub'].values) == {"telegram.org"}:
+        def date_reverse(date): # фильтрация по дате/календарик
+            lst = date.split('-')
+            temp = lst[1]
+            lst[1] = lst[2]
+            lst[2] = temp
+            return lst
+
+        if 'daterange' in request.values.to_dict(flat=True) and request.values.to_dict(flat=True)['daterange'] != '01/01/2022 - 01/12/2022': 
+
+            data_start = '-'.join(date_reverse('-'.join(
+                [x.strip() for x in request.values.to_dict(flat=True)['daterange'].split('-')[0].split('/')][::-1])))
+            data_stop = '-'.join(date_reverse('-'.join(
+                [x.strip() for x in request.values.to_dict(flat=True)['daterange'].split('-')[1].split('/')][::-1])))
+
+            df_meta = df_meta.loc[data_stop: data_start] # фильтрация данынх по дате в календарике
+        
+        df_meta['timeCreate'] = list(df_meta.index)
+
+
+        if df_meta.shape[0] == 0: # если по запросу найдено 0 сообщений - вывести flash 
+            flash('По запросу найдено 0 сообщений')
+            return redirect(url_for('information_graph'))
+
+
+        if set(df_meta['hub'].values) == {"telegram.org"}: # если все сообщения только ТГ
 
             if request.values.to_dict(flat=True)['text_min'] != '':
                 df_meta = df_meta.iloc[int(request.values.to_dict(flat=True)['text_min']):]
@@ -436,19 +482,17 @@ def information_graph():
 
             df_meta = df_meta.loc[index_table]
 
-            df_data_rep = df_meta[['fullname', 'url', 'author_type', 'text', 'audienceCount', 'hub', 'er']]
+            if df_meta.shape[0] == 0:  # если по запросу найдено 0 сообщений - вывести flash
+                flash('По запросу найдено 0 сообщений')
+                return redirect(url_for('information_graph'))
+
+            df_data_rep = df_meta[['fullname', 'url', 'author_type', 'text', 'audienceCount', 'hub', 'er', 'type']]
             df_rep_auth = list(df_data_rep['fullname'].values)
             data_rep_er = list(df_data_rep['er'].values)
             data_audience = list(df_data_rep['audienceCount'].values)
             all_hubs = list(df_data_rep['hub'].values)
+            print('!!!')
 
-
-            regex = re.compile("[А-Яа-я:=!\).\()A-z\_\%/|ёЁ]+")
-            def words_only(text, regex=regex):
-                try:
-                    return " ".join(regex.findall(text))
-                except:
-                    return ""
 
             all_hubs = [words_only(x) for x in all_hubs]
             df_rep_auth = [words_only(x) for x in df_rep_auth]
@@ -480,16 +524,44 @@ def information_graph():
                 "df_rep_auth": df_rep_auth_inverse,
                 "data_rep_er": data_rep_er,
                 "data_rep_audience": data_audience,
+                "authors_count": len(set(df_rep_auth)),
+                "len_messages": df_meta.shape[0],
                 "data_authors": df_rep_auth,
                 "data_hub": hubs,
                 "all_hubs": all_hubs
             }
 
-            print(data['data_rep_audience'])
-
             return render_template('information_graph.html', theme=theme, len_files=len_files, files=json_files,
                                    data=data)
 
+
+        df_meta_filter = df_meta
+        df_meta = pd.DataFrame()
+        
+        # фильтрация по типу сообщения
+        if 'posts' in request.values.to_dict(flat=True):
+            if request.values.to_dict(flat=True)['posts'] == 'on':
+                df_meta = pd.concat([df_meta, df_meta_filter[
+                    (df_meta_filter['type'] == 'Пост') | (df_meta_filter['type'] == 'Комментарий')]], ignore_index=True)
+
+        if 'reposts' in request.values.to_dict(flat=True):
+            if request.values.to_dict(flat=True)['reposts'] == 'on':
+                df_meta = pd.concat([df_meta, df_meta_filter[
+                    (df_meta_filter['type'] == 'Репост') | (df_meta_filter['type'] == 'Репост с дополнением')]],
+                                    ignore_index=True)
+
+        if 'smi' in request.values.to_dict(flat=True):
+            if request.values.to_dict(flat=True)['smi'] == 'on':
+                df_meta = pd.concat([df_meta, df_meta_filter[df_meta_filter['hubtype'] == 'Новости']],
+                                    ignore_index=True)
+
+        if 'posts' not in request.values.to_dict(flat=True) and 'reposts' not in request.values.to_dict(
+                flat=True) and 'smi' not in request.values.to_dict(flat=True):
+            df_meta = df_meta_filter
+
+        if df_meta.shape[0] == 0: # если по запросу найдено 0 сообщений - вывести flash 
+            flash('По запросу найдено 0 сообщений')
+            return redirect(url_for('information_graph'))
 
         if request.values.to_dict(flat=True)['text_min'] != '':
             df_meta = df_meta.iloc[int(request.values.to_dict(flat=True)['text_min']):]
@@ -517,18 +589,14 @@ def information_graph():
                 index_table.append(df_meta.index[j])
 
         df_meta = df_meta.loc[index_table]
+        if df_meta.shape[0] == 0: # если по запросу найдено 0 сообщений - вывести flash 
+            flash('По запросу найдено 0 сообщений')
+            return redirect(url_for('information_graph'))
 
-        df_data_rep = df_meta[['fullname', 'url', 'author_type', 'text', 'er', 'hub']]
+        df_data_rep = df_meta[['fullname', 'url', 'author_type', 'text', 'er', 'hub', 'audienceCount']]
         df_rep_auth = list(df_data_rep['fullname'].values)
         data_rep_er = list(df_data_rep['er'].values)
         all_hubs = list(df_data_rep['hub'].values)
-
-        regex = re.compile("[А-Яа-я:=!\).\()A-z\_\%/|ёЁ]+")
-        def words_only(text, regex=regex):
-            try:
-                return " ".join(regex.findall(text))
-            except:
-                return ""
 
         all_hubs = [words_only(x) for x in all_hubs]
         df_rep_auth = [words_only(x) for x in df_rep_auth]
@@ -553,15 +621,21 @@ def information_graph():
         hubs = [x[0] for x in hubs]
         hubs = [words_only(x) for x in hubs]
 
-        print(all_hubs)
+        data_audience = list(df_data_rep['audienceCount'].values)
+        data_audience = [int(z) for z in [int(y) for y in [5 if x == 0 else x for x in data_audience]]]
+
 
         data = {
             "df_rep_auth": df_rep_auth_inverse,
             "data_rep_er": er,
+            "data_rep_audience": data_audience,
             "data_authors": df_rep_auth,
+            "authors_count": len(set(df_rep_auth)),
+            "len_messages": df_meta.shape[0],
             "data_hub": hubs,
             "all_hubs": all_hubs
         }
+
 
         return render_template('information_graph.html', theme=theme, len_files=len_files, files=json_files,
                                data=data)
@@ -572,7 +646,7 @@ def information_graph():
 
     data = {
         "df_rep_auth": ['A', 'G', 'K', 'M'],
-        "data_rep_er": ['11', '12', '15', '8']
+        "data_rep_audience": ['11', '12', '15', '8']
 
     }
 
@@ -602,6 +676,23 @@ def media_rating():
         # timestamp to date
         df_meta['timeCreate'] = [datetime.datetime.fromtimestamp(x).strftime('%Y-%m-%d %H:%M:%S') for x in
                                  df_meta['timeCreate'].values]
+
+        df_meta = df_meta.set_index(['timeCreate'])  # индекс - время создания поста
+
+        def date_reverse(date):
+            lst = date.split('-')
+            temp = lst[1]
+            lst[1] = lst[2]
+            lst[2] = temp
+            return lst
+
+
+        data_start = '-'.join(date_reverse('-'.join(
+            [x.strip() for x in request.values.to_dict(flat=True)['daterange'].split('-')[0].split('/')][::-1])))
+        data_stop = '-'.join(date_reverse('-'.join(
+            [x.strip() for x in request.values.to_dict(flat=True)['daterange'].split('-')[1].split('/')][::-1])))
+        df_meta = df_meta.loc[data_stop: data_start]
+        df_meta['timeCreate'] = list(df_meta.index)
 
         if set(df_meta['hub'].values) == {"telegram.org"}:
 
@@ -704,12 +795,6 @@ def media_rating():
                 else:
                     bobble[i][3] = "#FF3232"
 
-            regex = re.compile("[А-Яа-я:=!\).\()A-z\_\%/|ёЁ]+")
-            def words_only(text, regex=regex):
-                try:
-                    return " ".join(regex.findall(text))
-                except:
-                    return ""
 
             list_neg_smi = [words_only(x) for x in list_neg_smi]
             list_pos_smi = [words_only(x) for x in list_pos_smi]
@@ -1142,12 +1227,6 @@ def test():
         else:
             bobble[i][3] = "#FF3232"
 
-    regex = re.compile("[А-Яа-я:=!\).\()A-z\_\%/|]+")
-    def words_only(text, regex=regex):
-        try:
-            return " ".join(regex.findall(text))
-        except:
-            return ""
 
     list_neg_smi = [words_only(x) for x in list_neg_smi]
     list_pos_smi = [words_only(x) for x in list_pos_smi]
