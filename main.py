@@ -453,17 +453,6 @@ def information_graph():
 
         if set(df_meta['hub'].values) == {"telegram.org"}: # если все сообщения только ТГ
 
-            if request.values.to_dict(flat=True)['text_min'] != '':
-                df_meta = df_meta.iloc[int(request.values.to_dict(flat=True)['text_min']):]
-
-            if request.values.to_dict(flat=True)['text_max'] != '':
-                df_meta = df_meta.iloc[:int(request.values.to_dict(flat=True)['text_max'])]
-
-            if request.values.to_dict(flat=True)['text_min'] != '' and request.values.to_dict(flat=True)[
-                'text_max'] != '':
-                df_meta = df_meta.iloc[int(request.values.to_dict(flat=True)['text_min']):int(
-                    request.values.to_dict(flat=True)['text_max'])]
-
             search_lst = request.values.to_dict(flat=True)['text_search'].split(',')
             search_lst = [x.split('или') for x in search_lst]
             search_lst = [[x.strip().lower() for x in group] for group in search_lst]
@@ -481,6 +470,18 @@ def information_graph():
                     index_table.append(df_meta.index[j])
 
             df_meta = df_meta.loc[index_table]
+
+
+            if request.values.to_dict(flat=True)['text_min'] != '':
+                df_meta = df_meta.iloc[int(request.values.to_dict(flat=True)['text_min']):]
+
+            if request.values.to_dict(flat=True)['text_max'] != '':
+                df_meta = df_meta.iloc[:int(request.values.to_dict(flat=True)['text_max'])]
+
+            if request.values.to_dict(flat=True)['text_min'] != '' and request.values.to_dict(flat=True)[
+                'text_max'] != '':
+                df_meta = df_meta.iloc[int(request.values.to_dict(flat=True)['text_min']):int(
+                    request.values.to_dict(flat=True)['text_max'])]
 
             if df_meta.shape[0] == 0:  # если по запросу найдено 0 сообщений - вывести flash
                 flash('По запросу найдено 0 сообщений')
