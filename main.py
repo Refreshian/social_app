@@ -227,7 +227,6 @@ def tonality():
 
         date = data_start + ' : ' + data_stop
 
-        # print(neg_authors['apple.com'])
         return render_template('tonality_landscape.html', files=json_files, len_files=len_files, datagraph=data,
                                object_name=superDonatName, date=date)
 
@@ -577,14 +576,10 @@ def information_graph():
         search_lst = [x.split('или') for x in search_lst]
         search_lst = [[x.strip().lower() for x in group] for group in search_lst]
 
-        print("!!!!****&&&&&")
-        print(search_lst)
-
         index_table = []
         text_val = df_meta['text'].values
         text_val = [x.lower() for x in text_val]
 
-        print(text_val[:2])
 
         for j in range(len(text_val)):
             a = []
@@ -824,10 +819,9 @@ def media_rating():
 
             theme = request.values.to_dict(flat=True)['file_choose'].split('_')[0]
 
-            print("=====!!!!!+++++")
-            # print(data)
 
             return render_template('media_rating.html', len_files=len_files, files=json_files, data=data, theme=theme)
+
 
         df_meta = df_meta[df_meta['hubtype'] == 'Новости']
 
@@ -941,8 +935,6 @@ def media_rating():
             "tonality_index_bobble": [x[3] for x in bobble]
         }
 
-        print("=====!!!!!&&&&&")
-        print(data)
         theme = request.values.to_dict(flat=True)['file_choose'].split('_')[0]
 
         return render_template('media_rating.html', len_files=len_files, files=json_files, data=data, theme=theme)
@@ -1101,8 +1093,6 @@ def voice():
             "tonality": list(set([x[1] for x in tonality_by_post_type])),
         }
 
-        print("=====!!!!!!&&&&&")
-        print(data["type_message"])
         return render_template('voice.html', files=json_files, len_files=len_files, data=data, theme=theme,
                                dict_names=dict_names)
 
