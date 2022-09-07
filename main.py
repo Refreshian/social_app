@@ -467,10 +467,11 @@ def information_graph():
 
             search_lst = request.values.to_dict(flat=True)['text_search'].split(',')
             search_lst = [x.split('или') for x in search_lst]
-            search_lst = [[x.strip() for x in group] for group in search_lst]
+            search_lst = [[x.strip().lower() for x in group] for group in search_lst]
 
             index_table = []
             text_val = df_meta['text'].values
+            text_val = [x.lower() for x in text_val]
 
             for j in range(len(text_val)):
                 a = []
@@ -491,7 +492,6 @@ def information_graph():
             data_rep_er = list(df_data_rep['er'].values)
             data_audience = list(df_data_rep['audienceCount'].values)
             all_hubs = list(df_data_rep['hub'].values)
-            print('!!!')
 
 
             all_hubs = [words_only(x) for x in all_hubs]
@@ -575,10 +575,16 @@ def information_graph():
 
         search_lst = request.values.to_dict(flat=True)['text_search'].split(',')
         search_lst = [x.split('или') for x in search_lst]
-        search_lst = [[x.strip() for x in group] for group in search_lst]
+        search_lst = [[x.strip().lower() for x in group] for group in search_lst]
+
+        print("!!!!****&&&&&")
+        print(search_lst)
 
         index_table = []
         text_val = df_meta['text'].values
+        text_val = [x.lower() for x in text_val]
+
+        print(text_val[:2])
 
         for j in range(len(text_val)):
             a = []
@@ -980,9 +986,10 @@ def voice():
 
         search_lst = request.values.to_dict(flat=True)['text_search'].split(',')
         search_lst = [x.split('или') for x in search_lst]
-        search_lst = [[x.strip() for x in group] for group in search_lst]
+        search_lst = [[x.strip().lower() for x in group] for group in search_lst]
 
         text_val = df_meta['text'].values
+        text_val = [x.lower() for x in text_val]
 
         dict_count = {key: [] for key in [x[0].capitalize() for x in
                                           search_lst]}  # словарь с названием продукта и индексом его встречаемости в таблице текстов
