@@ -672,7 +672,7 @@ def media_rating():
         df = pd.DataFrame(dict_train)
 
         # метаданные
-        columns = ['citeIndex', 'timeCreate', 'toneMark', 'hubtype', 'hub', 'audienceCount']
+        columns = ['citeIndex', 'timeCreate', 'toneMark', 'hubtype', 'hub', 'audienceCount', 'url']
         # columns.remove('text')
         df_meta = pd.concat([pd.DataFrame.from_records(df['authorObject'].values), df[columns]], axis=1)
         # timestamp to date
@@ -826,6 +826,7 @@ def media_rating():
 
         df_meta = df_meta[df_meta['hubtype'] == 'Новости']
 
+
         # negative smi
         df_hub_siteIndex = df_meta[(df_meta['hubtype'] == 'Новости') & (df_meta['toneMark'] == -1)][
             ['hub', 'citeIndex']].values
@@ -901,7 +902,7 @@ def media_rating():
         # data to bobble graph
         bobble = []
         df_tonality = df_meta[(df_meta['hubtype'] == 'Новости') & (df_meta['toneMark'] != 0)][
-            ['hub', 'citeIndex', 'toneMark']].values
+            ['hub', 'citeIndex', 'toneMark', 'url']].values
         index_ton = df_meta[(df_meta['hubtype'] == 'Новости') & (df_meta['toneMark'] != 0)][
             ['timeCreate']].values.tolist()
         date_ton = [x[0] for x in index_ton]
@@ -909,11 +910,12 @@ def media_rating():
                                                                                                 1)).total_seconds() * 1000)
                     for x in date_ton]
 
+
         for i in range(len(df_tonality)):
             if df_tonality[i][2] == -1:
-                bobble.append([date_ton[i], df_tonality[i][0], dict_neg[df_tonality[i][0]], -1])
+                bobble.append([date_ton[i], df_tonality[i][0], dict_neg[df_tonality[i][0]], -1, df_tonality[i][4]])
             elif df_tonality[i][2] == 1:
-                bobble.append([date_ton[i], df_tonality[i][0], dict_pos[df_tonality[i][0]], 1])
+                bobble.append([date_ton[i], df_tonality[i][0], dict_pos[df_tonality[i][0]], 1, df_tonality[i][4]])
 
         for i in range(len(bobble)):
             if bobble[i][3] == 1:
@@ -933,8 +935,10 @@ def media_rating():
             "name_bobble": [x[1] for x in bobble],
             "index_bobble": [x[2] for x in bobble],
             "z_index_bobble": [1] * len(bobble),
-            "tonality_index_bobble": [x[3] for x in bobble]
+            "tonality_index_bobble": [x[3] for x in bobble], 
+            "tonality_url": [x[4] for x in bobble],
         }
+
 
         theme = request.values.to_dict(flat=True)['file_choose'].split('_')[0]
 
