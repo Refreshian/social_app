@@ -963,6 +963,7 @@ def voice():
     json_files = [pos_json for pos_json in os.listdir(os.getcwd()) if pos_json.endswith('.json')]
     len_files = len(json_files)
 
+
     if 'send' in request.values.to_dict(flat=True) and request.values.to_dict(flat=True)['text_search'] != '':
 
         session['filename'] = request.values.to_dict(flat=True)['file_choose']
@@ -1075,13 +1076,19 @@ def voice():
             if 'Positive' not in dict_count[key]:
                 dict_count[key]['Positive'] = 0
 
+
+        dict_count = collections.OrderedDict(sorted(dict_count.items()))
+
         a = []  # список с кол-ом поз, нег и нейтр по продуктам (поиску) пример списка - [[0, 0, 153], [0, 0, 18]]
         for key, val in dict_count.items():
             a.append([dict_count[key]["Negative"], dict_count[key]["Positive"], dict_count[key]["Neutral"]])
 
-        theme = request.values.to_dict(flat=True)['file_choose'].split('_')[0]
+        
 
+        theme = request.values.to_dict(flat=True)['file_choose'].split('_')[0]
         dict_names = {key: key[0] for key in [x for x in list(dict_count.keys())]}
+        dict_names = collections.OrderedDict(sorted(dict_names.items()))
+
 
         data = {
             "negative": [x[0] for x in a],
