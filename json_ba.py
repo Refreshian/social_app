@@ -3,12 +3,12 @@ import re
 import json
 import nltk
 import pandas as pd
-import tensorflow_text
-import os, psutil
+# import tensorflow_text
+import os
 from sklearn import manifold
 from nltk.corpus import stopwords
 nltk.download('stopwords')
-import tensorflow_hub as hub
+# import tensorflow_hub as hub
 
 
 class json_ba():
@@ -16,7 +16,7 @@ class json_ba():
     def __init__(self):
 
         self.df = pd.DataFrame()
-        self.embed = hub.load("universal-sentence-encoder-multilingual_3")
+        # self.embed = hub.load("universal-sentence-encoder-multilingual_3")
         
 
     def open_file(self, filename):

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="SshConfigs">
+    <configs>
+      <sshConfig host="146.185.208.165" id="90350919-823f-4427-8d3b-f933a5ec1cfd" keyPath="C:\Users\NUC\CentOS-Standard-2-8-100GB-ZcmKRio7.pem" port="22" nameFormat="DESCRIPTIVE" username="centos" useOpenSSHConfig="true" />
+    </configs>
+  </component>
+</project>

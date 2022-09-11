@@ -6,7 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>MediaIndex</title>
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous">
-
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
     <style>
   body {
     margin: 0;
@@ -523,6 +526,7 @@
             y: data.index_bobble[i], 
             z: data.z_index_bobble[i], 
             name: data.name_bobble[i],
+            url: data.tonality_url[i],
             color: data.tonality_index_bobble[i] })  
       }
 
@@ -537,6 +541,7 @@
       //   useUTC: false,
       // }
       // })
+
 
       Highcharts.chart("container2", {
 
@@ -593,30 +598,45 @@
               style: "bold"
           },
           labels: {
-              format: "{value}"
+              format: "{value}", 
+              
           },
           accessibility: {
               rangeDescription: "Range: $0 to $2B."
           }
       },
 
+
       tooltip: {
           useHTML: true,
           headerFormat: "<table>",
           pointFormat:
           '<tr><th colspan="2"><h3>{point.name}</h3></th></tr>' +
-          "<tr><th>Медиа Индекс:</th><td>{point.y}</td></tr>" +
-          "<tr><th>Публикаций за период:</th><td>{point.z}</td></tr>",
+          "<tr><th>Медиа Индекс:</th><td>{point.y}</td></tr>",
+          // "<tr><th>Публикаций за период:</th><td>{point.z}</td></tr>",
           footerFormat: "</table>",
           followPointer: true,
-          shared: true
+          shared: true,
+
+          // pointFormatter() {
+          // let point = this;
+          // return `<a href="https://en.wikipedia.org/wiki/${point.y}" target="_blank">${point.y}</a>`
+          // }
       },
-  
+
       plotOptions: {
           series: {
               dataLabels: {
                   enabled: false,
-                  format: "{point.name}"
+                  format: "{point.name}",
+              },
+              cursor: 'pointer',
+              point: {
+                  events: {
+                      click: function () {
+                        window.open(this.options.url);
+                      }
+                  }
               }
           }
       },

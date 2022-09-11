@@ -1,3 +1,4 @@
+import collections
 import datetime
 import glob
 import html as htl
@@ -21,17 +22,24 @@ from dash import Dash
 from dash import dcc
 from dash import html
 
-from flask import Flask, render_template, request, redirect, url_for, send_file, send_from_directory
+from flask import Flask, render_template, request, redirect, url_for, send_file, send_from_directory, flash
 from jaal import Jaal
 
 app = Flask(__name__)
 app.debug = True
 app.secret_key = 'a(d)fs#$T12eF#4-key'
 
-path_to_files = "C:\\Users\\NUC\\PycharmProjects\\clusters\\data"
+# path_to_files = "/home/centos/home/centos/social_app/data"
+path_to_files = 'C:\\Users\\NUC\\PycharmProjects\\clusters\\data'
 session = flask.session
 app.config['UPLOAD_FOLDER'] = path_to_files
 
+regex = re.compile("[А-Яа-яЁё:=!\).\()A-z\_\%/|0-9]+")
+def words_only(text, regex=regex):
+    try:
+        return " ".join(regex.findall(text))
+    except:
+        return ""
 
 @app.route("/")
 def hello():
@@ -185,18 +193,6 @@ def tonality():
         #     neg_authors[list(hub_neg.keys())[i]] = dict(
         #         Counter(neg_tabl[neg_tabl['hub'] == list(hub_neg.keys())[i]]['fullname'].values))
 
-        regex = re.compile("[А-Яа-я:=!\).\()A-z\_\%/|ёЁ]+")
-        def words_only(text, regex=regex):
-            try:
-                return " ".join(regex.findall(text))
-            except:
-                return ""
-
-        neg_list_name = [words_only(x) for x in neg_list_name]
-        pos_list_name = [words_only(x) for x in pos_list_name]
-        data_tonality_hub_neg_name = [words_only(x) for x in data_tonality_hub_neg_name]
-        data_tonality_hub_pos_name = [words_only(x) for x in data_tonality_hub_pos_name]
-
         data = {
             "neg_list_data": neg_list_data,
             "neg_list_name": neg_list_name,
@@ -286,12 +282,35 @@ def information_graph():
         df = pd.DataFrame(dict_train)
 
         # метаданные
-        columns = ['text', 'er', 'timeCreate', 'type', 'hubtype', 'hub']
+        columns = ['text', 'er', 'timeCreate', 'type', 'hubtype', 'hub', 'audienceCount']
         # columns.remove('text')
         df_meta = pd.concat([pd.DataFrame.from_records(df['authorObject'].values), df[columns]], axis=1)
         # timestamp to date
         df_meta['timeCreate'] = [datetime.datetime.fromtimestamp(x).strftime('%Y-%m-%d %H:%M:%S') for x in
                                  df_meta['timeCreate'].values]
+        df_meta = df_meta.set_index(['timeCreate'])  # индекс - время создания поста
+
+        def date_reverse(date):  # фильтрация по дате/календарик
+            lst = date.split('-')
+            temp = lst[1]
+            lst[1] = lst[2]
+            lst[2] = temp
+            return lst
+
+        if 'daterange' in request.values.to_dict(flat=True) and request.values.to_dict(flat=True)[
+            'daterange'] != '01/01/2022 - 01/12/2022':
+            data_start = '-'.join(date_reverse('-'.join(
+                [x.strip() for x in request.values.to_dict(flat=True)['daterange'].split('-')[0].split('/')][::-1])))
+            data_stop = '-'.join(date_reverse('-'.join(
+                [x.strip() for x in request.values.to_dict(flat=True)['daterange'].split('-')[1].split('/')][::-1])))
+
+            df_meta = df_meta.loc[data_stop: data_start]  # фильтрация данных по дате в календарике
+
+        df_meta['timeCreate'] = list(df_meta.index)
+
+        if df_meta.shape[0] == 0:  # если по запросу найдено 0 сообщений - вывести flash
+            flash('По запросу найдено 0 сообщений')
+            return redirect(url_for('information_graph'))
 
         if 'hub_select' in request.values.to_dict(flat=True):
             hub_select = request.form.getlist('hub_select')
@@ -307,9 +326,10 @@ def information_graph():
             df_meta = df_meta.iloc[int(request.values.to_dict(flat=True)['text_min']):int(
                 request.values.to_dict(flat=True)['text_max'])]
 
-        df_meta_filter = df_meta.set_index(['timeCreate'])  # индекс - время создания поста
-
+        df_meta_filter = df_meta
         df_meta = pd.DataFrame()
+
+        # фильтрация по типу сообщения
         if 'posts' in request.values.to_dict(flat=True):
             if request.values.to_dict(flat=True)['posts'] == 'on':
                 df_meta = pd.concat([df_meta, df_meta_filter[
@@ -330,26 +350,21 @@ def information_graph():
                 flat=True) and 'smi' not in request.values.to_dict(flat=True):
             df_meta = df_meta_filter
 
-        df_data_rep = df_meta[['fullname', 'url', 'author_type', 'text', 'er', 'hub']]
+        if df_meta.shape[0] == 0:  # если по запросу найдено 0 сообщений - вывести flash
+            flash('По запросу найдено 0 сообщений')
+            return redirect(url_for('information_graph'))
+
+        df_data_rep = df_meta[['fullname', 'url', 'author_type', 'text', 'er', 'hub', 'audienceCount']]
         if 'smi' in request.values.to_dict(flat=True):
             df_rep_auth = list(df_data_rep['hub'].values)
         else:
             df_rep_auth = list(df_data_rep['fullname'].values)
         data_rep_er = list(df_data_rep['er'].values)
 
-
-        regex = re.compile("[А-Яа-я:=!\).\()A-z\_\%/|ёЁ]+")
-        def words_only(text, regex=regex):
-            try:
-                return " ".join(regex.findall(text))
-            except:
-                return ""
-
-
         all_hubs = list(df_data_rep['hub'].values)
-
         all_hubs = [words_only(x) for x in all_hubs]
         df_rep_auth = [words_only(x) for x in df_rep_auth]
+        data_audience = list(df_data_rep['audienceCount'].values)
 
         for i in range(len(df_rep_auth) - 1):
             if df_rep_auth[i + 1] == df_rep_auth[i]:
@@ -358,7 +373,6 @@ def information_graph():
         f = lambda A, n=1: [[df_rep_auth[i], df_rep_auth[i + n]] for i in range(0, len(df_rep_auth) - 1,
                                                                                 n)]  # ф-ия разбивки авторов на последовательности [[1, 2], [2,3]...]
         df_rep_auth_inverse = f(df_rep_auth.append(df_rep_auth[-1]))
-
 
         theme = request.values.to_dict(flat=True)['file_choose'].split('_')[0]
 
@@ -369,12 +383,13 @@ def information_graph():
         hubs = Counter(df_meta['hub'].values)
         hubs = hubs.most_common()
         hubs = [x[0] for x in hubs]
-
         hubs = [words_only(x) for x in hubs]
+        data_audience = [int(z) for z in [int(y) for y in [5 if x == 0 else x for x in data_audience]]]
 
         data = {
             "df_rep_auth": df_rep_auth_inverse,
             "data_rep_er": er,
+            "data_rep_audience": data_audience,
             "data_authors": df_rep_auth,
             "authors_count": len(set(df_rep_auth)),
             "len_messages": df_meta.shape[0],
@@ -382,10 +397,8 @@ def information_graph():
             "all_hubs": all_hubs
         }
 
-
         return render_template('information_graph.html', theme=theme, len_files=len_files, files=json_files,
                                data=data)
-
 
     if 'send' in request.values.to_dict(flat=True) and request.values.to_dict(flat=True)['text_search'] != '':
 
@@ -398,7 +411,7 @@ def information_graph():
         df = pd.DataFrame(dict_train)
 
         # метаданные
-        columns = ['text', 'er', 'timeCreate', 'hub', 'audienceCount']
+        columns = ['text', 'er', 'timeCreate', 'hub', 'audienceCount', 'type']
         # columns.remove('text')
         df_meta = pd.concat([pd.DataFrame.from_records(df['authorObject'].values), df[columns]], axis=1)
         # timestamp to date
@@ -406,7 +419,47 @@ def information_graph():
                                  df_meta['timeCreate'].values]
         df_meta = df_meta.set_index(['timeCreate'])  # индекс - время создания поста
 
-        if set(df_meta['hub'].values) == {"telegram.org"}:
+        def date_reverse(date):  # фильтрация по дате/календарик
+            lst = date.split('-')
+            temp = lst[1]
+            lst[1] = lst[2]
+            lst[2] = temp
+            return lst
+
+        if 'daterange' in request.values.to_dict(flat=True) and request.values.to_dict(flat=True)[
+            'daterange'] != '01/01/2022 - 01/12/2022':
+            data_start = '-'.join(date_reverse('-'.join(
+                [x.strip() for x in request.values.to_dict(flat=True)['daterange'].split('-')[0].split('/')][::-1])))
+            data_stop = '-'.join(date_reverse('-'.join(
+                [x.strip() for x in request.values.to_dict(flat=True)['daterange'].split('-')[1].split('/')][::-1])))
+
+            df_meta = df_meta.loc[data_stop: data_start]  # фильтрация данынх по дате в календарике
+
+        df_meta['timeCreate'] = list(df_meta.index)
+
+        if df_meta.shape[0] == 0:  # если по запросу найдено 0 сообщений - вывести flash
+            flash('По запросу найдено 0 сообщений')
+            return redirect(url_for('information_graph'))
+
+        if set(df_meta['hub'].values) == {"telegram.org"}:  # если все сообщения только ТГ
+
+            search_lst = request.values.to_dict(flat=True)['text_search'].split(',')
+            search_lst = [x.split('или') for x in search_lst]
+            search_lst = [[x.strip().lower() for x in group] for group in search_lst]
+
+            index_table = []
+            text_val = df_meta['text'].values
+            text_val = [x.lower() for x in text_val]
+
+            for j in range(len(text_val)):
+                a = []
+                for i in range(len(search_lst)):
+                    if [item for item in search_lst[i] if item in text_val[j]] != []:
+                        a.append([item for item in search_lst[i] if item in text_val[j]])
+                if len(a) == len(search_lst):
+                    index_table.append(df_meta.index[j])
+
+            df_meta = df_meta.loc[index_table]
 
             if request.values.to_dict(flat=True)['text_min'] != '':
                 df_meta = df_meta.iloc[int(request.values.to_dict(flat=True)['text_min']):]
@@ -419,36 +472,15 @@ def information_graph():
                 df_meta = df_meta.iloc[int(request.values.to_dict(flat=True)['text_min']):int(
                     request.values.to_dict(flat=True)['text_max'])]
 
-            search_lst = request.values.to_dict(flat=True)['text_search'].split(',')
-            search_lst = [x.split('или') for x in search_lst]
-            search_lst = [[x.strip() for x in group] for group in search_lst]
+            if df_meta.shape[0] == 0:  # если по запросу найдено 0 сообщений - вывести flash
+                flash('По запросу найдено 0 сообщений')
+                return redirect(url_for('information_graph'))
 
-            index_table = []
-            text_val = df_meta['text'].values
-
-            for j in range(len(text_val)):
-                a = []
-                for i in range(len(search_lst)):
-                    if [item for item in search_lst[i] if item in text_val[j]] != []:
-                        a.append([item for item in search_lst[i] if item in text_val[j]])
-                if len(a) == len(search_lst):
-                    index_table.append(df_meta.index[j])
-
-            df_meta = df_meta.loc[index_table]
-
-            df_data_rep = df_meta[['fullname', 'url', 'author_type', 'text', 'audienceCount', 'hub', 'er']]
+            df_data_rep = df_meta[['fullname', 'url', 'author_type', 'text', 'audienceCount', 'hub', 'er', 'type']]
             df_rep_auth = list(df_data_rep['fullname'].values)
             data_rep_er = list(df_data_rep['er'].values)
             data_audience = list(df_data_rep['audienceCount'].values)
             all_hubs = list(df_data_rep['hub'].values)
-
-
-            regex = re.compile("[А-Яа-я:=!\).\()A-z\_\%/|ёЁ]+")
-            def words_only(text, regex=regex):
-                try:
-                    return " ".join(regex.findall(text))
-                except:
-                    return ""
 
             all_hubs = [words_only(x) for x in all_hubs]
             df_rep_auth = [words_only(x) for x in df_rep_auth]
@@ -459,7 +491,6 @@ def information_graph():
 
             f = lambda A, n=1: [[df_rep_auth[i], df_rep_auth[i + n]] for i in range(0, len(df_rep_auth) - 1,
                                                                                     n)]  # ф-ия разбивки авторов на последовательности [[1, 2], [2,3]...]
-
 
             df_rep_auth_inverse = f(df_rep_auth.append(df_rep_auth[-1]))
 
@@ -480,16 +511,43 @@ def information_graph():
                 "df_rep_auth": df_rep_auth_inverse,
                 "data_rep_er": data_rep_er,
                 "data_rep_audience": data_audience,
+                "authors_count": len(set(df_rep_auth)),
+                "len_messages": df_meta.shape[0],
                 "data_authors": df_rep_auth,
                 "data_hub": hubs,
                 "all_hubs": all_hubs
             }
 
-            print(data['data_rep_audience'])
-
             return render_template('information_graph.html', theme=theme, len_files=len_files, files=json_files,
                                    data=data)
 
+        df_meta_filter = df_meta
+        df_meta = pd.DataFrame()
+
+        # фильтрация по типу сообщения
+        if 'posts' in request.values.to_dict(flat=True):
+            if request.values.to_dict(flat=True)['posts'] == 'on':
+                df_meta = pd.concat([df_meta, df_meta_filter[
+                    (df_meta_filter['type'] == 'Пост') | (df_meta_filter['type'] == 'Комментарий')]], ignore_index=True)
+
+        if 'reposts' in request.values.to_dict(flat=True):
+            if request.values.to_dict(flat=True)['reposts'] == 'on':
+                df_meta = pd.concat([df_meta, df_meta_filter[
+                    (df_meta_filter['type'] == 'Репост') | (df_meta_filter['type'] == 'Репост с дополнением')]],
+                                    ignore_index=True)
+
+        if 'smi' in request.values.to_dict(flat=True):
+            if request.values.to_dict(flat=True)['smi'] == 'on':
+                df_meta = pd.concat([df_meta, df_meta_filter[df_meta_filter['hubtype'] == 'Новости']],
+                                    ignore_index=True)
+
+        if 'posts' not in request.values.to_dict(flat=True) and 'reposts' not in request.values.to_dict(
+                flat=True) and 'smi' not in request.values.to_dict(flat=True):
+            df_meta = df_meta_filter
+
+        if df_meta.shape[0] == 0:  # если по запросу найдено 0 сообщений - вывести flash
+            flash('По запросу найдено 0 сообщений')
+            return redirect(url_for('information_graph'))
 
         if request.values.to_dict(flat=True)['text_min'] != '':
             df_meta = df_meta.iloc[int(request.values.to_dict(flat=True)['text_min']):]
@@ -503,10 +561,11 @@ def information_graph():
 
         search_lst = request.values.to_dict(flat=True)['text_search'].split(',')
         search_lst = [x.split('или') for x in search_lst]
-        search_lst = [[x.strip() for x in group] for group in search_lst]
+        search_lst = [[x.strip().lower() for x in group] for group in search_lst]
 
         index_table = []
         text_val = df_meta['text'].values
+        text_val = [x.lower() for x in text_val]
 
         for j in range(len(text_val)):
             a = []
@@ -517,22 +576,17 @@ def information_graph():
                 index_table.append(df_meta.index[j])
 
         df_meta = df_meta.loc[index_table]
+        if df_meta.shape[0] == 0:  # если по запросу найдено 0 сообщений - вывести flash
+            flash('По запросу найдено 0 сообщений')
+            return redirect(url_for('information_graph'))
 
-        df_data_rep = df_meta[['fullname', 'url', 'author_type', 'text', 'er', 'hub']]
+        df_data_rep = df_meta[['fullname', 'url', 'author_type', 'text', 'er', 'hub', 'audienceCount']]
         df_rep_auth = list(df_data_rep['fullname'].values)
         data_rep_er = list(df_data_rep['er'].values)
         all_hubs = list(df_data_rep['hub'].values)
 
-        regex = re.compile("[А-Яа-я:=!\).\()A-z\_\%/|ёЁ]+")
-        def words_only(text, regex=regex):
-            try:
-                return " ".join(regex.findall(text))
-            except:
-                return ""
-
         all_hubs = [words_only(x) for x in all_hubs]
         df_rep_auth = [words_only(x) for x in df_rep_auth]
-
 
         for i in range(len(df_rep_auth) - 1):
             if df_rep_auth[i + 1] == df_rep_auth[i]:
@@ -553,12 +607,16 @@ def information_graph():
         hubs = [x[0] for x in hubs]
         hubs = [words_only(x) for x in hubs]
 
-        print(all_hubs)
+        data_audience = list(df_data_rep['audienceCount'].values)
+        data_audience = [int(z) for z in [int(y) for y in [5 if x == 0 else x for x in data_audience]]]
 
         data = {
             "df_rep_auth": df_rep_auth_inverse,
             "data_rep_er": er,
+            "data_rep_audience": data_audience,
             "data_authors": df_rep_auth,
+            "authors_count": len(set(df_rep_auth)),
+            "len_messages": df_meta.shape[0],
             "data_hub": hubs,
             "all_hubs": all_hubs
         }
@@ -572,7 +630,7 @@ def information_graph():
 
     data = {
         "df_rep_auth": ['A', 'G', 'K', 'M'],
-        "data_rep_er": ['11', '12', '15', '8']
+        "data_rep_audience": ['11', '12', '15', '8']
 
     }
 
@@ -596,12 +654,29 @@ def media_rating():
         df = pd.DataFrame(dict_train)
 
         # метаданные
-        columns = ['citeIndex', 'timeCreate', 'toneMark', 'hubtype', 'hub', 'audienceCount']
+        columns = ['citeIndex', 'timeCreate', 'toneMark', 'hubtype', 'hub', 'audienceCount', 'url']
         # columns.remove('text')
         df_meta = pd.concat([pd.DataFrame.from_records(df['authorObject'].values), df[columns]], axis=1)
         # timestamp to date
         df_meta['timeCreate'] = [datetime.datetime.fromtimestamp(x).strftime('%Y-%m-%d %H:%M:%S') for x in
                                  df_meta['timeCreate'].values]
+
+        df_meta = df_meta.set_index(['timeCreate'])  # индекс - время создания поста
+
+        def date_reverse(date):
+            lst = date.split('-')
+            temp = lst[1]
+            lst[1] = lst[2]
+            lst[2] = temp
+            return lst
+
+
+        data_start = '-'.join(date_reverse('-'.join(
+            [x.strip() for x in request.values.to_dict(flat=True)['daterange'].split('-')[0].split('/')][::-1])))
+        data_stop = '-'.join(date_reverse('-'.join(
+            [x.strip() for x in request.values.to_dict(flat=True)['daterange'].split('-')[1].split('/')][::-1])))
+        df_meta = df_meta.loc[data_stop: data_start]
+        df_meta['timeCreate'] = list(df_meta.index)
 
         if set(df_meta['hub'].values) == {"telegram.org"}:
 
@@ -684,7 +759,7 @@ def media_rating():
             # data to bobble graph
             bobble = []
             df_tonality = df_meta[(df_meta['hubtype'] == 'Мессенджеры каналы') & (df_meta['toneMark'] != 0)][
-                ['fullname', 'audienceCount', 'toneMark']].values
+                ['fullname', 'audienceCount', 'toneMark', 'url']].values
             index_ton = df_meta[(df_meta['hubtype'] == 'Мессенджеры каналы') & (df_meta['toneMark'] != 0)][
                 ['timeCreate']].values.tolist()
             date_ton = [x[0] for x in index_ton]
@@ -694,9 +769,9 @@ def media_rating():
 
             for i in range(len(df_tonality)):
                 if df_tonality[i][2] == -1:
-                    bobble.append([date_ton[i], df_tonality[i][0], dict_neg[df_tonality[i][0]], -1])
+                    bobble.append([date_ton[i], df_tonality[i][0], dict_neg[df_tonality[i][0]], -1, df_tonality[i][4]])
                 elif df_tonality[i][2] == 1:
-                    bobble.append([date_ton[i], df_tonality[i][0], dict_pos[df_tonality[i][0]], 1])
+                    bobble.append([date_ton[i], df_tonality[i][0], dict_pos[df_tonality[i][0]], 1, df_tonality[i][4]])
 
             for i in range(len(bobble)):
                 if bobble[i][3] == 1:
@@ -704,12 +779,6 @@ def media_rating():
                 else:
                     bobble[i][3] = "#FF3232"
 
-            regex = re.compile("[А-Яа-я:=!\).\()A-z\_\%/|ёЁ]+")
-            def words_only(text, regex=regex):
-                try:
-                    return " ".join(regex.findall(text))
-                except:
-                    return ""
 
             list_neg_smi = [words_only(x) for x in list_neg_smi]
             list_pos_smi = [words_only(x) for x in list_pos_smi]
@@ -728,17 +797,18 @@ def media_rating():
                 "name_bobble": name_bobble,
                 "index_bobble": [x[2] for x in bobble],
                 "z_index_bobble": [1] * len(bobble),
-                "tonality_index_bobble": [x[3] for x in bobble]
+                "tonality_index_bobble": [x[3] for x in bobble],
+                "tonality_url": [x[4] for x in bobble],
             }
 
             theme = request.values.to_dict(flat=True)['file_choose'].split('_')[0]
 
-            print("=====!!!!!+++++")
-            # print(data)
 
             return render_template('media_rating.html', len_files=len_files, files=json_files, data=data, theme=theme)
 
+
         df_meta = df_meta[df_meta['hubtype'] == 'Новости']
+
 
         # negative smi
         df_hub_siteIndex = df_meta[(df_meta['hubtype'] == 'Новости') & (df_meta['toneMark'] == -1)][
@@ -815,7 +885,7 @@ def media_rating():
         # data to bobble graph
         bobble = []
         df_tonality = df_meta[(df_meta['hubtype'] == 'Новости') & (df_meta['toneMark'] != 0)][
-            ['hub', 'citeIndex', 'toneMark']].values
+            ['hub', 'citeIndex', 'toneMark', 'url']].values
         index_ton = df_meta[(df_meta['hubtype'] == 'Новости') & (df_meta['toneMark'] != 0)][
             ['timeCreate']].values.tolist()
         date_ton = [x[0] for x in index_ton]
@@ -823,11 +893,12 @@ def media_rating():
                                                                                                 1)).total_seconds() * 1000)
                     for x in date_ton]
 
+
         for i in range(len(df_tonality)):
             if df_tonality[i][2] == -1:
-                bobble.append([date_ton[i], df_tonality[i][0], dict_neg[df_tonality[i][0]], -1])
+                bobble.append([date_ton[i], df_tonality[i][0], dict_neg[df_tonality[i][0]], -1, df_tonality[i][4]])
             elif df_tonality[i][2] == 1:
-                bobble.append([date_ton[i], df_tonality[i][0], dict_pos[df_tonality[i][0]], 1])
+                bobble.append([date_ton[i], df_tonality[i][0], dict_pos[df_tonality[i][0]], 1, df_tonality[i][4]])
 
         for i in range(len(bobble)):
             if bobble[i][3] == 1:
@@ -847,11 +918,11 @@ def media_rating():
             "name_bobble": [x[1] for x in bobble],
             "index_bobble": [x[2] for x in bobble],
             "z_index_bobble": [1] * len(bobble),
-            "tonality_index_bobble": [x[3] for x in bobble]
+            "tonality_index_bobble": [x[3] for x in bobble], 
+            "tonality_url": [x[4] for x in bobble],
         }
 
-        print("=====!!!!!&&&&&")
-        print(data)
+
         theme = request.values.to_dict(flat=True)['file_choose'].split('_')[0]
 
         return render_template('media_rating.html', len_files=len_files, files=json_files, data=data, theme=theme)
@@ -875,6 +946,7 @@ def voice():
     json_files = [pos_json for pos_json in os.listdir(os.getcwd()) if pos_json.endswith('.json')]
     len_files = len(json_files)
 
+
     if 'send' in request.values.to_dict(flat=True) and request.values.to_dict(flat=True)['text_search'] != '':
 
         session['filename'] = request.values.to_dict(flat=True)['file_choose']
@@ -895,9 +967,10 @@ def voice():
 
         search_lst = request.values.to_dict(flat=True)['text_search'].split(',')
         search_lst = [x.split('или') for x in search_lst]
-        search_lst = [[x.strip() for x in group] for group in search_lst]
+        search_lst = [[x.strip().lower() for x in group] for group in search_lst]
 
         text_val = df_meta['text'].values
+        text_val = [x.lower() for x in text_val]
 
         dict_count = {key: [] for key in [x[0].capitalize() for x in
                                           search_lst]}  # словарь с названием продукта и индексом его встречаемости в таблице текстов
@@ -986,13 +1059,19 @@ def voice():
             if 'Positive' not in dict_count[key]:
                 dict_count[key]['Positive'] = 0
 
+
+        dict_count = collections.OrderedDict(sorted(dict_count.items()))
+
         a = []  # список с кол-ом поз, нег и нейтр по продуктам (поиску) пример списка - [[0, 0, 153], [0, 0, 18]]
         for key, val in dict_count.items():
             a.append([dict_count[key]["Negative"], dict_count[key]["Positive"], dict_count[key]["Neutral"]])
 
-        theme = request.values.to_dict(flat=True)['file_choose'].split('_')[0]
+        
 
+        theme = request.values.to_dict(flat=True)['file_choose'].split('_')[0]
         dict_names = {key: key[0] for key in [x for x in list(dict_count.keys())]}
+        dict_names = collections.OrderedDict(sorted(dict_names.items()))
+
 
         data = {
             "negative": [x[0] for x in a],
@@ -1009,8 +1088,6 @@ def voice():
             "tonality": list(set([x[1] for x in tonality_by_post_type])),
         }
 
-        print("=====!!!!!!&&&&&")
-        print(data["type_message"])
         return render_template('voice.html', files=json_files, len_files=len_files, data=data, theme=theme,
                                dict_names=dict_names)
 
@@ -1019,162 +1096,103 @@ def voice():
 
 @app.route('/test', methods=["GET", "POST"])
 def test():
+    data = {'negative': [10, 0, 0], 'positive': [5, 0, 0], 'neutral': [30, 5, 3],
 
-    os.chdir(path_to_files)
-    json_files = [pos_json for pos_json in os.listdir(os.getcwd()) if pos_json.endswith('.json')]
-    len_files = len(json_files)
+            'list_sunkey_hubs': [['facebook.com', 'Платон', 10], ['vk.com', 'Платон', 7], ['ok.ru', 'Платон', 6],
+                                 ['bmwclub.ru', 'Платон', 4], ['yaplakal.com', 'Платон', 4],
+                                 ['youtu be.com', 'Платон', 4], ['zen.yandex.ru', 'Платон', 2],
+                                 ['twitter.com', 'Платон', 2], ['telegram.org', 'Платон', 2], ['2ch.hk', 'Платон', 1],
+                                 ['ati.su', 'Платон', 1], ['tinkoff.ru', 'Платон', 1],
+                                 ['novosti-kosmonavtiki.ru', 'Платон', 1], ['o k.ru', 'Ротенберг', 2],
+                                 ['2ch.hk', 'Ротенберг', 1], ['vk.com', 'Ротенберг', 1],
+                                 ['instagram.com', 'Ротенберг', 1], ['ati.su', 'Путин', 1], ['ok.ru', 'Путин', 1],
+                                 ['twitter.com', 'Путин', 1]],
+
+            'list_sunkey_post_type': [['Платон', 'Комментарий', 27], ['Платон', 'Пост', 16],
+                                      ['Платон', 'Репост с дополнением', 2], ['Ротенберг', 'Комментарий', 4],
+                                      ['Ротенберг', 'Пост', 1], ['Путин', 'Пост', 2], ['Путин ', 'Комментарий', 1]],
+
+            'tonality_by_post_type': [['Комментарий', 'Neutral', 16], ['Комментарий', 'Negative', 6],
+                                      ['Комментарий', 'Positive', 5], ['Пост', 'Neutral', 13], ['Пост', 'Negative', 3],
+                                      ['Репост с дополнением', 'Neutral', 1], ['Репост с дополнением', 'Negative', 1],
+                                      ['Комментарий', 'Neutral', 16], ['Комментарий', 'Negative', 6],
+                                      ['Комментарий', 'Positive', 5], ['Пост', 'Neutral', 13], ['Пост', 'Negative', 3],
+                                      ['Репост с дополнением', 'Neutral', 1], ['Репост с дополнением', 'Negative', 1],
+                                      ['Комментарий', 'Neutral', 16], ['Комментарий', 'Negative ', 6],
+                                      ['Комментарий', 'Positive', 5], ['Пост', 'Neutral', 13], ['Пост', 'Negative', 3],
+                                      ['Репост с дополнением', 'Neutral', 1], ['Репост с дополнением', 'Negative', 1],
+                                      ['Комментарий', 'Neutral', 4], ['Пост', 'Neutral', 1],
+                                      ['Комментарий', 'Neutral', 4], ['Пост', 'Neutral', 1], ['Пост', 'Neutral', 2],
+                                      ['Комментарий', 'Neutral', 1], ['Пост', 'Neutral', 2],
+                                      ['Комментарий', 'Neutral', 1]],
+
+            'fin_list': [['facebook.com', 'Платон', 10], ['vk.com', 'Платон', 7], ['ok.ru', 'Платон', 6],
+                         ['bmwclub.ru', 'Платон', 4], ['yaplakal.com', 'Платон', 4], ['youtube.com', 'Платон', 4],
+                         ['zen.yandex.ru', 'Платон', 2], ['twitter.com', 'Платон', 2], ['telegram.org', 'Платон', 2],
+                         ['2ch.hk', 'Платон', 1], ['ati.su', 'Платон', 1], ['tinkoff.ru', 'Платон', 1],
+                         ['novosti-kosmonavtiki.ru', 'Платон', 1], ['ok.ru', 'Ротенберг', 2],
+                         ['2ch.hk', 'Ротенберг', 1], ['vk.com', 'Ротенберг', 1], ['instagram.com', 'Ротенберг', 1],
+                         ['ati.su', 'Путин', 1], ['ok.ru', 'Путин', 1], ['twitter.com', 'Путин', 1],
+                         ['Платон', 'Комментарий', 27], ['Платон', 'Пост', 16], ['Платон', 'Репост с дополнением', 2],
+                         ['Ротенберг', 'Комментарий', 4], ['Ротенберг', 'Пост', 1], ['Путин', 'Пост', 2],
+                         ['Путин', 'Комментарий', 1], ['Комментарий ', 'Neutral', 16], ['Комментарий', 'Negative', 6],
+                         ['Комментарий', 'Positive', 5], ['Пост', 'Neutral', 13], ['Пост', 'Negative', 3],
+                         ['Репост с дополнением', 'Neutral', 1], ['Репост с дополнением', 'Negative', 1],
+                         ['Комментарий', 'Neutral', 16], ['Комментарий', 'Negative', 6], ['Комментарий', 'Positive', 5],
+                         ['Пост', 'Neutral', 13], ['Пост', 'Negative', 3], ['Репост с дополнением', 'Neutral', 1],
+                         ['Репост с дополнением', 'Negative', 1], ['Комментарий', 'Neutral', 16],
+                         ['Комме нтарий', 'Negative', 6], ['Комментарий', 'Positive', 5], ['Пост', 'Neutral', 13],
+                         ['Пост', 'Negative', 3], ['Репост с дополнением', 'Neutral', 1],
+                         ['Репост с до полнением', 'Negative', 1], ['Комментарий', 'Neutral', 4],
+                         ['Пост', 'Neutral', 1], ['Комментарий', 'Neutral', 4], ['Пост', 'Neutral', 1],
+                         ['Пост', 'Neutral', 2], ['Комментарий', 'Neutral', 1], ['Пост', 'Neutral', 2],
+                         ['Комментарий', 'Neutral', 1]],
+
+            'names': ['Платон', 'Ротенберг', 'Путин'],
+
+            'hubs': [x[0] for x in [['facebook.com', 'Платон', 10], ['vk.com', 'Платон', 7], ['ok.ru', 'Платон', 6],
+                                    ['bmwclub.ru', 'Платон', 4], ['yaplakal.com', 'Платон', 4],
+                                    ['youtu be.com', 'Платон', 4], ['zen.yandex.ru', 'Платон', 2],
+                                    ['twitter.com', 'Платон', 2], ['telegram.org', 'Платон', 2],
+                                    ['2ch.hk', 'Платон', 1], ['ati.su', 'Платон', 1], ['tinkoff.ru', 'Платон', 1],
+                                    ['novosti-kosmonavtiki.ru', 'Платон', 1], ['o k.ru', 'Ротенберг', 2],
+                                    ['2ch.hk', 'Ротенберг', 1], ['vk.com', 'Ротенберг', 1],
+                                    ['instagram.com', 'Ротенберг', 1], ['ati.su', 'Путин', 1], ['ok.ru', 'Путин', 1],
+                                    ['twitter.com', 'Путин', 1]]],
+
+            'type_message': list(set([x[1] for x in [['Платон', 'Комментарий', 27], ['Платон', 'Пост', 16],
+                                                     ['Платон', 'Репост с дополнением', 2],
+                                                     ['Ротенберг', 'Комментарий', 4],
+                                                     ['Ротенберг', 'Пост', 1], ['Путин', 'Пост', 2],
+                                                     ['Путин ', 'Комментарий', 1]]])),
+
+            'tonality': list(set([x[1] for x in [['Комментарий', 'Neutral', 16], ['Комментарий', 'Negative', 6],
+                                                 ['Комментарий', 'Positive', 5], ['Пост', 'Neutral', 13],
+                                                 ['Пост', 'Negative', 3], ['Репост с дополнением', 'Neutral', 1],
+                                                 ['Репост с дополнением', 'Negative', 1],
+                                                 ['Комментарий', 'Neutral', 16], ['Комментарий', 'Negative', 6],
+                                                 ['Комментарий', 'Positive', 5], ['Пост', 'Neutral', 13],
+                                                 ['Пост', 'Negative', 3], ['Репост с дополнением', 'Neutral', 1],
+                                                 ['Репост с дополнением', 'Negative', 1],
+                                                 ['Комментарий', 'Neutral', 16], ['Комментарий', 'Negative ', 6],
+                                                 ['Комментарий', 'Positive', 5], ['Пост', 'Neutral', 13],
+                                                 ['Пост', 'Negative', 3], ['Репост с дополнением', 'Neutral', 1],
+                                                 ['Репост с дополнением', 'Negative', 1], ['Комментарий', 'Neutral', 4],
+                                                 ['Пост', 'Neutral', 1], ['Комментарий', 'Neutral', 4],
+                                                 ['Пост', 'Neutral', 1], ['Пост', 'Neutral', 2],
+                                                 ['Комментарий', 'Neutral', 1], ['Пост', 'Neutral', 2],
+                                                 ['Комментарий', 'Neutral', 1]]]))
+
+            # 'hubs': [x[0] for x in list_sunkey_hubs]
+            #
+            # "type_message": list(set([x[1] for x in list_sunkey_post_type]))
+            #
+            # 'tonality': list(set([x[1] for x in tonality_by_post_type]))
+
+            }
+
+    return render_template('test.html', data=data)
 
 
-    filename = 'Rosbank_15.08.2022-21.08.2022_telegram.json'
-    # 'Rosbank_08.08.2022-14.08.2022_telegram.json'
-
-    # parsing json
-    with io.open(filename, encoding='utf-8', mode='r') as train_file:
-        dict_train = json.load(train_file)
-
-    df = pd.DataFrame(dict_train)
-
-    # метаданные
-    columns = ['citeIndex', 'timeCreate', 'toneMark', 'hubtype', 'hub', 'audienceCount']
-    # columns.remove('text')
-    df_meta = pd.concat([pd.DataFrame.from_records(df['authorObject'].values), df[columns]], axis=1)
-    # timestamp to date
-    df_meta['timeCreate'] = [datetime.datetime.fromtimestamp(x).strftime('%Y-%m-%d %H:%M:%S') for x in
-                             df_meta['timeCreate'].values]
-
-
-    df_meta = df_meta[(df_meta['hubtype'] == 'Мессенджеры каналы') & (df_meta['hub'] == "telegram.org")]
-
-    # negative smi
-    df_hub_siteIndex = df_meta[(df_meta['hubtype'] == 'Мессенджеры каналы') & (df_meta['toneMark'] == -1)][
-        ['fullname', 'audienceCount']].values
-
-    dict_neg = {}
-    for i in range(len(df_hub_siteIndex)):
-
-        if df_hub_siteIndex[i][0] not in dict_neg.keys():
-
-            dict_neg[df_hub_siteIndex[i][0]] = []
-            dict_neg[df_hub_siteIndex[i][0]].append(df_hub_siteIndex[i][1])
-
-        else:
-            dict_neg[df_hub_siteIndex[i][0]].append(df_hub_siteIndex[i][1])
-
-    list_neg = [list(set(x)) for x in dict_neg.values()]
-    list_neg = [[0] if x[0] == 'n/a' else x for x in list_neg if x != 'n/a']
-    list_neg = [int(x[0]) for x in list_neg]
-
-    for i in range(len(list_neg)):
-        dict_neg[list(dict_neg.keys())[i]] = list_neg[i]
-
-    dict_neg = dict(sorted(dict_neg.items(), key=lambda x: x[1], reverse=True))
-
-    dict_neg_hubs_count = dict(
-        Counter(list(
-            df_meta[(df_meta['hubtype'] == 'Мессенджеры каналы') & (df_meta['toneMark'] == -1)]['fullname'])))
-
-    fin_neg_dict = defaultdict(tuple)
-    for d in (dict_neg, dict_neg_hubs_count):  # you can list as many input dicts as you want here
-        for key, value in d.items():
-            fin_neg_dict[key] += (value,)
-
-    list_neg_smi = list(fin_neg_dict.keys())
-    list_neg_smi_index = [x[0] for x in fin_neg_dict.values()]
-    list_neg_smi_massage_count = [x[1] for x in fin_neg_dict.values()]
-
-    # positive smi
-    df_hub_siteIndex = df_meta[(df_meta['hubtype'] == 'Мессенджеры каналы') & (df_meta['toneMark'] == 1)][
-        ['fullname', 'audienceCount']].values
-
-    dict_pos = {}
-    for i in range(len(df_hub_siteIndex)):
-
-        if df_hub_siteIndex[i][0] not in dict_pos.keys():
-
-            dict_pos[df_hub_siteIndex[i][0]] = []
-            dict_pos[df_hub_siteIndex[i][0]].append(df_hub_siteIndex[i][1])
-
-        else:
-            dict_pos[df_hub_siteIndex[i][0]].append(df_hub_siteIndex[i][1])
-
-    list_pos = [list(set(x)) for x in dict_pos.values()]
-    list_pos = [[0] if x[0] == 'n/a' else x for x in list_pos if x != 'n/a']
-    list_pos = [int(x[0]) for x in list_pos]
-
-    for i in range(len(list_pos)):
-        dict_pos[list(dict_pos.keys())[i]] = list_pos[i]
-
-    dict_pos = dict(sorted(dict_pos.items(), key=lambda x: x[1], reverse=True))
-
-    dict_pos_hubs_count = dict(
-        Counter(list(
-            df_meta[(df_meta['hubtype'] == 'Мессенджеры каналы') & (df_meta['toneMark'] == 1)]['fullname'])))
-
-    fin_pos_dict = defaultdict(tuple)
-    for d in (dict_pos, dict_pos_hubs_count):  # you can list as many input dicts as you want here
-        for key, value in d.items():
-            fin_pos_dict[key] += (value,)
-
-    list_pos_smi = list(fin_pos_dict.keys())
-    list_pos_smi_index = [x[0] for x in fin_pos_dict.values()]
-    list_pos_smi_massage_count = [x[1] for x in fin_pos_dict.values()]
-
-    # data to bobble graph
-    bobble = []
-    df_tonality = df_meta[(df_meta['hubtype'] == 'Мессенджеры каналы') & (df_meta['toneMark'] != 0)][
-        ['fullname', 'audienceCount', 'toneMark']].values
-    index_ton = df_meta[(df_meta['hubtype'] == 'Мессенджеры каналы') & (df_meta['toneMark'] != 0)][
-        ['timeCreate']].values.tolist()
-    date_ton = [x[0] for x in index_ton]
-    date_ton = [int((datetime.datetime.strptime(x, '%Y-%m-%d %H:%M:%S') - datetime.datetime(1970, 1,
-                                                                                            1)).total_seconds() * 1000)
-                for x in date_ton]
-
-    for i in range(len(df_tonality)):
-        if df_tonality[i][2] == -1:
-            bobble.append([date_ton[i], df_tonality[i][0], dict_neg[df_tonality[i][0]], -1])
-        elif df_tonality[i][2] == 1:
-            bobble.append([date_ton[i], df_tonality[i][0], dict_pos[df_tonality[i][0]], 1])
-
-    for i in range(len(bobble)):
-        if bobble[i][3] == 1:
-            bobble[i][3] = "#32ff32"
-        else:
-            bobble[i][3] = "#FF3232"
-
-    regex = re.compile("[А-Яа-я:=!\).\()A-z\_\%/|]+")
-    def words_only(text, regex=regex):
-        try:
-            return " ".join(regex.findall(text))
-        except:
-            return ""
-
-    list_neg_smi = [words_only(x) for x in list_neg_smi]
-    list_pos_smi = [words_only(x) for x in list_pos_smi]
-    name_bobble = [x[1] for x in bobble]
-    name_bobble = [words_only(x) for x in name_bobble]
-
-    data = {
-        "neg_smi_name": list_neg_smi[:20],
-        "neg_smi_count": list_pos_smi_massage_count[:20],
-        "neg_smi_rating": list_neg_smi_index[:20],
-        "pos_smi_name": list_pos_smi[:20],
-        "pos_smi_count": list_pos_smi_massage_count[:20],
-        "pos_smi_rating": list_pos_smi_index[:20],
-
-        "date_bobble": [x[0] for x in bobble],
-        "name_bobble": name_bobble,
-        "index_bobble": [x[2] for x in bobble],
-        "z_index_bobble": [1] * len(bobble),
-        "tonality_index_bobble": [x[3] for x in bobble]
-    }
-
-    with open('file.txt', 'w') as file:
-        file.write(json.dumps(data))  # use `json.loads` to do the reverse
-
-    theme = filename.split('_')[0]
-
-    print("=====!!!!!+++++")
-    print(data)
-
-    return render_template('media_rating.html', len_files=len_files, files=json_files, data=data, theme=theme)
+if __name__ == "__main__":
+    app.run(host='146.185.208.165', port=5000)
