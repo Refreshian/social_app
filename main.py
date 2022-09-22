@@ -10,20 +10,26 @@ from collections import Counter, OrderedDict, defaultdict
 from operator import itemgetter
 import time
 
+import requests
+import sys
+import traceback
+import urllib
+
 import flask
 import numpy
 import pandas as pd
-import dash
-import jaal
-from jaal import Jaal
 from json_ba import json_ba
 from io import BytesIO
-from dash import Dash
-from dash import dcc
-from dash import html
+
+import tensorflow_hub as hub
+import numpy as np
+import tensorflow_text
+import nltk
+from nltk.corpus import stopwords
+nltk.download('stopwords')
+
 
 from flask import Flask, render_template, request, redirect, url_for, send_file, send_from_directory, flash
-from jaal import Jaal
 
 app = Flask(__name__)
 app.debug = True
@@ -40,6 +46,7 @@ def words_only(text, regex=regex):
         return " ".join(regex.findall(text))
     except:
         return ""
+
 
 @app.route("/")
 def hello():
@@ -80,24 +87,6 @@ def graph():
 @app.route('/tsne', methods=('GET', 'POST'))
 def tsne():
     return render_template('visualizer.html')
-
-
-@app.route('/graph', methods=("GET", "POST"))
-def graph():
-    # columns = ['from', 'to', 'weight', 'strenght']
-    # edge_df = pd.DataFrame([['Alex', 'Matt', 3, 12], ['Dot', 'Carl', 18, 4]])
-    # edge_df.columns = columns
-    #
-    # columns = ['id', 'gender']
-    # node_df = pd.DataFrame([['Alex', 'male'], ['Matt', 'female'],
-    #                         ['Dot', 'male'], ['Carl', 'male']])
-    # node_df.columns = columns
-
-    X = Jaal(edge_df, node_df)
-    X.create(app)
-
-    return flask.redirect('http://127.0.0.1:5000/graph/')
-    # render_template()
 
 
 @app.route('/tonality_landscape', methods=['GET', 'POST'], endpoint='tonality_landscape')
@@ -965,6 +954,29 @@ def voice():
         df_meta['timeCreate'] = [datetime.datetime.fromtimestamp(x).strftime('%Y-%m-%d %H:%M:%S') for x in
                                  df_meta['timeCreate'].values]
 
+        df_meta = df_meta.set_index(['timeCreate'])  # индекс - время создания поста
+
+        def date_reverse(date):  # фильтрация по дате/календарик
+            lst = date.split('-')
+            temp = lst[1]
+            lst[1] = lst[2]
+            lst[2] = temp
+            return lst
+
+        if 'daterange' in request.values.to_dict(flat=True) and request.values.to_dict(flat=True)['daterange'] != '01/01/2022 - 01/12/2022':
+            data_start = '-'.join(date_reverse('-'.join(
+                [x.strip() for x in request.values.to_dict(flat=True)['daterange'].split('-')[0].split('/')][::-1])))
+            data_stop = '-'.join(date_reverse('-'.join(
+                [x.strip() for x in request.values.to_dict(flat=True)['daterange'].split('-')[1].split('/')][::-1])))
+
+            df_meta = df_meta.loc[data_stop:data_start]  # фильтрация данных по дате в календарике
+
+        if df.shape[0] == 0:  # если по запросу найдено 0 сообщений - вывести flash
+            flash('По запросу найдено 0 сообщений')
+            return redirect(url_for('voice'))
+
+        df_meta = df_meta.reset_index()
+
         search_lst = request.values.to_dict(flat=True)['text_search'].split(',')
         search_lst = [x.split('или') for x in search_lst]
         search_lst = [[x.strip().lower() for x in group] for group in search_lst]
@@ -1094,6 +1106,210 @@ def voice():
     return render_template('voice.html', files=json_files, len_files=len_files)
 
 
+
+@app.route('/mension', methods=["GET", "POST"], endpoint='mension')
+def mension():
+
+    os.chdir(path_to_files)
+    json_files = [pos_json for pos_json in os.listdir(os.getcwd()) if pos_json.endswith('.json')]
+    len_files = len(json_files)
+
+    if 'send' in request.values.to_dict(flat=True) and request.values.to_dict(flat=True)['file_choose'] != 'Выбрать файл':
+
+        embed = hub.load("universal-sentence-encoder-multilingual_3")
+        cluster_num = request.values.to_dict(flat=True)['clusters_choose']
+
+        # parsing json
+        with io.open(request.values.to_dict(flat=True)['file_choose'], encoding='utf-8', mode='r') as train_file:
+            dict_train = json.load(train_file)
+
+        df = pd.DataFrame(dict_train)
+        # метаданные
+        df = df[['text', 'url', 'hub', 'timeCreate']]
+        # df_meta = pd.concat([pd.DataFrame.from_records(df['authorObject'].values), df[columns]], axis=1)
+        # timestamp to date
+        df['timeCreate'] = [datetime.datetime.fromtimestamp(x).strftime('%Y-%m-%d %H:%M:%S') for x in
+                                 df['timeCreate'].values]
+
+        df = df.set_index(['timeCreate'])  # индекс - время создания поста
+
+        def date_reverse(date):  # фильтрация по дате/календарик
+            lst = date.split('-')
+            temp = lst[1]
+            lst[1] = lst[2]
+            lst[2] = temp
+            return lst
+
+        if 'daterange' in request.values.to_dict(flat=True) and request.values.to_dict(flat=True)['daterange'] != '01/01/2022 - 01/12/2022':
+            data_start = '-'.join(date_reverse('-'.join(
+                [x.strip() for x in request.values.to_dict(flat=True)['daterange'].split('-')[0].split('/')][::-1])))
+            data_stop = '-'.join(date_reverse('-'.join(
+                [x.strip() for x in request.values.to_dict(flat=True)['daterange'].split('-')[1].split('/')][::-1])))
+
+            df = df.loc[data_stop:data_start]  # фильтрация данных по дате в календарике
+
+        df = df.reset_index() # возвращаем индексы к 0, 1, 2, 3 для дальнейшей итерации по ним
+
+        if df.shape[0] == 0:  # если по запросу найдено 0 сообщений - вывести flash
+            flash('По запросу найдено 0 сообщений')
+            return redirect(url_for('mension'))
+
+
+        regex = re.compile("[А-Яа-я:=!\)\()A-z\_\%/|]+")
+        def words_only(text, regex=regex):
+            try:
+                return " ".join(regex.findall(text))
+            except:
+                return ""
+
+        def preprocess_text(text):
+            text = text.lower().replace("ё", "е")
+            text = re.sub('((www\[^\s]+)|(https?://[^\s]+))','URL', text)
+            text = re.sub('@[^\s]+','USER', text)
+            text = re.sub('[^a-zA-Zа-яА-Я1-9]+', ' ', text)
+            text = re.sub(' +',' ', text)
+            return text.strip()
+
+        mystopwords = stopwords.words('russian') + ['это', 'наш' , 'тыс', 'млн', 'млрд', 'также',  'т', 'д', 'URL', 
+                                                    'i', 's', 'v', 'info', 'a', 'подробнее', 'который', 'год', 
+                                                ' - ', '-','В','—', '–', '-', 'в', 'который']
+
+        def  remove_stopwords(text, mystopwords = mystopwords):
+            try:
+                return " ".join([token for token in text.split() if not token in mystopwords])
+            except:
+                return ""
+
+        df['text'] = df['text'].apply(preprocess_text)
+        df['text'] = df['text'].apply(remove_stopwords)
+        df['text'] = df['text'].apply(words_only)
+        sent_ru = df['text'].values
+
+        emb_list = []
+        for sent in sent_ru:
+            emb_list.append(embed(sent))
+
+        a = []
+        for emb in emb_list:
+            a.append(emb[0].numpy())
+
+        dff = pd.DataFrame(a)
+
+        from sklearn.cluster import KMeans
+        clusters = KMeans(n_clusters = int(cluster_num))
+        clusters.fit(dff.values)
+
+        df = df[['text', 'url', 'hub']]
+        df['label'] = clusters.labels_
+
+        clusters_len = np.arange(1, 50)
+
+
+        df.drop_duplicates(subset=['text'], inplace=True)
+        columns = df.columns
+        df = df.reset_index()
+
+        list_count_labels = list(Counter(df['label'].values).keys())
+        count_clusters = Counter(df['label'].values) # кол-во сообщений в каждом кластере
+
+        a = []
+        df_values = df.values
+
+        for i in range(len(list_count_labels)):
+            for j in range(len(df_values)):
+                if list_count_labels[i] == df_values[j][4]:
+                    a.append(df_values[j])
+
+
+        df = pd.DataFrame(a)
+        df.drop(0, axis=1, inplace=True)
+        df.columns = columns
+        df.drop_duplicates(subset=['text'], inplace=True)
+        df['value'] = df['label'].map(count_clusters)
+        df = df.sort_values(by='value', ascending=False)
+        df.drop(['value'], axis=1, inplace=True)
+
+        # https://gist.github.com/komasaru/ed07018ae246d128370a1693f5dd1849
+        def shorten(url_long): # делаем ссылки короткими для отображения в web 
+
+            URL = "http://tinyurl.com/api-create.php"
+            try:
+                url = URL + "?" \
+                    + urllib.parse.urlencode({"url": url_long})
+                res = requests.get(url)
+                if res.text == 'Error':
+                    return url_long
+                else:
+                    return res.text
+
+            except Exception as e:
+                raise
+        
+        # create short url links
+        df.loc[:, 'url'] = [shorten(x) for x in df['url'].values]
+        # create active url links
+        df['url'] = '<a href="' + df['url'] + '">' + df['url'] + '</a>'
+
+        # данные для первого графика (heat) 
+        name_cluster_column = ['Cluster_' + str(x) for x in df['label'].values]
+
+        df_count_hub = df[['hub']]
+        df_count_hub['cluster_name'] = name_cluster_column
+
+        dict_count_hub = {}
+        df_count_hub_values = df_count_hub.values
+
+        for i in range(len(df_count_hub_values)): # получаем словарь вида {'Cluster_4': ['telegra.ph', 'vk.com', 'vk.com', ...
+            if df_count_hub_values[i][1] not in dict_count_hub.keys():
+                dict_count_hub[df_count_hub_values[i][1]] = []
+                dict_count_hub[df_count_hub_values[i][1]].append(df_count_hub_values[i][0])
+                
+            else:
+                dict_count_hub[df_count_hub_values[i][1]].append(df_count_hub_values[i][0])
+            
+
+        for key, val in dict_count_hub.items(): # получаем словарь с подсчетом каждого источника вида 'Cluster_1': Counter({'telegram.org': 21, 'vk.com': 34, 'instagram.com': 8, ...
+            dict_count_hub[key] = Counter(val)
+            
+        # преобразуем Counter словарь с кол-ом источников по каждому кластеру к массиву для передачи во front
+        # {'instagram.com': 6, 'telegram.org': 24, 'banki.ru': 11, 'vk.com': 58,..
+        for key, val in dict_count_hub.items():
+            dict_count_hub[key] = dict(val)
+
+        a = [[dict_count_hub[group] for val in group] for group in dict_count_hub]
+        hubs_cluster_id = [list(x[0].keys()) for x in a] # ['telegra.ph', 'vk.com', 'zen.yandex.ru', 'ok.ru', 'youtube.com', 'telegram.org', 'apple.com'
+        hubs_cluster_values = [list(x[0].values()) for x in a] # [6, 137, 11, 12, 13, 56, 1, 6, 20, 11, 2, 1, 1, 2, 1, 1, 1, 1, 2, 1, 1], [6,
+
+        hub_parents = []
+        for i in range(len(hubs_cluster_values)):
+            hub_parents.append([list(dict_count_hub.keys())[i] for x in hubs_cluster_values[i]])
+
+        data = {
+                "cluster_names": list(dict_count_hub.keys()), # кластеры ['Cluster_4', 'Cluster_7', 'Cluster_2', 'Cluster_5', 'Cluster_0', 'Cluster_3', 'Cluster_1', 'Cluster_6']
+                "cluster_values": list(Counter(df['label'].values).values()), # сколько сообщений в кластере [287, 216, 211, 141, 128, 111, 68, 4]
+                "hubs_cluster_id": hubs_cluster_id, 
+                "hubs_cluster_values": hubs_cluster_values,
+                "cluster_parent": hub_parents
+            }
+
+
+        return render_template('mension.html', len_files=len_files, files=json_files, clusters_len=clusters_len, data=data,
+                                tables=[df.to_html(classes='data', render_links=True, escape=False)], titles=df.columns.values)
+
+
+    data = {
+    "cluster_names": ['Cluster_4', 'Cluster_7', 'Cluster_2'],
+    "cluster_values": [287, 216, 211],
+    "hubs_cluster_id": ['VK', 'OK', 'Fb'], 
+    "hubs_cluster_values": [11, 12, 8],
+    "cluster_parent": ['Cluster_4', 'Cluster_7', 'Cluster_2']
+    }
+
+    clusters_len = np.arange(1, 50)
+    return render_template('mension.html', len_files=len_files, files=json_files, clusters_len=clusters_len, data=data)
+
+
+
 @app.route('/test', methods=["GET", "POST"])
 def test():
     data = {'negative': [10, 0, 0], 'positive': [5, 0, 0], 'neutral': [30, 5, 3],
@@ -1182,12 +1398,6 @@ def test():
                                                  ['Пост', 'Neutral', 1], ['Пост', 'Neutral', 2],
                                                  ['Комментарий', 'Neutral', 1], ['Пост', 'Neutral', 2],
                                                  ['Комментарий', 'Neutral', 1]]]))
-
-            # 'hubs': [x[0] for x in list_sunkey_hubs]
-            #
-            # "type_message": list(set([x[1] for x in list_sunkey_post_type]))
-            #
-            # 'tonality': list(set([x[1] for x in tonality_by_post_type]))
 
             }
 

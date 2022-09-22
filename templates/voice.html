@@ -1,12 +1,11 @@
 <!DOCTYPE html>
 <html lang='en-US'>
   <head>
-{#    <link rel="icon" type="image/x-icon" href="https://www.highcharts.com/demo/static/favicon.ico">#}
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-{#    <title>Highcharts Demo Chart Chooser Radial Bar Chart</title>#}
-{#    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous">#}
-    
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous">
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
     <style>
   body {
     margin: 0;
@@ -147,6 +146,13 @@
   </head>
 
 <body>
+
+{% for message in get_flashed_messages() %}
+  <div class="alert alert-warning alert-dismissible fade show" role="alert" style="color: red;">
+    {{ message }}
+  </div>
+{% endfor %}
+
 {%  if data %}
     <form action="/voice" method="POST" style="margin-top: 30px">
       <div class="container">
@@ -166,6 +172,15 @@
                     <input type = "text" class = "form-control" name="text_search" size="61" placeholder="Добавьте объекты: втб или vtb, карта или кредитка">
                 </div>
 
+                <script>
+                  $(function() {
+                    $('input[name="daterange"]').daterangepicker({
+                      opens: 'left'
+                    }, function(start, end, label) {
+                      console.log("A new date selection was made: " + start.format('YYYY-MM-DD') + ' to ' + end.format('YYYY-MM-DD'));
+                    });
+                  });
+                  </script>
             <input type="submit" class="btn btn-light" href="{{ url_for('voice') }}" name="send" value="Запуск" style="margin-top: 5px">
         </form>
 
@@ -624,6 +639,11 @@
         {% endif %}
 
 {%  if not data %}
+  {% for message in get_flashed_messages() %}
+    <div class="alert alert-warning alert-dismissible fade show" role="alert" style="color: red;">
+      {{ message }}
+    </div>
+  {% endfor %}
     <form action="/voice" method="POST" style="margin-top: 30px">
       <div class="container">
         <div class="row my-3">
@@ -641,7 +661,15 @@
                 <div class = "input-group" style="margin-top: 5px">
                     <input type = "text" class = "form-control" name="text_search" size="61" placeholder="Добавьте объекты: втб или vtb, карта или кредитка">
                 </div>
-
+                <script>
+                  $(function() {
+                    $('input[name="daterange"]').daterangepicker({
+                      opens: 'left'
+                    }, function(start, end, label) {
+                      console.log("A new date selection was made: " + start.format('YYYY-MM-DD') + ' to ' + end.format('YYYY-MM-DD'));
+                    });
+                  });
+                  </script>
             <input type="submit" class="btn btn-light" href="{{ url_for('voice') }}" name="send" value="Запуск" style="margin-top: 5px">
         </form>
 

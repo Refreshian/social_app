@@ -93,9 +93,25 @@
 # fin_list.append(list_sunkey_post_type)
 # fin_list.append(tonality_by_post_type)
 
-import collections
+import requests
+import sys
+import traceback
+import urllib
 
 
-d = {'Путин': {'Neutral': 1936, 'Negative': 639, 'Positive': 89}, 'Да': {'Neutral': 7775, 'Negative': 3392, 'Positive': 1475}}
 
-print(collections.OrderedDict(sorted(d.items())))
+# https://gist.github.com/komasaru/ed07018ae246d128370a1693f5dd1849
+def shorten(url_long): # делаем ссылки корткими для отображения в web 
+
+    URL = "http://tinyurl.com/api-create.php"
+    try:
+        url = URL + "?" \
+            + urllib.parse.urlencode({"url": url_long})
+        res = requests.get(url)
+        print("   LONG URL:", url_long)
+        print("  SHORT URL:", res.text)
+    except Exception as e:
+        raise
+
+# X = UrlShortenTinyurl()
+print(shorten('https://adpass.ru/reklama-prinesla-vk-polovinu-vyruchki/'))

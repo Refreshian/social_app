@@ -182,6 +182,11 @@
 
   </head>
   <body class="embed">
+    {% for message in get_flashed_messages() %}
+  <div class="alert alert-warning alert-dismissible fade show" role="alert" style="color: red;">
+    {{ message }}
+  </div>
+{% endfor %}
 
 
 <script src="https://code.highcharts.com/highcharts.js"></script>
