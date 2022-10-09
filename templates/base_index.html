@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+    <script type="text/javascript" src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+    <script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/snap.svg/0.1.0/snap.svg-min.js"></script>
+
+    <title>
+        {% block title %}
+        Title text
+        {% endblock %}
+    </title>
+<!--    <ul class="nav nav-pills">-->
+<!--        <li class="nav-item">-->
+<!--            <a class="nav-link">Домой</a>-->
+<!--        </li>-->
+<!--        <li class="nav-item">-->
+<!--            <a class="nav-link" href="{{ url_for('authors') }}">Анализ графа</a>-->
+<!--        </li>-->
+<!--    </ul>-->
+</head>
+<body>
+{% block body %}
+Body text
+{% endblock %}
+</body>
+</html>

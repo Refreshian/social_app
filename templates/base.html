@@ -1,34 +1,67 @@
 <!doctype html>
 <html lang="en">
+
 <head>
-    <!-- Required meta tags -->
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css -->
+<!-- <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"> -->
 
-    <!-- Bootstrap CSS -->
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
-    <script type="text/javascript" src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
-    <script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-    <script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"></script>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/snap.svg/0.1.0/snap.svg-min.js"></script>
+<link rel="stylesheet" type="text/css" href="../static/css/font-awesome.min.css"></link>
+<link rel="stylesheet" type="text/css" href="../static/css/custom.css"></link>
+<!-- <link href="custom.css" rel="stylesheet"></link> -->
 
-    <title>
-        {% block title %}
-        Title text
-        {% endblock %}
-    </title>
-<!--    <ul class="nav nav-pills">-->
-<!--        <li class="nav-item">-->
-<!--            <a class="nav-link">Домой</a>-->
-<!--        </li>-->
-<!--        <li class="nav-item">-->
-<!--            <a class="nav-link" href="{{ url_for('authors') }}">Анализ графа</a>-->
-<!--        </li>-->
-<!--    </ul>-->
+<style>
+ 
+  </style>
+
+    {% block head %}
+        Head text
+    {% endblock %}
+
 </head>
+
 <body>
-{% block body %}
-Body text
-{% endblock %}
+        <div class="navbar">
+        <a href="/index" style="margin-left: 15px;">Home</a>
+        <div class="dropdown">
+            <button class="dropbtn" onclick="myFunction()">Menu
+                <i class="fa fa-caret-down"></i>
+                </button>
+                <div class="dropdown-content" id="myDropdown">
+                <a href="{{ url_for('tonality_landscape') }}">Tonality landscape</a>
+                <a href="{{ url_for('information_graph') }}">Information Graph</a>
+                <a href="{{ url_for('media_rating') }}">Media Rating</a>
+                <a href="{{ url_for('voice') }}">Voice of Customer</a>
+                <a class="isDisabled" href="#">Competitive Environment</a>
+                <a class="isDisabled" href="#">External Influence</a>
+                <a href="{{ url_for('datalake') }}">Files</a>
+                <a class="isDisabled" href="#">Author Clustering</a>
+                <a href="{{ url_for('mension') }}">Mension Classification</a>
+            </div>
+        </div> 
+        <a href="#news">FAQ</a>
+        </div>
+
+      
+      <script>
+      /* When the user clicks on the button, 
+      toggle between hiding and showing the dropdown content */
+      function myFunction() {
+        document.getElementById("myDropdown").classList.toggle("show");
+      }
+      
+      // Close the dropdown if the user clicks outside of it
+      window.onclick = function(e) {
+        if (!e.target.matches('.dropbtn')) {
+        var myDropdown = document.getElementById("myDropdown");
+          if (myDropdown.classList.contains('show')) {
+            myDropdown.classList.remove('show');
+          }
+        }
+      }
+      </script>
+    {% block body %}
+      Body text
+    {% endblock %}
 </body>
 </html>

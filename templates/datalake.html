@@ -1,45 +1,25 @@
-<!DOCTYPE html>
-<html lang="en">
-<!--https://bootsnipp.com/snippets/4MN2R-->
-<head>
+{% extends 'base.html' %}
+{% block head %}
+
     <meta charset="utf-8">
     <meta name="robots" content="noindex, nofollow">
 
     <title>Datalake</title>
-</head>
-<body>
-    <!DOCTYPE html>
-<html lang="en">
-<head>
-  <title>Datalake</title>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
-  
-</head>
-<body>
 
-<header>
-<!--  <div class="logo">DATA FILES</div>-->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"> -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
 
-<!--<div class="text-left" style="margin: 10px">-->
-<!--    <h4> <a href="{{ url_for('index') }}" style="margin-left: 20px"> Home </a> </h4>-->
-<!--</div>-->
+{% endblock %}
 
-<div class="text-right" style="margin-right: 1000px">
-    <h4> <a href="{{ url_for('index') }}"> Home </a> </h4>
-</div>
-
-    <h3 style="margin: 28px">Data Files</h3>
-</header>
+{% block body %}
 
 <ul>
     {% for key in files_dict.keys() %}
      <li style="margin-top: 20px">{{key}}
          {% for val in files_dict[key] %}
            <ul style="margin-top: 5px">
-                <a href="/return-files/{{val}}" target="blank"><button class='btn-link'> {{ val }} </button></a>
+                <a href="/return-files/{{val}}" target="blank"><button type="button" class="btn btn-link"> {{ val }} </button></a>
            </ul>{% endfor %}</li>
     {% endfor %}
 </ul>
@@ -58,5 +38,6 @@
 #element2 {float:left;}
  </style>
 
-</body>
+
 </html>
+{% endblock %}

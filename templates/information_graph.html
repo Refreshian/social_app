@@ -1,17 +1,18 @@
-<!DOCTYPE html>
-<html lang='en-US' xmlns="http://www.w3.org/1999/html" xmlns="http://www.w3.org/1999/html"
-      xmlns="http://www.w3.org/1999/html">
-  <head>
+{% extends 'base.html' %}
+{% block head %}
+
     <link rel="stylesheet" href="/static/css/multi-checkbox-select.css" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Information stream in {{ theme }} </title>
-<!--    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous">-->
-      <!--https://www.highcharts.com/blog/chartchooser/network-graph-categorical-relationship/-->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.min.js"></script>
+
     <script type="text/javascript" src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
-    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css"/>
+
+    <!-- Add icon library -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+
     <style>
   body {
     margin: 0;
@@ -147,128 +148,142 @@ display: inline;
     height: 800px;
 }
 
-    </style>
+#input-group-prepend {
+  flex: 0 0 auto; 
+  display: flex;
+  align-items: center;
+}
 
-  </head>
-    <div class="text-right" style="margin-left: 1500px">
-    <h4> <a href="{{ url_for('index') }}"> Home </a> </h4>
-</div>
-  <body class="embed">
-{% for message in get_flashed_messages() %}
-  <div class="alert alert-warning alert-dismissible fade show" role="alert" style="color: red;">
-    {{ message }}
-  </div>
-{% endfor %}
+#input-group { 
+  display: flex;
+  align-items: center;
+  padding: .25rem;
+  border: 1px solid #ddd;
+  border-radius: .25rem;
+}
 
-<form action="/information_graph" method="POST" style="margin-top: 30px">
-    <select name="file_choose" class="form-select-sm" aria-label="Пример выбора по умолчанию">
-    <option selected>select File</option>
-        {% for i in range(0, len_files) %}
-            <option value="{{ files[i] }}">{{ files[i] }}</option>
-        {% endfor %}
-    </select>
-    <!--    <input type="hidden" name="filename" value="{{ files[i] }}">-->
-    <input type="text" name="daterange" value="01/01/2022 - 01/12/2022" />
-    <script>
-        $(function() {
-          $('input[name="daterange"]').daterangepicker({
-            opens: 'left'
-          }, function(start, end, label) {
-            console.log("A new date selection was made: " + start.format('YYYY-MM-DD') + ' to ' + end.format('YYYY-MM-DD'));
-          });
-        });
-        </script>
-   <div style = "padding: 10px 0px 10px;">
-               <div class = "col-lg-6" style="width: 1000px">
-                  <div class = "input-group">
-                     <input type = "text" class = "form-control" name="text_search" size="61" placeholder="Поиск по графу: платон или система взимания платы, пробка или затор">
-<!--                     <span class = "input-group-btn">-->
-<!--                        <button class = "btn btn-default" type = "button" name="send">-->
-<!--                           Запуск-->
-<!--                        </button>-->
-<!--                     </span>-->
-                        <input type="checkbox" class="form-check-input" id="dropdownCheck1" name="posts">
-                        <label class="form-check-label" for="dropdownCheck2">
-                        Посты
-                      </label>
-                      <input type="checkbox" class="form-check-input" id="dropdownCheck2" name="reposts">
-                        <label class="form-check-label" for="dropdownCheck2">
-                        Репосты
-                      </label>
-                      <input type="checkbox" class="form-check-input" id="dropdownCheck3" name="smi">
-                        <label class="form-check-label" for="dropdownCheck2">
-                        СМИ
-                      </label>
-                  </div>
-               </div>
-       <div>
+#input-group > #form-control { 
+  flex: 1 1 auto;
+  border: 0;
+  background: transparent;
+  padding: 0 .25rem;
+}
 
-        <p style="scroll-margin-top: -5px"> Найдено {{ data.len_messages }} текстов и {{ data.authors_count }} авторов </p>
-        <select id="example" name="hub_select" id="hub_select"></select>
-        <script src="https://code.jquery.com/jquery-3.6.0.slim.min.js"></script>
-        <script src="/static/js/multiCheckboxSelect.js"></script>
-        <script>
-        var data = JSON.parse('{{ data|tojson }}');
-        var options = {
-            placeholder: 'Выбрать источник',
-            entryName: 'Источник',
-            data: data.data_hub,
-            multiple: true
-        }
+</style>
 
-        $('#example').multiCheckboxSelect(options)
+{% endblock %}
 
-        </script>
-        <script>
-        try {
-          fetch(new Request("https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js", { method: 'HEAD', mode: 'no-cors' })).then(function(response) {
-            return true;
-          }).catch(function(e) {
-            var carbonScript = document.createElement("script");
-            carbonScript.src = "//cdn.carbonads.com/carbon.js?serve=CK7DKKQU&placement=wwwjqueryscriptnet";
-            carbonScript.id = "_carbonads_js";
-            document.getElementById("carbon-block").appendChild(carbonScript);
-          });
-        } catch (error) {
-          console.log(error);
-        }
-        </script>
-        <script type="text/javascript">
+{% block body %}
 
-          var _gaq = _gaq || [];
-          _gaq.push(['_setAccount', 'UA-36251023-1']);
-          _gaq.push(['_setDomainName', 'jqueryscript.net']);
-          _gaq.push(['_trackPageview']);
+  <figure>
+    {% for message in get_flashed_messages() %}
+    <div class="alert alert-warning alert-dismissible fade show" role="alert" style="color: red;">
+      {{ message }}
+      </div>
+    {% endfor %}
 
-          (function() {
-            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-          })();
+    <form action="/information_graph" method="POST">
+      <div class="input-group">
+        <div class="input-group-prepend" id="button-addon3" style="height: 28px;">
+          <select name="file_choose" class="form-select-sm">
+            <option selected>select File</option>
+                {% for i in range(0, len_files) %}
+                    <option value="{{ files[i] }}">{{ files[i] }}</option>
+                {% endfor %}
+            </select>
+            <input type="text" name="daterange" value="01/01/2022 - 01/12/2022"/>
+            <input type="submit" href="{{ url_for('information_graph') }}" name="send" value="Запуск">
+          </div>
+        </div>
+        <div class="input-group">
+          <div class="input-group-prepend" id="button-addon3">
+                <div>
+                <input type = "text" name="text_search" size="30" placeholder="поиск по тексту" style="margin-top: 5px;">
+                </div>
+                <div style="margin-top: 5px;">
+                  <input type="checkbox" class="form-check-input" id="dropdownCheck1" name="posts">
+                  <label class="form-check-label" for="dropdownCheck2">
+                  Посты
+                </label>
+                <input type="checkbox" class="form-check-input" id="dropdownCheck2" name="reposts">
+                  <label class="form-check-label" for="dropdownCheck2">
+                  Репосты
+                </label>
+                <input type="checkbox" class="form-check-input" id="dropdownCheck3" name="smi">
+                  <label class="form-check-label" for="dropdownCheck2">
+                  СМИ
+                </label>
+            </div>
+          </div>
 
-        </script>
-       </div>
-   </div>
-        <input type="text" class="inline" placeholder="Анализировать текстов (от)" name="text_min" id="text_min">
-        <input type="text" class="inline" placeholder="Анализировать текстов (до)" name="text_max" id="text_max">
+          <div class="input-group">
+            <div class="input-group-prepend" id="button-addon3">
+              <div style="margin-top: 5px;"></div>
+                <input type="text" class="inline" placeholder="текстов (от)" name="text_min" id="text_min" style="width: 75px;">
+                <input type="text" class="inline" placeholder="текстов (до)" name="text_max" id="text_max" style="width: 75px;">
+              </div>
+            </div>
+          </div>
+        {% if data.len_messages %}
+          <p style="scroll-margin-top: -10px"> {{ data.len_messages }} текста(ов) и {{ data.authors_count }} автора(ов) </p>
+        {% endif %}
+        {% if data.data_hub %}
+          <select id="example" name="hub_select" id="hub_select"></select>
+        {% endif %}
+    </form>
 
-       <input type="submit" class="btn btn-light" href="{{ url_for('tonality_landscape') }}" name="send" value="Запуск">
+<script>
+  $(function() {
+    $('input[name="daterange"]').daterangepicker({
+      opens: 'left'
+    }, function(start, end, label) {
+      console.log("A new date selection was made: " + start.format('YYYY-MM-DD') + ' to ' + end.format('YYYY-MM-DD'));
+    });
+  });
+  </script>
 
-</form>
-<!--<div class="highcharts-samples-navbar">-->
-  <a href="https://www.highcharts.com" class="sample-navbar-brand" title="Highcharts">
-    <img src="https://wp-assets.highcharts.com/svg/highcharts-logo-padded.svg" alt="Highcharts">
-  </a>
-<!--  <div class="actions">-->
-<!--    <a href="/samples/highcharts/chartchooser/categorical-relationship-network-graph?codepen" id="codepenButton" target="_blank" rel="noreferrer noopener" class="action">-->
-<!--      <i class="fab fa-codepen"></i> CodePen-->
-<!--    </a>-->
+<script src="https://code.jquery.com/jquery-3.6.0.slim.min.js"></script>
+<script src="/static/js/multiCheckboxSelect.js"></script>
+<script>
+var data = JSON.parse('{{ data|tojson }}');
+var options = {
+    placeholder: 'Выбрать источник',
+    entryName: 'Источник',
+    data: data.data_hub,
+    multiple: true
+}
 
-<!--      <a href="https://jsfiddle.net/gh/get/library/pure/highcharts/highcharts/tree/master/samples/highcharts/chartchooser/categorical-relationship-network-graph" class="action" target="_blank" rel="noreferrer noopener">-->
-<!--      <i class="fab fa-jsfiddle"></i> jsFiddle-->
-<!--    </a>-->
-<!--  </div>-->
-<!--</div>-->
+$('#example').multiCheckboxSelect(options)
+</script>
+
+<script>
+try {
+  fetch(new Request("https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js", { method: 'HEAD', mode: 'no-cors' })).then(function(response) {
+    return true;
+  }).catch(function(e) {
+    var carbonScript = document.createElement("script");
+    carbonScript.src = "//cdn.carbonads.com/carbon.js?serve=CK7DKKQU&placement=wwwjqueryscriptnet";
+    carbonScript.id = "_carbonads_js";
+    document.getElementById("carbon-block").appendChild(carbonScript);
+  });
+} catch (error) {
+  console.log(error);
+}
+</script>
+
+<script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-36251023-1']);
+  _gaq.push(['_setDomainName', 'jqueryscript.net']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+
 <script src="https://code.highcharts.com/highcharts.js"></script>
 <script src="https://code.highcharts.com/modules/networkgraph.js"></script>
 <script src="https://code.highcharts.com/modules/accessibility.js"></script>
@@ -408,5 +423,122 @@ Highcharts.chart("container", {
           } catch (e) {}
     });
     </script>
-  </body>
+</figure>
+
+<!-- scatter graph -->
+
+<style>
+  #container2 {
+    max-width: auto;
+    min-height: 800px;
+    max-height: auto;
+    margin: auto;
+    margin-top: 50px;
+  }
+  </style>
+  
+<figure>
+  <div id="container2"></div>
+  <script>
+    Highcharts.setOptions({
+  colors: ['#058DC7', '#50B432', '#ED561B', '#DDDF00', '#24CBE5', '#64E572', '#FF9655', '#FFF263', '#6AF9C4']
+});
+
+var date = JSON.parse('{{ multivalue_dict|tojson }}');
+const series = [];
+
+for (var key in date) {
+
+  var data = []
+  for (i = 0; i < date[key].length; i++) 
+      data.push({ x:date[key][i][0], y: date[key][i][1], name: date[key][i][2], url: date[key][i][3], 
+      hub: key})
+
+  series.push({
+    name: key,
+    data: data})
+}
+
+
+const colors = Highcharts.getOptions().colors.map(
+  c => Highcharts.color(c).setOpacity(0.8).get()
+);
+
+Highcharts.chart("container2", {
+  chart: {
+    type: "scatter",
+    zoomType: "xy"
+  },
+  colors,
+  title: {
+    text: "Media Graph"
+  },
+
+  xAxis: {   
+  type: 'datetime',
+         dateTimeLabelFormats: { 
+            year: '%b'
+         },
+
+    title: {
+      text: "Дата / время"
+    },
+
+  },
+  yAxis: {
+    title: {
+      text: "Аудитория"
+    },
+    labels: {
+      format: "{value}"
+    }
+  },
+  legend: {
+    enabled: true
+  },
+  plotOptions: {
+    series: {
+      dataGrouping: {
+          enabled: true
+      }
+  },
+    scatter: {
+      marker: {
+        radius: 4.5,
+        symbol: "circle",
+        states: {
+          hover: {
+            enabled: true,
+            lineColor: "rgb(100,100,100)"
+          }
+        }
+      },
+      cursor: 'pointer',
+        point: {
+            events: {
+                click: function () {
+                  window.open(this.options.url);
+                }
+            }
+        }
+    }
+},
+tooltip: {
+    useHTML: true,
+    headerFormat: "<table>",
+    pointFormat:
+    "<tr><th>Источник:</th><td>{point.hub}</td></tr>" +
+    "<tr><th>Автор:</th><td>{point.name}</td></tr>" + 
+    "<tr><th>Аудитория:</th><td>{point.y}</td></tr>",
+    // "<tr><th>Публикаций за период:</th><td>{point.z}</td></tr>",
+    footerFormat: "</table>",
+    followPointer: true,
+    shared: true,
+},
+  series: series
+});
+
+</script>
+</figure>
 </html>
+{% endblock %}

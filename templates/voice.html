@@ -1,12 +1,21 @@
-<!DOCTYPE html>
-<html lang='en-US'>
+{% extends 'base.html' %}
+{% block head %}
   <head>
-    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous">
+    <!-- <link rel=stylesheet href=//cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css /> -->
+    <!-- <link rel=stylesheet href=https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css /> -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.min.js"></script>
+
     <script type="text/javascript" src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+
+    <!-- Add icon library -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    
+      
     <style>
+
   body {
     margin: 0;
     color: #313131;
@@ -144,7 +153,9 @@
     </style>
 
   </head>
+  {% endblock %}
 
+  {% block body %}
 <body>
 
 {% for message in get_flashed_messages() %}
@@ -153,37 +164,33 @@
   </div>
 {% endfor %}
 
+
 {%  if data %}
-    <form action="/voice" method="POST" style="margin-top: 30px">
-      <div class="container">
-        <div class="row my-3">
-            <div class="text-right">
-                <h5> <a href="{{ url_for('index') }}"> Home </a> </h5>
-            </div>
-        </div>
-            <select name="file_choose" class="form-select-sm" aria-label="Пример выбора по умолчанию">
-            <option selected>select File</option>
-                {% for i in range(0, len_files) %}
-                    <option value="{{ files[i] }}">{{ files[i] }}</option>
-                {% endfor %}
-            </select>
-            <input type="text" name="daterange" value="01/01/2022 - 01/12/2022" />
-                <div class = "input-group" style="margin-top: 5px">
-                    <input type = "text" class = "form-control" name="text_search" size="61" placeholder="Добавьте объекты: втб или vtb, карта или кредитка">
-                </div>
 
-                <script>
-                  $(function() {
-                    $('input[name="daterange"]').daterangepicker({
-                      opens: 'left'
-                    }, function(start, end, label) {
-                      console.log("A new date selection was made: " + start.format('YYYY-MM-DD') + ' to ' + end.format('YYYY-MM-DD'));
-                    });
-                  });
-                  </script>
-            <input type="submit" class="btn btn-light" href="{{ url_for('voice') }}" name="send" value="Запуск" style="margin-top: 5px">
-        </form>
-
+    <form action="/voice" method="POST" style="margin-top: 10px">
+      <div class="container" style="margin-left:10px">
+          <select name="file_choose" class="form-select-sm">
+          <option selected>select File</option>
+              {% for i in range(0, len_files) %}
+                  <option value="{{ files[i] }}">{{ files[i] }}</option>
+              {% endfor %}
+          </select>
+          <input type="text" name="daterange" value="01/01/2022 - 01/12/2022" />
+          <input type="submit" class="btn btn-light" href="{{ url_for('voice') }}" name="send" value="Запуск" style="margin-left: 2px;">
+          <div class = "input-group" style="margin-top: 5px; width: 400px;">
+              <input type = "text" class = "form-control" name="text_search" placeholder="Поиск по текстам">
+          </div>
+      </form>
+        
+      <script>
+        $(function() {
+          $('input[name="daterange"]').daterangepicker({
+            opens: 'left'
+          }, function(start, end, label) {
+            console.log("A new date selection was made: " + start.format('YYYY-MM-DD') + ' to ' + end.format('YYYY-MM-DD'));
+          });
+        });
+        </script>
 
     <script src="https://code.highcharts.com/highcharts.js"></script>
     <script src="https://code.highcharts.com/highcharts-more.js"></script>
@@ -193,12 +200,9 @@
 
     <!-- Flag sprites service provided by Martijn Lafeber,
       https://github.com/lafeber/world-flags-sprite/blob/master/LICENSE -->
-    <link
-      rel="stylesheet"
-      href="https://github.com/downloads/lafeber/world-flags-sprite/flags16.css"
-    />
+    <link rel="stylesheet" href="https://github.com/downloads/lafeber/world-flags-sprite/flags16.css"/>
 
-    <div id="container"></div>
+    <div id="container" style="margin-top: 25px;"></div>
 
 
         <script>
@@ -332,7 +336,7 @@
         </script>
 
 
-            <style>
+<style>
   body {
     margin: 0;
     color: #313131;
@@ -473,32 +477,12 @@
     margin-top: 250px;
     margin-block-end: 100px;
   }
+
+  .
     </style>
 
   </body>
-  <body class="embed">
 
-{#<div class="highcharts-samples-navbar">#}
-{#  <a href="https://www.highcharts.com" class="sample-navbar-brand" title="Highcharts">#}
-{#    <img src="https://wp-assets.highcharts.com/svg/highcharts-logo-padded.svg" alt="Highcharts">#}
-{#  </a>#}
-{#  <div class="actions">#}
-{#    <a href="/samples/highcharts/chartchooser/categorical-comparison-treemap?codepen" id="codepenButton" target="_blank" rel="noreferrer noopener" class="action">#}
-{#      <i class="fab fa-codepen"></i> CodePen#}
-{#    </a>#}
-{##}
-{#      <a href="https://jsfiddle.net/gh/get/library/pure/highcharts/highcharts/tree/master/samples/highcharts/chartchooser/categorical-comparison-treemap" class="action" target="_blank" rel="noreferrer noopener">#}
-{#      <i class="fab fa-jsfiddle"></i> jsFiddle#}
-{#    </a>#}
-{#  </div>#}
-{#</div>#}
-
-
-<script src="https://code.highcharts.com/highcharts.js"></script>
-<script src="https://code.highcharts.com/modules/treemap.js"></script>
-<script src="https://code.highcharts.com/modules/data.js"></script>
-<script src="https://code.highcharts.com/modules/exporting.js"></script>
-<script src="https://code.highcharts.com/modules/accessibility.js"></script>
 
 <script src="https://code.highcharts.com/modules/sankey.js"></script>
 
@@ -509,11 +493,6 @@
     var data_list = []
     var data_sunkey = []
 
-    {#for (i = 0; i < data.fin_list.length; i++) {#}
-    {#    data_list.push(#}
-    {#        data.fin_list[i]#}
-    {#    )#}
-    {#}#}
 
     for (i = 0; i < data.list_sunkey_hubs.length; i++) {
         data_list.push(
@@ -639,17 +618,10 @@
         {% endif %}
 
 {%  if not data %}
-  {% for message in get_flashed_messages() %}
-    <div class="alert alert-warning alert-dismissible fade show" role="alert" style="color: red;">
-      {{ message }}
-    </div>
-  {% endfor %}
-    <form action="/voice" method="POST" style="margin-top: 30px">
-      <div class="container">
+
+  <form action="/voice" method="POST" style="margin-top: 10px">
+        <div class="container" style="margin-left:10px">
         <div class="row my-3">
-            <div class="text-right">
-                <h5> <a href="{{ url_for('index') }}"> Home </a> </h5>
-            </div>
         </div>
             <select name="file_choose" class="form-select-sm" aria-label="Пример выбора по умолчанию">
             <option selected>select File</option>
@@ -658,8 +630,8 @@
                 {% endfor %}
             </select>
             <input type="text" name="daterange" value="01/01/2022 - 01/12/2022" />
-                <div class = "input-group" style="margin-top: 5px">
-                    <input type = "text" class = "form-control" name="text_search" size="61" placeholder="Добавьте объекты: втб или vtb, карта или кредитка">
+                <div class = "input-group" style="margin-top: 5px; width: 700px;">
+                    <input type = "text" class = "form-control" name="text_search" placeholder="Поиск по текстам">
                 </div>
                 <script>
                   $(function() {
@@ -692,22 +664,16 @@
 
         <script>
         const country = {
-        Norway: "no",
-        "United States": "us",
-        Germany: "de",
-        Canada: "ca",
-        Austria: "at"
+        Norway: "nos",
+        "United States": "usc",
+        Germany: "des",
+        "Soviet Union": "ussr",
+        Canada: "ats"
     };
 
     Highcharts.chart("container", {
         colors: ["#FFD700", "#C0C0C0", "#CD7F32"],
-        {#country: {#}
-        {#    Norway: "no",#}
-        {#    "United States": "us",#}
-        {#    Germany: "de",#}
-        {#    Canada: "ca",#}
-        {#    Austria: "at"#}
-        {#},#}
+
         chart: {
             type: "column",
             inverted: true,
@@ -751,7 +717,8 @@
                 }
             },
             lineWidth: 0,
-            categories: ["Norway", "United States", "Germany", "Canada", "Austria"],
+            categories: ["Norway", "Soviet Union + Russia", "United States", "Germany", "Canada"],
+            /* https://www.topendsports.com/events/winter/medal-tally/all-time.htm */
             accessibility: {
                 description: "Countries"
             }
@@ -781,15 +748,15 @@
         series: [
             {
                 name: "Gold medals",
-                data: [132, 105, 92, 73, 64]
+                data: [148, 133, 113, 112, 77]
             },
             {
                 name: "Silver medals",
-                data: [125, 110, 86, 64, 81]
+                data: [133, 114, 122, 104, 72]
             },
             {
                 name: "Bronze medals",
-                data: [111, 90, 60, 62, 87]
+                data: [124, 117, 95, 70, 76]
             }
         ]
     });
@@ -826,5 +793,6 @@
         </script>
         {% endif %}
 
-    </body>
+
 </html>
+{% endblock %}

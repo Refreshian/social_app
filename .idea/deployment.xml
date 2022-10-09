@@ -6,7 +6,7 @@
       <paths name="VCS">
         <serverdata>
           <mappings>
-            <mapping deploy="/home/centos/social_app" local="$PROJECT_DIR$" web="/" />
+            <mapping deploy="/home/centos" local="$PROJECT_DIR$" web="/" />
           </mappings>
         </serverdata>
       </paths>

@@ -28,6 +28,8 @@ import nltk
 from nltk.corpus import stopwords
 nltk.download('stopwords')
 
+from fastapi import FastAPI
+
 
 from flask import Flask, render_template, request, redirect, url_for, send_file, send_from_directory, flash
 
@@ -36,7 +38,7 @@ app.debug = True
 app.secret_key = 'a(d)fs#$T12eF#4-key'
 
 # path_to_files = "/home/centos/home/centos/social_app/data"
-path_to_files = 'C:\\Users\\NUC\\PycharmProjects\\clusters\\data'
+path_to_files = 'D:\\social_app_vsc\\data'
 session = flask.session
 app.config['UPLOAD_FOLDER'] = path_to_files
 
@@ -44,8 +46,10 @@ regex = re.compile("[А-Яа-яЁё:=!\).\()A-z\_\%/|0-9]+")
 def words_only(text, regex=regex):
     try:
         return " ".join(regex.findall(text))
-    except:
+    except: 
         return ""
+
+
 
 
 @app.route("/")
@@ -127,6 +131,10 @@ def tonality():
             [x.strip() for x in request.values.to_dict(flat=True)['daterange'].split('-')[1].split('/')][::-1])))
         df_meta = df_meta.loc[data_stop: data_start]
 
+        if df_meta.shape[0] == 0:  # если по запросу найдено 0 сообщений - вывести flash
+            flash('По запросу найдено 0 сообщений (проверьте даты и/или другие условия)')
+            return redirect(url_for('tonality_landscape'))
+
         # негатив и позитив по площадкам (соцмедиа)
         hub_neg = Counter(df_meta[(df_meta['hubtype'] != 'Новости') & (df_meta['toneMark'] == 1)]['hub'].values)
         hub_pos = Counter(df_meta[(df_meta['hubtype'] != 'Новости') & (df_meta['toneMark'] == -1)]['hub'].values)
@@ -160,7 +168,7 @@ def tonality():
         neg2 = [x[1] for x in neg_authors]
         neg3 = [x[2] for x in neg_authors]
 
-        neg2 = [[x.replace('"', '') for x in group] for group in neg2]  # для корректной передачи в html java
+        neg2 = [[x.replace('"', '') for x in group] for group in neg2]  # для корректной передачи в javaS
 
         pos_authors = []
         for i in range(len(list(hub_pos.keys()))):
@@ -175,12 +183,30 @@ def tonality():
         pos2 = [x[1] for x in pos_authors]
         pos3 = [x[2] for x in pos_authors]
 
-        pos2 = [[x.replace('"', '') for x in group] for group in pos2]  # для корректной передачи в html java
+        pos2 = [[x.replace('"', '') for x in group] for group in pos2]  # для корректной передачи в javaS
 
         # neg_authors = {}
         # for i in range(len(list(hub_neg.keys()))):
         #     neg_authors[list(hub_neg.keys())[i]] = dict(
         #         Counter(neg_tabl[neg_tabl['hub'] == list(hub_neg.keys())[i]]['fullname'].values))
+
+        percent_pos = len(data_tonality_hub_neg_data)
+        percent_neg = len(data_tonality_hub_pos_data)
+
+        if percent_pos == 0 and percent_neg == 0: # если не было негативных или позитивных сообщений
+            flash('Не найдено негативных и позитивных сообщений!')
+            return redirect(url_for('tonality_landscape'))
+
+        if percent_neg == 0:
+            percent_neg = 0
+            percent_pos = 100
+        elif percent_pos == 0:
+            percent_neg = 100
+        else:
+            count_sum = percent_pos + percent_neg
+            percent_pos = np.round((percent_pos / count_sum), 1)*100
+            percent_neg = np.round((percent_neg / count_sum), 1)*100
+
 
         data = {
             "neg_list_data": neg_list_data,
@@ -204,8 +230,13 @@ def tonality():
 
             "pos1": pos1,
             "pos2": pos2,
-            "pos3": pos3
+            "pos3": pos3, 
+
+            "percent_pos": percent_pos,
+            "percent_neg": percent_neg,
         }
+
+
 
         date = data_start + ' : ' + data_stop
 
@@ -271,9 +302,9 @@ def information_graph():
         df = pd.DataFrame(dict_train)
 
         # метаданные
-        columns = ['text', 'er', 'timeCreate', 'type', 'hubtype', 'hub', 'audienceCount']
+        columns = ['text', 'er', 'timeCreate', 'type', 'hubtype', 'hub', 'audienceCount', 'url']
         # columns.remove('text')
-        df_meta = pd.concat([pd.DataFrame.from_records(df['authorObject'].values), df[columns]], axis=1)
+        df_meta = pd.concat([pd.DataFrame.from_records(df['authorObject'].values).drop('url', axis=1), df[columns]], axis=1)
         # timestamp to date
         df_meta['timeCreate'] = [datetime.datetime.fromtimestamp(x).strftime('%Y-%m-%d %H:%M:%S') for x in
                                  df_meta['timeCreate'].values]
@@ -386,8 +417,34 @@ def information_graph():
             "all_hubs": all_hubs
         }
 
+        ### second graph
+        df_meta.fullname.fillna("СМИ", inplace=True)
+        df_meta = df_meta[['fullname', 'url', 'er', 'hub', 'audienceCount', 'hubtype', 'timeCreate']]
+        df_meta = df_meta
+        # время к unix формату для js 
+        df_meta['timeCreate'] = [int((datetime.datetime.strptime(x, '%Y-%m-%d %H:%M:%S') - 
+                                    datetime.datetime(1970, 1, 1)).total_seconds() * 1000) for x in df_meta['timeCreate'].values]
+        
+        unique_hubs = list(df_meta['hub'].unique())
+        # https://stackoverflow.com/questions/17426292/how-to-create-a-dictionary-of-two-pandas-dataframe-columns
+        multivalue_dict = defaultdict(list)
+        authors_name = [] # список с именами авторов
+        authors_urls = [] # список urls текстов
+
+        for i in range(len(unique_hubs)):
+            
+            df = df_meta[df_meta['hub'] == unique_hubs[i]]
+            
+            for idx,row in df.iterrows():
+                multivalue_dict[row['hub']].append([row['timeCreate'], row['audienceCount'], 
+                words_only(row['fullname']), row['url']])
+            
+
+        multivalue_dict = dict(multivalue_dict)
+
         return render_template('information_graph.html', theme=theme, len_files=len_files, files=json_files,
-                               data=data)
+                               data=data, multivalue_dict=multivalue_dict)
+
 
     if 'send' in request.values.to_dict(flat=True) and request.values.to_dict(flat=True)['text_search'] != '':
 
@@ -400,9 +457,9 @@ def information_graph():
         df = pd.DataFrame(dict_train)
 
         # метаданные
-        columns = ['text', 'er', 'timeCreate', 'hub', 'audienceCount', 'type']
+        columns = ['text', 'er', 'timeCreate', 'hub', 'audienceCount', 'type', 'hubtype', 'url']
         # columns.remove('text')
-        df_meta = pd.concat([pd.DataFrame.from_records(df['authorObject'].values), df[columns]], axis=1)
+        df_meta = pd.concat([pd.DataFrame.from_records(df['authorObject'].values).drop('url', axis=1), df[columns]], axis=1)
         # timestamp to date
         df_meta['timeCreate'] = [datetime.datetime.fromtimestamp(x).strftime('%Y-%m-%d %H:%M:%S') for x in
                                  df_meta['timeCreate'].values]
@@ -465,7 +522,7 @@ def information_graph():
                 flash('По запросу найдено 0 сообщений')
                 return redirect(url_for('information_graph'))
 
-            df_data_rep = df_meta[['fullname', 'url', 'author_type', 'text', 'audienceCount', 'hub', 'er', 'type']]
+            df_data_rep = df_meta[['fullname', 'url', 'author_type', 'text', 'audienceCount', 'hub', 'er', 'type']].sort_index(axis=0)
             df_rep_auth = list(df_data_rep['fullname'].values)
             data_rep_er = list(df_data_rep['er'].values)
             data_audience = list(df_data_rep['audienceCount'].values)
@@ -507,8 +564,33 @@ def information_graph():
                 "all_hubs": all_hubs
             }
 
+            ### second graph
+            df_meta.fullname.fillna("СМИ", inplace=True)
+            df_meta = df_meta[['fullname', 'url', 'er', 'hub', 'audienceCount', 'hubtype', 'timeCreate']]
+            df_meta = df_meta
+            # время к unix формату для js 
+            df_meta['timeCreate'] = [int((datetime.datetime.strptime(x, '%Y-%m-%d %H:%M:%S') - 
+                                        datetime.datetime(1970, 1, 1)).total_seconds() * 1000) for x in df_meta['timeCreate'].values]
+            
+            unique_hubs = list(df_meta['hub'].unique())
+            # https://stackoverflow.com/questions/17426292/how-to-create-a-dictionary-of-two-pandas-dataframe-columns
+            multivalue_dict = defaultdict(list)
+            authors_name = [] # список с именами авторов
+            authors_urls = [] # список urls текстов
+
+            for i in range(len(unique_hubs)):
+                
+                df = df_meta[df_meta['hub'] == unique_hubs[i]]
+                
+                for idx,row in df.iterrows():
+                    multivalue_dict[row['hub']].append([row['timeCreate'], row['audienceCount'], 
+                    words_only(row['fullname']), row['url']])
+                
+
+            multivalue_dict = dict(multivalue_dict)
+
             return render_template('information_graph.html', theme=theme, len_files=len_files, files=json_files,
-                                   data=data)
+                                   data=data, multivalue_dict=multivalue_dict)
 
         df_meta_filter = df_meta
         df_meta = pd.DataFrame()
@@ -569,7 +651,7 @@ def information_graph():
             flash('По запросу найдено 0 сообщений')
             return redirect(url_for('information_graph'))
 
-        df_data_rep = df_meta[['fullname', 'url', 'author_type', 'text', 'er', 'hub', 'audienceCount']]
+        df_data_rep = df_meta[['fullname', 'url', 'author_type', 'text', 'er', 'hub', 'audienceCount']].sort_index(axis=0)
         df_rep_auth = list(df_data_rep['fullname'].values)
         data_rep_er = list(df_data_rep['er'].values)
         all_hubs = list(df_data_rep['hub'].values)
@@ -610,20 +692,48 @@ def information_graph():
             "all_hubs": all_hubs
         }
 
+        ### second graph
+        df_meta.fullname.fillna("СМИ", inplace=True)
+        df_meta = df_meta[['fullname', 'url', 'er', 'hub', 'audienceCount', 'hubtype', 'timeCreate']]
+        df_meta = df_meta
+        # время к unix формату для js 
+        df_meta['timeCreate'] = [int((datetime.datetime.strptime(x, '%Y-%m-%d %H:%M:%S') - 
+                                    datetime.datetime(1970, 1, 1)).total_seconds() * 1000) for x in df_meta['timeCreate'].values]
+        
+        unique_hubs = list(df_meta['hub'].unique())
+        # https://stackoverflow.com/questions/17426292/how-to-create-a-dictionary-of-two-pandas-dataframe-columns
+        multivalue_dict = defaultdict(list)
+        for i in range(len(unique_hubs)):
+            
+            df = df_meta[df_meta['hub'] == unique_hubs[i]]
+            for idx,row in df.iterrows():
+                multivalue_dict[row['hub']].append([row['timeCreate'], row['audienceCount'], 
+                words_only(row['fullname']), row['url']])
+
+        multivalue_dict = dict(multivalue_dict)
+
         return render_template('information_graph.html', theme=theme, len_files=len_files, files=json_files,
-                               data=data)
+                               data=data, multivalue_dict=multivalue_dict)
 
     os.chdir(path_to_files)
     json_files = [pos_json for pos_json in os.listdir(os.getcwd()) if pos_json.endswith('.json')]
-    len_files = len(json_files)
+    len_files = len(json_files) 
 
+    # data
     data = {
         "df_rep_auth": ['A', 'G', 'K', 'M'],
-        "data_rep_audience": ['11', '12', '15', '8']
+        "data_rep_audience": [11, 12, 15, 8],
+        "data_rep_er": [25, 29, 34, 18],
+        "authors_count": 4,
+        }
 
-    }
+    multivalue_dict = {"facebook.com": [[1660516886000, 1875, 'Константин Лазарев', 'http://www.facebook.com/100000048821988/posts/5774082512603319'], 
+        [1660133911000, 187779, 'Стартапы и бизнес', 'http://www.facebook.com/169345889757001/posts/5710404055651129']], 
+        "ok.ru": [[1660511171000, 604, 'Валерий Жадан', 'http://www.ok.ru/group/52118611624148/topic/155101385145812'], 
+        [1660510999000, 695, 'Валерий Жадан', 'http://www.ok.ru/group/52074498621689/topic/154563267526905']]}
 
-    return render_template('information_graph.html', len_files=len_files, files=json_files, data=data)
+    return render_template('information_graph.html', len_files=len_files, files=json_files, data=data, 
+                            multivalue_dict=multivalue_dict)
 
 
 @app.route('/media_rating', methods=['GET', 'POST'], endpoint='media_rating')
@@ -666,6 +776,10 @@ def media_rating():
             [x.strip() for x in request.values.to_dict(flat=True)['daterange'].split('-')[1].split('/')][::-1])))
         df_meta = df_meta.loc[data_stop: data_start]
         df_meta['timeCreate'] = list(df_meta.index)
+
+        if df_meta.shape[0] == 0:  # если по запросу найдено 0 сообщений - вывести flash
+            flash('По запросу найдено 0 сообщений (проверьте даты и/или другие условия)')
+            return redirect(url_for('media_rating')) 
 
         if set(df_meta['hub'].values) == {"telegram.org"}:
 
@@ -971,7 +1085,7 @@ def voice():
 
             df_meta = df_meta.loc[data_stop:data_start]  # фильтрация данных по дате в календарике
 
-        if df.shape[0] == 0:  # если по запросу найдено 0 сообщений - вывести flash
+        if df_meta.shape[0] == 0:  # если по запросу найдено 0 сообщений - вывести flash
             flash('По запросу найдено 0 сообщений')
             return redirect(url_for('voice'))
 
@@ -1312,96 +1426,94 @@ def mension():
 
 @app.route('/test', methods=["GET", "POST"])
 def test():
-    data = {'negative': [10, 0, 0], 'positive': [5, 0, 0], 'neutral': [30, 5, 3],
 
-            'list_sunkey_hubs': [['facebook.com', 'Платон', 10], ['vk.com', 'Платон', 7], ['ok.ru', 'Платон', 6],
-                                 ['bmwclub.ru', 'Платон', 4], ['yaplakal.com', 'Платон', 4],
-                                 ['youtu be.com', 'Платон', 4], ['zen.yandex.ru', 'Платон', 2],
-                                 ['twitter.com', 'Платон', 2], ['telegram.org', 'Платон', 2], ['2ch.hk', 'Платон', 1],
-                                 ['ati.su', 'Платон', 1], ['tinkoff.ru', 'Платон', 1],
-                                 ['novosti-kosmonavtiki.ru', 'Платон', 1], ['o k.ru', 'Ротенберг', 2],
-                                 ['2ch.hk', 'Ротенберг', 1], ['vk.com', 'Ротенберг', 1],
-                                 ['instagram.com', 'Ротенберг', 1], ['ati.su', 'Путин', 1], ['ok.ru', 'Путин', 1],
-                                 ['twitter.com', 'Путин', 1]],
+        os.chdir(path_to_files)
+        with io.open('Skillfactory_08.08.2022-14.08.2022_62fd379ed1d6b47ce97bcdf3.json', encoding='utf-8', mode='r') as train_file:
+            dict_train = json.load(train_file)
 
-            'list_sunkey_post_type': [['Платон', 'Комментарий', 27], ['Платон', 'Пост', 16],
-                                      ['Платон', 'Репост с дополнением', 2], ['Ротенберг', 'Комментарий', 4],
-                                      ['Ротенберг', 'Пост', 1], ['Путин', 'Пост', 2], ['Путин ', 'Комментарий', 1]],
+        df = pd.DataFrame(dict_train)
 
-            'tonality_by_post_type': [['Комментарий', 'Neutral', 16], ['Комментарий', 'Negative', 6],
-                                      ['Комментарий', 'Positive', 5], ['Пост', 'Neutral', 13], ['Пост', 'Negative', 3],
-                                      ['Репост с дополнением', 'Neutral', 1], ['Репост с дополнением', 'Negative', 1],
-                                      ['Комментарий', 'Neutral', 16], ['Комментарий', 'Negative', 6],
-                                      ['Комментарий', 'Positive', 5], ['Пост', 'Neutral', 13], ['Пост', 'Negative', 3],
-                                      ['Репост с дополнением', 'Neutral', 1], ['Репост с дополнением', 'Negative', 1],
-                                      ['Комментарий', 'Neutral', 16], ['Комментарий', 'Negative ', 6],
-                                      ['Комментарий', 'Positive', 5], ['Пост', 'Neutral', 13], ['Пост', 'Negative', 3],
-                                      ['Репост с дополнением', 'Neutral', 1], ['Репост с дополнением', 'Negative', 1],
-                                      ['Комментарий', 'Neutral', 4], ['Пост', 'Neutral', 1],
-                                      ['Комментарий', 'Neutral', 4], ['Пост', 'Neutral', 1], ['Пост', 'Neutral', 2],
-                                      ['Комментарий', 'Neutral', 1], ['Пост', 'Neutral', 2],
-                                      ['Комментарий', 'Neutral', 1]],
+        # метаданные
+        columns = ['text', 'er', 'timeCreate', 'type', 'hubtype', 'hub', 'audienceCount', 'url']
+        # columns.remove('text')
+        df_meta = pd.concat([pd.DataFrame.from_records(df['authorObject'].values).drop('url', axis=1), df[columns]], axis=1)
+        # timestamp to date
+        df_meta['timeCreate'] = [datetime.datetime.fromtimestamp(x).strftime('%Y-%m-%d %H:%M:%S') for x in
+                                 df_meta['timeCreate'].values]
+        df_meta = df_meta.set_index(['timeCreate'])  # индекс - время создания поста
 
-            'fin_list': [['facebook.com', 'Платон', 10], ['vk.com', 'Платон', 7], ['ok.ru', 'Платон', 6],
-                         ['bmwclub.ru', 'Платон', 4], ['yaplakal.com', 'Платон', 4], ['youtube.com', 'Платон', 4],
-                         ['zen.yandex.ru', 'Платон', 2], ['twitter.com', 'Платон', 2], ['telegram.org', 'Платон', 2],
-                         ['2ch.hk', 'Платон', 1], ['ati.su', 'Платон', 1], ['tinkoff.ru', 'Платон', 1],
-                         ['novosti-kosmonavtiki.ru', 'Платон', 1], ['ok.ru', 'Ротенберг', 2],
-                         ['2ch.hk', 'Ротенберг', 1], ['vk.com', 'Ротенберг', 1], ['instagram.com', 'Ротенберг', 1],
-                         ['ati.su', 'Путин', 1], ['ok.ru', 'Путин', 1], ['twitter.com', 'Путин', 1],
-                         ['Платон', 'Комментарий', 27], ['Платон', 'Пост', 16], ['Платон', 'Репост с дополнением', 2],
-                         ['Ротенберг', 'Комментарий', 4], ['Ротенберг', 'Пост', 1], ['Путин', 'Пост', 2],
-                         ['Путин', 'Комментарий', 1], ['Комментарий ', 'Neutral', 16], ['Комментарий', 'Negative', 6],
-                         ['Комментарий', 'Positive', 5], ['Пост', 'Neutral', 13], ['Пост', 'Negative', 3],
-                         ['Репост с дополнением', 'Neutral', 1], ['Репост с дополнением', 'Negative', 1],
-                         ['Комментарий', 'Neutral', 16], ['Комментарий', 'Negative', 6], ['Комментарий', 'Positive', 5],
-                         ['Пост', 'Neutral', 13], ['Пост', 'Negative', 3], ['Репост с дополнением', 'Neutral', 1],
-                         ['Репост с дополнением', 'Negative', 1], ['Комментарий', 'Neutral', 16],
-                         ['Комме нтарий', 'Negative', 6], ['Комментарий', 'Positive', 5], ['Пост', 'Neutral', 13],
-                         ['Пост', 'Negative', 3], ['Репост с дополнением', 'Neutral', 1],
-                         ['Репост с до полнением', 'Negative', 1], ['Комментарий', 'Neutral', 4],
-                         ['Пост', 'Neutral', 1], ['Комментарий', 'Neutral', 4], ['Пост', 'Neutral', 1],
-                         ['Пост', 'Neutral', 2], ['Комментарий', 'Neutral', 1], ['Пост', 'Neutral', 2],
-                         ['Комментарий', 'Neutral', 1]],
+        df_meta['timeCreate'] =  df_meta.index
 
-            'names': ['Платон', 'Ротенберг', 'Путин'],
+        df_data_rep = df_meta[['fullname', 'url', 'author_type', 'text', 'er', 'hub', 'audienceCount']]
 
-            'hubs': [x[0] for x in [['facebook.com', 'Платон', 10], ['vk.com', 'Платон', 7], ['ok.ru', 'Платон', 6],
-                                    ['bmwclub.ru', 'Платон', 4], ['yaplakal.com', 'Платон', 4],
-                                    ['youtu be.com', 'Платон', 4], ['zen.yandex.ru', 'Платон', 2],
-                                    ['twitter.com', 'Платон', 2], ['telegram.org', 'Платон', 2],
-                                    ['2ch.hk', 'Платон', 1], ['ati.su', 'Платон', 1], ['tinkoff.ru', 'Платон', 1],
-                                    ['novosti-kosmonavtiki.ru', 'Платон', 1], ['o k.ru', 'Ротенберг', 2],
-                                    ['2ch.hk', 'Ротенберг', 1], ['vk.com', 'Ротенберг', 1],
-                                    ['instagram.com', 'Ротенберг', 1], ['ati.su', 'Путин', 1], ['ok.ru', 'Путин', 1],
-                                    ['twitter.com', 'Путин', 1]]],
+        if 'smi' in request.values.to_dict(flat=True):
+            df_rep_auth = list(df_data_rep['hub'].values)
+        else:
+            df_rep_auth = list(df_data_rep['fullname'].values)
+        data_rep_er = list(df_data_rep['er'].values)
+ 
+        all_hubs = list(df_data_rep['hub'].values)
+        all_hubs = [words_only(x) for x in all_hubs]
+        df_rep_auth = [words_only(x) for x in df_rep_auth]
+        data_audience = list(df_data_rep['audienceCount'].values)
 
-            'type_message': list(set([x[1] for x in [['Платон', 'Комментарий', 27], ['Платон', 'Пост', 16],
-                                                     ['Платон', 'Репост с дополнением', 2],
-                                                     ['Ротенберг', 'Комментарий', 4],
-                                                     ['Ротенберг', 'Пост', 1], ['Путин', 'Пост', 2],
-                                                     ['Путин ', 'Комментарий', 1]]])),
+        for i in range(len(df_rep_auth) - 1):
+            if df_rep_auth[i + 1] == df_rep_auth[i]:
+                df_rep_auth[i + 1] = df_rep_auth[i] + ' '
 
-            'tonality': list(set([x[1] for x in [['Комментарий', 'Neutral', 16], ['Комментарий', 'Negative', 6],
-                                                 ['Комментарий', 'Positive', 5], ['Пост', 'Neutral', 13],
-                                                 ['Пост', 'Negative', 3], ['Репост с дополнением', 'Neutral', 1],
-                                                 ['Репост с дополнением', 'Negative', 1],
-                                                 ['Комментарий', 'Neutral', 16], ['Комментарий', 'Negative', 6],
-                                                 ['Комментарий', 'Positive', 5], ['Пост', 'Neutral', 13],
-                                                 ['Пост', 'Negative', 3], ['Репост с дополнением', 'Neutral', 1],
-                                                 ['Репост с дополнением', 'Negative', 1],
-                                                 ['Комментарий', 'Neutral', 16], ['Комментарий', 'Negative ', 6],
-                                                 ['Комментарий', 'Positive', 5], ['Пост', 'Neutral', 13],
-                                                 ['Пост', 'Negative', 3], ['Репост с дополнением', 'Neutral', 1],
-                                                 ['Репост с дополнением', 'Negative', 1], ['Комментарий', 'Neutral', 4],
-                                                 ['Пост', 'Neutral', 1], ['Комментарий', 'Neutral', 4],
-                                                 ['Пост', 'Neutral', 1], ['Пост', 'Neutral', 2],
-                                                 ['Комментарий', 'Neutral', 1], ['Пост', 'Neutral', 2],
-                                                 ['Комментарий', 'Neutral', 1]]]))
+        f = lambda A, n=1: [[df_rep_auth[i], df_rep_auth[i + n]] for i in range(0, len(df_rep_auth) - 1,
+                                                                                n)]  # ф-ия разбивки авторов на последовательности [[1, 2], [2,3]...]
+        df_rep_auth_inverse = f(df_rep_auth.append(df_rep_auth[-1]))
 
-            }
 
-    return render_template('test.html', data=data)
+        er = [int(z) for z in [int(y) for y in [5 if x == 0 else x + 5 for x in data_rep_er]]]
+        er = [numpy.mean(er) if x > 5 * numpy.mean(er) else x for x in er]
+        er[0] = int(numpy.max(er) + 2)
+
+        hubs = Counter(df_meta['hub'].values)
+        hubs = hubs.most_common()
+        hubs = [x[0] for x in hubs]
+        hubs = [words_only(x) for x in hubs]
+        data_audience = [int(z) for z in [int(y) for y in [5 if x == 0 else x for x in data_audience]]]
+
+        data = {
+            "df_rep_auth": df_rep_auth_inverse,
+            "data_rep_er": er,
+            "data_rep_audience": data_audience,
+            "data_authors": df_rep_auth,
+            "authors_count": len(set(df_rep_auth)),
+            "len_messages": df_meta.shape[0],
+            "data_hub": hubs,
+            "all_hubs": all_hubs
+        }
+
+        df_meta.fullname.fillna("СМИ", inplace=True)
+        df_meta = df_meta[['fullname', 'url', 'er', 'hub', 'audienceCount', 'hubtype', 'timeCreate']]
+        df_meta = df_meta
+        # время к unix формату для js 
+        df_meta['timeCreate'] = [int((datetime.datetime.strptime(x, '%Y-%m-%d %H:%M:%S') - 
+                                    datetime.datetime(1970, 1, 1)).total_seconds() * 1000) for x in df_meta['timeCreate'].values]
+        
+        unique_hubs = list(df_meta['hub'].unique())
+        # https://stackoverflow.com/questions/17426292/how-to-create-a-dictionary-of-two-pandas-dataframe-columns
+        multivalue_dict = defaultdict(list)
+        authors_name = [] # список с именами авторов
+        authors_urls = [] # список urls текстов
+
+        for i in range(len(unique_hubs)):
+            
+            df = df_meta[df_meta['hub'] == unique_hubs[i]]
+            
+            for idx,row in df.iterrows():
+                multivalue_dict[row['hub']].append([row['timeCreate'], row['audienceCount'], 
+                words_only(row['fullname']), row['url']])
+            
+
+        multivalue_dict = dict(multivalue_dict)
+        
+        print(multivalue_dict)
+        return render_template('test.html', multivalue_dict=multivalue_dict)
+
 
 
 if __name__ == "__main__":

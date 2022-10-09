@@ -3,7 +3,7 @@
   <component name="WebServers">
     <option name="servers">
       <webServer id="4713ad60-f691-40a6-b092-10a71b60bec8" name="VCS" url="http://localhost">
-        <fileTransfer rootFolder="/home/centos" accessType="SFTP" host="146.185.208.165" port="22" sshConfigId="90350919-823f-4427-8d3b-f933a5ec1cfd" sshConfig="centos@146.185.208.165:22 key" keyPair="true">
+        <fileTransfer rootFolder="/home/centos" accessType="SFTP" host="146.185.208.165" port="22" sshConfigId="00f71df3-ecca-4055-be2d-243b9f78b579" sshConfig="centos@146.185.208.165:22 key" keyPair="true">
           <advancedOptions>
             <advancedOptions dataProtectionLevel="Private" keepAliveTimeout="0" passiveMode="true" shareSSLContext="true" />
           </advancedOptions>
