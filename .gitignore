@@ -27,7 +27,7 @@ test2.py
 test.py
 node_modules/
 2.0.0rc0
-data/
+.data/
 
 
 # Installer logs
@@ -57,4 +57,5 @@ coverage.xml
 *.pot
 
 # Sphinx documentation
-docs/_build/./data/universal-sentence-encoder-multilingual_3/variables/variables.data-00000-of-00001
+docs/_build/
+./data/universal-sentence-encoder-multilingual_3/variables/variables.data-00000-of-00001
