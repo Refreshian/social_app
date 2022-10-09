@@ -1,3 +1,4 @@
+# find ./* -size +100M | cat >> .gitignore
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -56,4 +57,4 @@ coverage.xml
 *.pot
 
 # Sphinx documentation
-docs/_build/
+docs/_build/./data/universal-sentence-encoder-multilingual_3/variables/variables.data-00000-of-00001
