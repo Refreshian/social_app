@@ -64,3 +64,5 @@ docs/_build/
 ./data/universal-sentence-encoder-multilingual_3/variables/variables.data-00000-of-00001
 /data/universal-sentence-encoder-multilingual_3/variables/variables.data-00000-of-00001
 /data
+variables/variables.data-00000-of-00001
+.variables/variables.data-00000-of-00001
