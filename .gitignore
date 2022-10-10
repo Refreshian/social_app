@@ -1,4 +1,5 @@
 # find ./* -size +100M | cat >> .gitignore
+# data/universal-sentence-encoder-multilingual_3/variables/variables.data-00000-of-00001
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -29,7 +30,7 @@ node_modules/
 2.0.0rc0
 .data
 /data
-
+data
 
 # Installer logs
 pip-log.txt
