@@ -1,0 +1,3 @@
+*.data filter=lfs diff=lfs merge=lfs -text
+data/universal-sentence-encoder-multilingual_3/variables/variables.data-00000-of-00001 filter=lfs diff=lfs merge=lfs -text
+.data/universal-sentence-encoder-multilingual_3/variables/variables.data-00000-of-00001 filter=lfs diff=lfs merge=lfs -text
