@@ -1,15 +1,304 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <title>authors</title>
+{% extends "base.html" %} {% block head %}
 
-<link href="/static/css/bootstrap.min.css" rel="stylesheet">
+<meta charset="utf-8" />
+<title>authors clustering</title>
 
-<script src="/static/js/jquery-1.11.2.min.js"></script>
+<!-- <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css" rel="stylesheet"> -->
+
+<script src="https://code.jquery.com/jquery-1.11.2.min.js"></script>
 <script src="/static/js/d3.min.js"></script>
-<script src="/static/js/bootstrap.min.js"></script>
-<script src="/static/js/tsne.js"></script>
+<!-- <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script> -->
+
+<!-- <script type="text/javascript" src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"></script> -->
+<script
+  type="text/javascript"
+  src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"
+></script>
+<script
+  type="text/javascript"
+  src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"
+></script>
+<link
+  rel="stylesheet"
+  type="text/css"
+  href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css"
+/>
+
+<!-- <link rel="stylesheet" type="text/css" href="/static/cdn/media_rating/8.0.1_normalize.min.css"></link> -->
+
+<!-- <link rel="stylesheet" type="text/css" href="/static/css/font-awesome.min.css"></link>
+<link rel="stylesheet" type="text/css" href="/static/css/styles.css" media="all"></link> -->
+
+<link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+/>
+
+{% endblock %} {% block title %} Authors Clustering {% endblock %} {% block body
+%} {% if not names %}
+
+<style>
+  .highcharts-figure {
+    display: flex;
+    justify-content: center;
+  }
+
+  .container {
+    display: flex;
+    justify-content: center;
+  }
+</style>
+
+<figure class="highcharts-figure">
+  <div class="container">
+    <form action="/authors" method="POST">
+      <select
+        name="file_choose"
+        title="thing"
+        class="form-select-sm"
+        aria-label="Пример выбора по умолчанию"
+      >
+        <option selected>select File</option>
+        {% for i in range(0, len_files) %}
+        <!-- <option value="{{ files[i] }}">{{ files[i] }}</option> -->
+        <option value="{{ files[i] }}" name="{{ files[i] }}">
+          {{ files[i] }}
+        </option>
+        {% endfor %}
+      </select>
+      <!--    <input type="hidden" name="filename" value="{{ files[i] }}">-->
+      <input type="text" name="daterange" value="01/01/2022 - 01/12/2022" />
+      <input
+        type="submit"
+        class="btn btn-outline-dark"
+        href="{{ url_for('authors') }}"
+        name="send"
+        value="Ок"
+      />
+    </form>
+  </div>
+</figure>
+
+<script>
+  $(function () {
+    $('input[name="daterange"]').daterangepicker(
+      {
+        opens: 'left',
+      },
+      function (start, end, label) {
+        console.log(
+          'A new date selection was made: ' +
+            start.format('YYYY-MM-DD') +
+            ' to ' +
+            end.format('YYYY-MM-DD')
+        );
+      }
+    );
+  });
+</script>
+
+{% elif names %}
+
+<style>
+  /* .highcharts-figure {
+      display:flex;
+      justify-content: center;
+  } */
+
+  .container {
+    display: flex;
+    justify-content: center;
+  }
+</style>
+
+<figure class="highcharts-figure">
+  <div class="container">
+    <form action="/authors" method="POST">
+      <select
+        name="file_choose"
+        title="thing"
+        class="form-select-sm"
+        aria-label="Пример выбора по умолчанию"
+      >
+        <option selected>select File</option>
+        {% for i in range(0, len_files) %}
+        <!-- <option value="{{ files[i] }}">{{ files[i] }}</option> -->
+        <option value="{{ files[i] }}" name="{{ files[i] }}">
+          {{ files[i] }}
+        </option>
+        {% endfor %}
+      </select>
+      <!--    <input type="hidden" name="filename" value="{{ files[i] }}">-->
+      <!-- <input type="text" name="daterange" value="01/01/2022 - 01/12/2022" /> -->
+      <input
+        type="submit"
+        class="btn btn-outline-dark"
+        href="{{ url_for('authors') }}"
+        name="send"
+        value="Ок"
+      />
+    </form>
+  </div>
+</figure>
+
+<!-- <script>
+  $(function () {
+    $('input[name="daterange"]').daterangepicker(
+      {
+        opens: 'left',
+      },
+      function (start, end, label) {
+        console.log(
+          'A new date selection was made: ' +
+            start.format('YYYY-MM-DD') +
+            ' to ' +
+            end.format('YYYY-MM-DD')
+        );
+      }
+    );
+  });
+</script> -->
+
+<h1 style="text-align: center">Кластеризация авторов</h1>
+<div style="text-align: center">
+  Кластеризация находит близких по смыслу авторов на основе анализа их текстов
+</div>
+
+<style>
+  .container2 {
+    display: flex;
+    justify-content: center;
+    min-width: auto;
+    max-width: auto;
+    min-height: auto;
+    max-height: auto;
+    margin-right: auto;
+    margin-left: auto;
+    margin-top: auto;
+  }
+
+  .container3 {
+    display: flex;
+    justify-content: center;
+    min-width: auto;
+    max-width: auto;
+    min-height: auto;
+    max-height: auto;
+    margin-right: auto;
+    margin-left: auto;
+    margin-top: auto;
+  }
+
+  .container4 {
+    display: flex;
+    justify-content: center;
+    min-width: 80%;
+    max-width: auto;
+    min-height: 80%;
+    max-height: auto;
+    margin-right: auto;
+    margin-left: auto;
+    margin-top: auto;
+  }
+
+  .textarea {
+    width: 400px;
+    margin: 10px;
+    display: inline-block;
+    text-align: left;
+  }
+  .container {
+    margin: auto;
+    text-align: center;
+  }
+
+  .btn-green {
+    background-color: #4caf50; /* Green */
+    border: none;
+    color: white;
+    padding: 15px 32px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+  }
+
+  .btn-red {
+    background-color: #f44336; /* Green */
+    border: none;
+    color: white;
+    padding: 15px 32px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+  }
+
+  .hide {
+    display: none;
+  }
+</style>
+
+<!-- <textarea id="inlabels" style="width: 200px; height:100px">
+  {{ names }}
+  </textarea>
+
+  <textarea id="incsv" style="width: 200px; height:100px;">
+    {{ coord }}
+    </textarea> -->
+
+<div class="hide">
+  <div>
+    <b style="text-align: left"> Имена авторов: </b><br />
+    <textarea id="inlabels" style="width: 200px; height: 100px">
+    {{ names }}
+    </textarea>
+  </div>
+  <div>
+    <b style="text-align: right">Координаты в пространстве:</b><br />
+    <textarea id="incsv" style="width: 200px; height: 100px">
+    {{ coord }}
+    </textarea>
+  </div>
+</div>
+
+<!-- <div class="container2">
+<div class="row">
+  <div class="col-sm-4">
+<br>
+Learning rate: <input type="text" id="lrtxt" maxlength="10" value="10" style="width:40px;">
+Perplexity: <input type="text" id="perptxt" maxlength="10" value="30" style="width:40px;">
+  </div>
+  </div>
+</div> -->
+
+<br />
+<div class="container3">
+  <button
+    type="button"
+    id="inbut"
+    class="btn-green"
+    style="width: 200px; height: 50px"
+  >
+    Старт!
+  </button>
+  <button
+    type="button"
+    id="stopbut"
+    class="btn-red"
+    style="width: 200px; height: 50px"
+  >
+    Стоп
+  </button>
+  <br />
+  <div id="cost" style="text-align: left; font-family: Impact"></div>
+</div>
+
+<div class="container4">
+  <div id="embed"></div>
+</div>
+
+<script src="../static/js/tsne.js"></script>
 
 <!-- Tracking code -->
 <script type="text/javascript">
@@ -17,281 +306,222 @@
   _gaq.push(['_setAccount', 'UA-3698471-13']);
   _gaq.push(['_trackPageview']);
 
-  (function() {
-    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  (function () {
+    var ga = document.createElement('script');
+    ga.type = 'text/javascript';
+    ga.async = true;
+    ga.src =
+      ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') +
+      '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0];
+    s.parentNode.insertBefore(ga, s);
   })();
 </script>
 
 <style>
-svg {
-  border: 1px solid #333;
-  margin-top: 20px;
-}
-body {
-  font-size: 16px;
-}
+  svg {
+    border: 1px solid #333;
+    margin-top: 20px;
+  }
+  body {
+    font-size: 16px;
+  }
 </style>
 
 <script>
+  var T, opt;
 
-var T, opt;
+  var Y; // tsne result stored here
+  var data;
 
-var Y; // tsne result stored here
-var data;
+  function updateEmbedding() {
+    // get current solution
+    var Y = T.getSolution();
+    // move the groups accordingly
+    gs.attr('transform', function (d, i) {
+      return (
+        'translate(' +
+        (Y[i][0] * 20 * ss + tx + 400) +
+        ',' +
+        (Y[i][1] * 20 * ss + ty + 400) +
+        ')'
+      );
+    });
+  }
 
-function updateEmbedding() {
+  var svg;
+  function initEmbedding() {
+    $('#embed').empty();
+    var div = d3.select('#embed');
+    svg = div
+      .append('svg') // svg is global
+      .attr('width', 1140)
+      .attr('height', 1140);
+  }
 
-  // get current solution
-  var Y = T.getSolution();
-  // move the groups accordingly
-  gs.attr("transform", function(d, i) { return "translate(" +
-                                          ((Y[i][0]*20*ss + tx) + 400) + "," +
-                                          ((Y[i][1]*20*ss + ty) + 400) + ")"; });
+  var gs;
+  var cs;
+  var ts;
+  function drawEmbedding() {
+    gs = svg.selectAll('.b').data(data).enter().append('g').attr('class', 'u');
 
-}
-
-var svg;
-function initEmbedding() {
-  $("#embed").empty();
-  var div = d3.select("#embed");
-  svg = div.append("svg") // svg is global
-    .attr("width", 1140)
-    .attr("height", 1140);
-}
-
-var gs;
-var cs;
-var ts;
-function drawEmbedding() {
-
-    gs = svg.selectAll(".b")
-      .data(data)
-      .enter().append("g")
-      .attr("class", "u");
-
-    cs = gs.append("circle")
-      .attr("cx", 0)
-      .attr("cy", 0)
-      .attr("r", 5)
+    cs = gs
+      .append('circle')
+      .attr('cx', 0)
+      .attr('cy', 0)
+      .attr('r', 5)
       .attr('stroke-width', 1)
       .attr('stroke', 'black')
       .attr('fill', 'rgb(100,100,255)');
 
-    if(labels.length > 0) {
-      ts = gs.append("text")
-        .attr("text-anchor", "top")
-        .attr("transform", "translate(5, -5)")
-        .attr("font-size", 12)
-        .attr("fill", "#333")
-        .text(function(d,i) { return labels[i]; });
+    if (labels.length > 0) {
+      ts = gs
+        .append('text')
+        .attr('text-anchor', 'top')
+        .attr('transform', 'translate(5, -5)')
+        .attr('font-size', 12)
+        .attr('fill', '#333')
+        .text(function (d, i) {
+          return labels[i];
+        });
     }
 
-    var zoomListener = d3.behavior.zoom()
+    var zoomListener = d3.behavior
+      .zoom()
       .scaleExtent([0.1, 10])
-      .center([0,0])
-      .on("zoom", zoomHandler);
+      .center([0, 0])
+      .on('zoom', zoomHandler);
     zoomListener(svg);
-}
-
-var tx=0, ty=0;
-var ss=1;
-function zoomHandler() {
-  tx = d3.event.translate[0];
-  ty = d3.event.translate[1];
-  ss = d3.event.scale;
-}
-
-var stepnum = 0;
-function step() {
-  if(dotrain) {
-    var cost = T.step(); // do a few steps
-    $("#cost").html("iteration " + T.iter + ", cost: " + cost);
   }
-  updateEmbedding();
-}
 
-labels = [];
-function preProLabels() {
-  var txt = $("#inlabels").val();
-  var lines = txt.split("\n");
+  var tx = 0,
+    ty = 0;
+  var ss = 1;
+  function zoomHandler() {
+    tx = d3.event.translate[0];
+    ty = d3.event.translate[1];
+    ss = d3.event.scale;
+  }
+
+  var stepnum = 0;
+  function step() {
+    if (dotrain) {
+      var cost = T.step(); // do a few steps
+      // $("#cost").html("iteration " + T.iter + ", cost: " + cost);
+      $('#cost').html('iteration ' + T.iter);
+    }
+    updateEmbedding();
+  }
+
   labels = [];
-  for(var i=0;i<lines.length;i++) {
-    var row = lines[i];
-    if (! /\S/.test(row)) {
-      // row is empty and only has whitespace
-      continue;
-    }
-    labels.push(row);
-  }
-}
-
-dataok = false;
-function preProData() {
-  var txt = $("#incsv").val();
-  var d = $("#deltxt").val();
-  var lines = txt.split("\n");
-  var raw_data = [];
-  var dlen = -1;
-  dataok = true;
-  for(var i=0;i<lines.length;i++) {
-    var row = lines[i];
-    if (! /\S/.test(row)) {
-      // row is empty and only has whitespace
-      continue;
-    }
-    var cells = row.split(d);
-    var data_point = [];
-    for(var j=0;j<cells.length;j++) {
-      if(cells[j].length !== 0) {
-        data_point.push(parseFloat(cells[j]));
+  function preProLabels() {
+    var txt = $('#inlabels').val();
+    var lines = txt.replace(/^\s+/, '').split('\n');
+    labels = [];
+    for (var i = 0; i < lines.length; i++) {
+      var row = lines[i];
+      if (!/\S/.test(row)) {
+        // row is empty and only has whitespace
+        continue;
       }
+      labels.push(row);
     }
-    var dl = data_point.length;
-    if(i === 0) { dlen = dl; }
-    if(dlen !== dl) {
-      // TROUBLE. Not all same length.
-      console.log('TROUBLE: row ' + i + ' has bad length ' + dlen);
-      dlen = dl; // hmmm... 
-      dataok = false;
-    }
-    raw_data.push(data_point);
   }
-  data = raw_data; // set global
-}
 
-dotrain = true;
-iid = -1;
-$(window).load(function() {
+  dataok = false;
+  function preProData() {
+    var txt = $('#incsv').val();
+    // $("#deltxt").val()
+    var d = ',';
+    var lines = txt.split('\n');
+    var raw_data = [];
+    var dlen = -1;
+    dataok = true;
+    for (var i = 0; i < lines.length; i++) {
+      var row = lines[i];
+      if (!/\S/.test(row)) {
+        // row is empty and only has whitespace
+        continue;
+      }
+      var cells = row.split(d);
+      var data_point = [];
+      for (var j = 0; j < cells.length; j++) {
+        if (cells[j].length !== 0) {
+          data_point.push(parseFloat(cells[j]));
+        }
+      }
+      var dl = data_point.length;
+      if (i === 0) {
+        dlen = dl;
+      }
+      if (dlen !== dl) {
+        // TROUBLE. Not all same length.
+        console.log('TROUBLE: row ' + i + ' has bad length ' + dlen);
+        dlen = dl; // hmmm...
+        dataok = false;
+      }
+      raw_data.push(data_point);
+    }
+    data = raw_data; // set global
+  }
 
-  initEmbedding();
-
-  $("#stopbut").click(function() {
-    dotrain = false;
-  });
-
-  $("#inbut").click(function() {
-
+  dotrain = true;
+  iid = -1;
+  $(window).load(function () {
     initEmbedding();
-    preProData();
-    if(!dataok) { // this is so terrible... globals everywhere #fasthacking #sosorry
-      alert('there was trouble with data, probably rows had different number of elements. See console for output.');
-      return;
-    }
-    preProLabels();
-    if(labels.length > 0) {
-      if(data.length !== labels.length) {
-        alert('number of rows in Text labels ('+labels.length+') does not match number of rows in Data (' + data.length + ')! Aborting.');
+
+    $('#stopbut').click(function () {
+      dotrain = false;
+    });
+
+    $('#inbut').click(function () {
+      initEmbedding();
+      preProData();
+      if (!dataok) {
+        // this is so terrible... globals everywhere #fasthacking #sosorry
+        alert(
+          'there was trouble with data, probably rows had different number of elements. See console for output.'
+        );
         return;
-      } 
-    }
+      }
+      preProLabels();
+      if (labels.length > 0) {
+        if (data.length !== labels.length) {
+          alert(
+            'number of rows in Text labels (' +
+              labels.length +
+              ') does not match number of rows in Data (' +
+              data.length +
+              ')! Aborting.'
+          );
+          return;
+        }
+      }
 
-    // ok lets do this
-    opt = {epsilon: parseFloat($("#lrtxt").val()), perplexity: parseInt($("#perptxt").val()), dim: data[0].length};
-    T = new tsnejs.tSNE(opt); // create a tSNE instance
+      // ok lets do this
+      // opt = {epsilon: parseFloat($("#lrtxt").val()), perplexity: parseInt($("#perptxt").val()), dim: data[0].length};
+      opt = {
+        epsilon: parseFloat('10'),
+        perplexity: parseInt('30'),
+        dim: data[0].length,
+      };
+      T = new tsnejs.tSNE(opt); // create a tSNE instance
 
-    var dfv = $('input[name=rdata]:checked', '#datatypeform').val();
-    if(dfv === 'raw') {
-      console.log('raw');
-      T.initDataRaw(data);
-    }
-    if(dfv === 'dist') {
-      console.log('dist');
-      T.initDataDist(data);
-    }
-    drawEmbedding();
-    iid = setInterval(step, 10);
-    dotrain = true;
-  
+      // $('input[name=rdata]:checked', '#datatypeform').val()
+      var dfv = 'raw';
+      if (dfv === 'raw') {
+        console.log('raw');
+        T.initDataRaw(data);
+      }
+      if (dfv === 'dist') {
+        console.log('dist');
+        T.initDataDist(data);
+      }
+      drawEmbedding();
+      iid = setInterval(step, 10);
+      dotrain = true;
+    });
   });
-});
-
 </script>
 
-</head>
-
-<body>
-
-<div class="container">
-
-<h1 style="text-align:center;">Кластеризация авторов по смыслам - их текстам</h1>
-<!-- <div>
-Paste your data in CSV format in the Data text box below to embed it with t-SNE in two dimensions. Each row corresponds to a datapoint. You can choose to associate a label with each datapoint (it will be shown as text next to its embedding), and also a group (each group will have its own color in the embedding) (Group not yet implemented). The data can be specified either as an NxD matrix (N = number of datapoints, one per row, D = number of features), in which case a gaussian kernel will be used to compute their distances. Alternatively you can also input some distance matrix yourself.
-
-<br><br>
-Make sure you play with the <b>perplexity</b>, which is data specific. The perplexity is roughly speaking the number of points (note, it must be integer) that each point considers to be its neighbors while it is being embedded. High perplexities therefore enforce more global structure in the embedding, and smaller perplexities will cut up your data cloud on much finer level.
-</div> -->
-</div>
-
-<div class="container">
-  <hr>
-  <div class="row">
-    <div class="col-sm-6">
-      <b>(optional) Text labels:</b><br>
-      <textarea id="inlabels" style="width:100%; height:100px;">
-{{ names }}
-      </textarea>
-    </div>
-    <div class="col-sm-6">
-      <b style="color:#999;">(optional) Data groups:</b><br>
-      <textarea id="ingroup" style="width:100%; height:100px;">not yet implemented</textarea>
-    </div>
-  </div>
-</div>
-
-<div class="container">
-<hr>
-<b>Data:</b><br>
-<textarea id="incsv" style="width:100%; height:200px;">
-{{ coord }}
-</textarea>
-
-</div>
-
-<div class="container">
-<div class="row">
-  <div class="col-sm-4">
-Delimiter (default is comma (CSV)): <input type="text" id="deltxt" maxlength="3" value="," style="width:20px;">
-<br>
-Learning rate: <input type="text" id="lrtxt" maxlength="10" value="10" style="width:40px;">
-Perplexity: <input type="text" id="perptxt" maxlength="10" value="30" style="width:40px;">
-<br>
-  </div>
-  <div class="col-sm-4">
-
-My data is:
-<form action="" id="datatypeform">
-<input type="radio" name="rdata" value="raw" checked> Raw NxD data (each row are features)<br>
-<input type="radio" name="rdata" value="dist"> NxN Distance
-</form>
-  </div>
-  <div class="col-sm-4">
-
-<form action="">
-</form>
-
-  </div>
-</div>
-</div>
-
-<div class="container">
-<button type="button" id="inbut" class="btn btn-primary" style="width:200px; height:50px;">Run t-SNE!</button>
-<button type="button" id="stopbut" class="btn btn-danger" style="width:200px; height:50px;">Stop</button>
-
-<br>
-
-<div id="cost" style="text-align:left; font-family: Impact;"></div>
-<div id="embed"></div>
-
-
-</div>
-
-
-<div class="container">
-  <hr>
-<a href="https://github.com/karpathy/tsnejs">tsnejs documentation</a><br>
-<!--Maintained by <a href="https://twitter.com/karpathy">@karpathy</a>.-->
-</div>
-</body>
-</html>
+{% endif %} {% endblock %}

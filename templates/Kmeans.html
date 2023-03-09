@@ -1,0 +1,581 @@
+
+
+<link rel="stylesheet" href="/static/css/multi-checkbox-select.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.min.js"></script>
+
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css"/>
+
+<!-- Add icon library -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+<link rel="stylesheet" type="text/css" href="../static/css/font-awesome.min.css"></link>
+<link rel="stylesheet" type="text/css" href="../static/css/custom.css"></link>
+<title>Kmeans кластеризация </title>
+
+<style>
+  form {
+      display: inline-block;  
+      width: 100%;
+      text-align: center;
+  }
+</style>
+
+
+{% if data_table %}
+
+  <div class="navbar">
+    <a href="/index" style="margin-left: 15px;">Home</a>
+    <div class="dropdown">
+        <button class="dropbtn" onclick="myFunction()">Menu
+            <i class="fa fa-caret-down"></i>
+            </button>
+            <div class="dropdown-content" id="myDropdown">
+            <a href="{{ url_for('tonality_landscape') }}">Tonality landscape</a>
+            <a href="{{ url_for('information_graph') }}">Information Graph</a>
+            <a href="{{ url_for('media_rating') }}">Media Rating</a>
+            <a href="{{ url_for('voice') }}">Voice of Customer</a>
+            <a href="{{ url_for('competitors') }}">Competitive Environment</a>
+            <a href="{{ url_for('external_factors') }}">External Influence</a>
+            <a href="{{ url_for('datalake') }}">Files</a>
+            <a href="{{ url_for('authors') }}">Author Clustering</a>
+            <a href="{{ url_for('classification') }}"> Text Classification</a>
+        </div>
+    </div> 
+    <a href="#news">FAQ</a>
+    <a class="isDisabled" href="#">Exit</a>
+  <!--            "{{ url_for('index') }}"-->
+    </div>
+
+
+  <script>
+  /* When the user clicks on the button, 
+  toggle between hiding and showing the dropdown content */
+  function myFunction() {
+    document.getElementById("myDropdown").classList.toggle("show");
+  }
+
+  // Close the dropdown if the user clicks outside of it
+  window.onclick = function(e) {
+    if (!e.target.matches('.dropbtn')) {
+    var myDropdown = document.getElementById("myDropdown");
+      if (myDropdown.classList.contains('show')) {
+        myDropdown.classList.remove('show');
+      }
+    }
+  }
+  </script>
+
+  <form action="/Kmeans" method="POST" style="display: inline-block;">
+      {% for message in get_flashed_messages() %}
+        <div class="alert alert-warning alert-dismissible fade show" role="alert" style="color: red;">
+        {{ message }}
+        </div>
+      {% endfor %}
+      <select name="file_choose" class="form-select-sm" style="margin-top: 10px;">
+      <option selected>Выбрать файл</option>
+          {% for i in range(0, len_files) %}
+              <option value="{{ files[i] }}">{{ files[i] }}</option>
+          {% endfor %}
+      </select>
+      <select name="clusters_choose" class="form-select-sm" aria-label="Выбрать число кластеров">
+        <option selected>Выбрать число кластеров</option>
+            {% for i in clusters_len %}
+                <option value="{{ clusters_len[i] }}">{{ clusters_len[i] }}</option>
+            {% endfor %}
+    </select>
+      <input type="text" name="daterange" value="01/01/2022 - 01/12/2022" />
+      <script>
+        $(function() {
+          $('input[name="daterange"]').daterangepicker({
+            opens: 'center',
+            singleDatePicker: false,
+            startDate: new Date(),
+            showDropdowns: true,
+            timePicker: true,
+            timePicker24Hour: true,
+            timePickerIncrement: 10,
+            autoUpdateInput: true,
+          }, function(start, end, label) {
+            console.log("A new date selection was made: " + start.format('YYYY-MM-DD') + ' to ' + end.format('YYYY-MM-DD'));
+          });
+        });
+        </script>
+      <input type="submit" class="btn btn-light" href="{{ url_for('kmeans') }}" name="send" value="Запуск">
+  </form>
+
+  <style>
+      body {
+        margin: 0;
+        color: #313131;
+        font-family: sans-serif;
+        min-width: 300px;
+      }
+      body.toc{
+        font-family: 'Roboto', sans-serif;
+        font-size: 15px;
+      }
+      h1 {
+        font-size: 2em;
+        margin: 0.67em 0;
+        font-weight: bolder;
+        text-transform: uppercase;
+      }
+      h2 {
+        font-size: 1.5em;
+        margin: 0.83em 0;
+        font-weight: bolder;
+        text-transform: uppercase;
+      }
+      h3 {
+        font-size: 1.17em;
+        margin: 1em 0;
+        font-weight: bolder;
+        text-transform: uppercase;
+      }
+      h4 {
+        font-weight: bolder;
+        text-transform: uppercase;
+      }
+    
+      .highcharts-samples-navbar {
+        background-color: #47475C;
+        height: 50px;
+      }
+      .highcharts-samples-navbar .sample-navbar-brand img {
+        height: 66px;
+        margin-top: auto;
+        margin-bottom: auto;
+        height: auto;
+        max-height: 95%;
+        margin-left: 5px;
+        width: auto;
+        max-width: 50vw;
+      }
+      .actions {
+        float: right;
+        max-width: 50vw;
+      }
+      .action {
+        float: right;
+        line-height: 50px;
+        margin-right: 10px;
+        text-decoration: none;
+        font-size: 0.8em;
+      }
+      a.action {
+        color: #424BCD;
+      }
+      a.action:hover {
+        text-decoration: underline;
+      }
+      .action i.fab {
+        font-size: 1.6em;
+      }
+      .action i.fa-jsfiddle {
+        font-weight: 700;
+      }
+      .highcharts-samples-navbar a.action {
+        color: #eeeaea;
+      }
+      .description {
+        max-width: 800px;
+        margin: 1em auto;
+        padding: 10px;
+      }
+      .error {
+        text-align: center;
+        font-style: italic;
+        color: red;
+      }
+    
+      .embed .highcharts-samples-navbar {
+        background-color: #EBEBEB;
+        color: #3d3d3d;
+        height: 50px;
+      }
+      .embed .sample-navbar-brand {
+        display: none;
+      }
+      .embed a.action {
+        color: #424BCD;
+      }
+    
+      .nonav .highcharts-samples-navbar {
+        display: none;
+      }
+    
+      li{
+        max-width: 60rem;
+      }
+    
+      ul, menu, dir {
+        display: block;
+        list-style-type: disc;
+        margin-block-start: 1em;
+        margin-block-end: 1em;
+        margin-inline-start: 0px;
+        margin-inline-end: 0px;
+        padding-inline-start: 40px;
+        line-height: 1.25rem;
+    }
+    
+    @media only screen and (max-width: 800px) {
+      .actions .action {
+        font-size: 0.65em;
+      }
+    }
+    
+    
+    </style>
+        <style>
+          #container {
+        min-width: 1000px;
+        max-width: 1200px;
+        min-height: 600px;
+        margin: 0 auto;
+        margin-top: 50px;
+        margin-bottom: 50px;
+    }
+
+      .highcharts-credits {
+          display: none !important;
+          }
+    
+        </style>
+    
+      </head>
+        
+    </div>
+    
+      <script src="https://code.highcharts.com/highcharts.js"></script>
+      <script src="https://code.highcharts.com/modules/treemap.js"></script>
+      <script src="https://code.highcharts.com/modules/exporting.js"></script>
+      <script src="https://code.highcharts.com/modules/accessibility.js"></script>
+
+      <div id="container"></div>
+      
+    
+  <script>
+  // const color = ["#75E492", "#e987cf", "#75C6E4", "#9375E4", "#e49375"];
+  // https://basicweb.ru/html/html_colors.php
+  // '#FFD700', '#FFFF00', '#FFFFE0', '#FFFACD', '#FAFAD2', '#FFEFD5', '#FFE4B5', 
+  const color = ["#75E492", "#e987cf", "#75C6E4", "#9375E4", "#e49375", '#FFDAB9', '#EEE8AA', '#F0E68C', '#BDB76B', '#CD5C5C', '#F08080', '#FA8072', '#E9967A', '#FFA07A', '#DC143C', '#FF0000', '#B22222', '#8B0000', '#FF7F50', '#FF6347', '#FF4500', '#FF8C00', '#FFA500', '#FFC0CB', '#FFB6C1', '#FF69B4', '#FF1493', '#C71585', '#DB7093', '#FFF8DC', '#FFEBCD', '#FFE4C4', '#FFDEAD', '#F5DEB3', '#DEB887', '#D2B48C', '#BC8F8F', '#F4A460', '#DAA520', '#B8860B', '#CD853F', '#D2691E', '#8B4513', '#A0522D', '#A52A2A', '#800000', '#00FFFF', '#E0FFFF', '#AFEEEE', '#7FFFD4', '#40E0D0', '#48D1CC', '#00CED1', '#5F9EA0', '#4682B4', '#B0C4DE', '#B0E0E6', '#ADD8E6', '#87CEEB', '#87CEFA', '#00BFFF', '#ADFF2F', '#7FFF00', '#7CFC00', '#00FF00', '#32CD32', '#98FB98', '#90EE90', '#00FA9A', '#00FF7F', '#3CB371', '#2E8B57', '#228B22', '#008000', '#006400', '#9ACD32', '#6B8E23', '#808000', '#556B2F', '#66CDAA', '#8FBC8F', '#20B2AA', '#008B8B', '#008080', '#F0FFF0', '#F5FFFA', '#F0FFFF', '#F0F8FF', '#F8F8FF', '#F5F5F5', '#FFF5EE', '#F5F5DC', '#FDF5E6', '#FFFAF0', '#FFFFF0', '#FAEBD7', '#FAF0E6', '#FFF0F5', '#FFE4E1', '#DCDCDC', '#D3D3D3', '#C0C0C0', '#A9A9A9', '#808080', '#696969', '#778899', '#708090', '#2F4F4F']
+  var data = JSON.parse('{{ data|tojson }}');
+  var data_chart = []
+
+  var data_to_table = JSON.parse('{{ data_table|tojson }}');
+  var data_table = []
+
+  for (i = 0; i < data.cluster_names.length; i++) {
+  data_chart.push({
+          id: data.cluster_names[i],
+          name: data.cluster_names[i],
+          value: data.cluster_values[i],
+          color: color[i],
+          })}
+
+  for (i = 0; i < data.hubs_cluster_id.length; i++) {
+      for (j = 0; j < data.hubs_cluster_id[i].length; j++) {
+          data_chart.push({
+              id: data.hubs_cluster_id[i][j],
+              name: data.hubs_cluster_id[i][j],
+              value: data.hubs_cluster_values[i][j],
+              parent: data.cluster_parent[i][j],
+              })
+      }
+      }
+
+  for (i = 0; i < data_to_table.number.length; i++) {
+    data_table.push({
+      number: data_to_table.number[i],
+      texts: data_to_table.texts[i],
+      // url: data_to_table.url[i],
+      hub: data_to_table.hub[i].link(data_to_table.url[i], '_blank'),
+      cluster: data_to_table.cluster[i],
+    })
+  }
+
+
+    Highcharts.chart("container", {
+
+      series: [
+            {
+                type: "treemap",
+                turboThreshold: 100000,
+                layoutAlgorithm: "squarified",
+                allowDrillToNode: true,
+                dataLabels: {
+                    enabled: false
+                },
+                levels: [
+                    {
+                        level: 2,
+                        dataLabels: {
+                            enabled: true,
+                            style: {
+                                textOutline: false
+                            }
+                        },
+                        borderWidth: 3
+                    }
+                ],
+                data: data_chart,
+            }
+        ],
+        title: {
+            text: "Распределение кластеров по источникам"
+        },
+        subtitle: {
+            useHTMl: true,
+          //   text:
+          // 'Source:<a href="https://en.wikipedia.org/wiki/Local_government_in_Fiji">Wikipedia</a>'
+        },
+        tooltip: {
+            useHTML: true,
+            pointFormat: "<b>{point.name}</b>: Сообщений: <b>{point.value}</b>"
+        }
+    });
+
+        </script>
+        <script>
+        window.addEventListener('DOMContentLoaded', (event) => {
+          // /* Script for setting iframe height when on Highcharts.com */
+              try {
+
+                // Allow hiding the description by search param
+                const search = window.location.search;
+                if(search && search.includes('hide-description')){
+                  const description = document.querySelector('.highcharts-description, .highcharts-linked-description');
+                  if(description){
+                    description.style.display = 'none';
+                  }
+                }
+
+                const iframes = window.parent.document.getElementsByTagName('iframe');
+
+                for(let iframe of iframes){
+                  const { height } = iframe.contentWindow.document.body.getBoundingClientRect();
+                  if (
+                    height &&
+                    height > iframe.height
+                  ) {
+                    iframe.setAttribute('height', height);
+                    iframe.style.setProperty('height', height + 25 + 'px')
+                  }
+                }
+              } catch (e) {}
+        });
+
+        </script>
+
+
+<link rel="stylesheet" href="/static/cdn/mension/styles.css">
+<link rel="stylesheet" href="/static/cdn/mension/table-sortable.css">
+<!-- <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha384-vk5WoKIaW/vJyUAd9n/wmopsmNhiy+L2Z+SBxGYnUkunIxVxAv/UtMOhba/xskxh" crossorigin="anonymous"></script> -->
+<style>
+  .page-container {
+margin: 20px auto;
+}
+</style>
+
+
+<div class="page-container">
+<div class="container">
+
+<!-- jQuery_Replace_Demo -->
+<ins class="adsbygoogle"
+style="display:block"
+data-ad-client="ca-pub-2783044520727903"
+data-ad-slot="7325992188"
+data-ad-format="auto"
+data-full-width-responsive="true"></ins>
+<script>
+(adsbygoogle = window.adsbygoogle || []).push({});
+</script></div>
+
+    <div class="row mt-5 mb-3 align-items-center">
+      <div class="col-md-5">
+        <button class="btn btn-primary btn-sm" id="rerender">Сброс</button>
+        <!-- <button class="btn btn-primary btn-sm" id="distory">Distory</button>
+        <button class="btn btn-primary btn-sm" id="refresh">Refresh</button> -->
+    </div>
+
+        <div class="col-md-3">
+          <input type="text" class="form-control" placeholder="Поиск по таблице..." id="searchField">
+        </div>
+        <div class="col-md-2 text-right">
+          <span class="pr-3">Строк на странице:</span>
+        </div>
+        <div class="col-md-2">
+            <div class="d-flex justify-content-end">
+                <select class="custom-select" name="rowsPerPage" id="changeRows">
+                    <option value="5" selected>5</option>
+                    <option value="10">10</option>
+                    <option value="30">30</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                </select>
+            </div>
+        </div>
+    </div>
+    <div id="root"></div>
+
+    </div>
+    </div>
+    <!-- <script src="/static/cdn/mension/data.js"></script> -->
+    <script src="/static/cdn/mension/table-sortable.js"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+
+    <script>
+
+      var data = data_table
+
+      console.log(data_table)
+
+      var columns = {
+          number: '№',
+          texts: 'Текст',
+          // url: 'URL',
+          hub: 'Источник',
+          cluster: 'Кластер',
+      }
+
+      var table = $('#root').tableSortable({
+          data,
+          columns,
+          searchField: '#searchField',
+          responsive: {
+              1100: {
+                  columns: {
+                      formCode: '№',
+                      formName: 'cluster',
+                  },
+              },
+          },
+          rowsPerPage: 5,
+          pagination: true,
+          tableWillMount: () => {
+              console.log('table will mount')
+          },
+          tableDidMount: () => {
+              console.log('table did mount')
+          },
+          tableWillUpdate: () => console.log('table will update'),
+          tableDidUpdate: () => console.log('table did update'),
+          tableWillUnmount: () => console.log('table will unmount'),
+          tableDidUnmount: () => console.log('table did unmount'),
+          onPaginationChange: function(nextPage, setPage) {
+              setPage(nextPage);
+          }
+      });
+
+      $('#changeRows').on('change', function() {
+          table.updateRowsPerPage(parseInt($(this).val(), 10));
+      })
+
+      $('#rerender').click(function() {
+          table.refresh(true);
+      })
+
+      $('#distory').click(function() {
+          table.distroy();
+      })
+
+      $('#refresh').click(function() {
+          table.refresh();
+      })
+
+      $('#setPage2').click(function() {
+          table.setPage(1);
+      })
+    </script>
+
+{% elif not data_table %}
+
+  <div class="navbar">
+    <a href="/index" style="margin-left: 15px;">Home</a>
+    <div class="dropdown">
+        <button class="dropbtn" onclick="myFunction()">Menu
+            <i class="fa fa-caret-down"></i>
+            </button>
+            <div class="dropdown-content" id="myDropdown">
+            <a href="{{ url_for('tonality_landscape') }}">Tonality landscape</a>
+            <a href="{{ url_for('information_graph') }}">Information Graph</a>
+            <a href="{{ url_for('media_rating') }}">Media Rating</a>
+            <a href="{{ url_for('voice') }}">Voice of Customer</a>
+            <a href="{{ url_for('competitors') }}">Competitive Environment</a>
+            <a href="{{ url_for('external_factors') }}">External Influence</a>
+            <a href="{{ url_for('datalake') }}">Files</a>
+            <a href="{{ url_for('authors') }}">Author Clustering</a>
+            <a href="{{ url_for('classification') }}"> Text Classification</a>
+        </div>
+    </div> 
+    <a href="#news">FAQ</a>
+    <a class="isDisabled" href="#">Exit</a>
+  <!--            "{{ url_for('index') }}"-->
+    </div>
+
+
+  <script>
+  /* When the user clicks on the button, 
+  toggle between hiding and showing the dropdown content */
+  function myFunction() {
+    document.getElementById("myDropdown").classList.toggle("show");
+  }
+
+  // Close the dropdown if the user clicks outside of it
+  window.onclick = function(e) {
+    if (!e.target.matches('.dropbtn')) {
+    var myDropdown = document.getElementById("myDropdown");
+      if (myDropdown.classList.contains('show')) {
+        myDropdown.classList.remove('show');
+      }
+    }
+  }
+  </script>
+
+
+  <form action="/Kmeans" method="POST" style="display: inline-block;">
+      {% for message in get_flashed_messages() %}
+        <div class="alert alert-warning alert-dismissible fade show" role="alert" style="color: red;">
+        {{ message }}
+        </div>
+      {% endfor %}
+      <select name="file_choose" class="form-select-sm" style="margin-top: 10px;">
+      <option selected>Выбрать файл</option>
+          {% for i in range(0, len_files) %}
+              <option value="{{ files[i] }}">{{ files[i] }}</option>
+          {% endfor %}
+      </select>
+      <select name="clusters_choose" class="form-select-sm" aria-label="Выбрать число кластеров">
+        <option selected>Выбрать число кластеров</option>
+            {% for i in clusters_len %}
+                <option value="{{ clusters_len[i] }}">{{ clusters_len[i] }}</option>
+            {% endfor %}
+      </select>
+      <!-- <input type="checkbox" id="auto" name="auto" value="auto"> -->
+      <!-- <label for="auto"> Подобрать автоматически</label> -->
+      <input type="text" name="daterange" value="01/01/2022 - 01/12/2022" />
+      <script>
+        $(function() {
+          $('input[name="daterange"]').daterangepicker({
+            opens: 'center',
+            singleDatePicker: false,
+            startDate: new Date(),
+            showDropdowns: true,
+            timePicker: true,
+            timePicker24Hour: true,
+            timePickerIncrement: 10,
+            autoUpdateInput: true,
+          }, function(start, end, label) {
+            console.log("A new date selection was made: " + start.format('YYYY-MM-DD') + ' to ' + end.format('YYYY-MM-DD'));
+          });
+        });
+        </script>
+      <input type="submit" class="btn btn-light" href="{{ url_for('kmeans') }}" name="send" value="Запуск">
+  </form>
+
+{% endif %}

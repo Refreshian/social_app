@@ -12,6 +12,33 @@
 
 {% endblock %}
 
+<style>
+
+body {
+  margin: 32px;
+}
+
+/*.btn {*/
+/*  display: flex;*/
+/*  align-items: center;*/
+/*  background: none;*/
+/*  border: 1px solid lighten(gray, 24%);*/
+/*  height: 48px;*/
+/*  padding: 0 24px 0 16px;*/
+/*  letter-spacing: .25px;*/
+/*  border-radius: 24px;*/
+/*  cursor: pointer*/
+/*  }*/
+
+
+.btn-delete {
+  font-size: 16px;
+  color: red
+  }
+
+
+</style>
+
 {% block body %}
 
 <ul>
@@ -20,6 +47,12 @@
          {% for val in files_dict[key] %}
            <ul style="margin-top: 5px">
                 <a href="/return-files/{{val}}" target="blank"><button type="button" class="btn btn-link"> {{ val }} </button></a>
+<!--                <a href="/delete-file/{{val}}" style="margin-left: 2px; background-color: tomato"> Удалить </a>-->
+               <button class="btn-delete" >
+                  <span class="mdi mdi-delete mdi-24px"></span>
+                  <span class="mdi mdi-delete-empty mdi-24px"></span>
+                  <a class="btn-deletes" href="/delete-file/{{val}}" style="color: indianred">Delete</a>
+                </button>
            </ul>{% endfor %}</li>
     {% endfor %}
 </ul>
@@ -28,9 +61,8 @@
 
 <form action="{{ url_for('datalake') }}" method="POST" enctype="multipart/form-data" style="margin-left: 25px" id="category" name="filenames">
         <p><input type='file' name='filename' multiple='' id="element1"></p>
-        <input type='submit' value='upload' id="element2">
+        <input type='submit' value='ОК' id="element2">
 </form>
-
 
 
 <style type="text/css">

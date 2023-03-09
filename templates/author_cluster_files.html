@@ -1,0 +1,40 @@
+{% extends 'base.html' %} {% block head %}
+
+<meta charset="utf-8" />
+<meta name="robots" content="noindex, nofollow" />
+
+<title>Author_cluster_files</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"> -->
+<link
+  rel="stylesheet"
+  href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"
+/>
+
+{% endblock %} {% block body %}
+
+<style>
+  ul {
+    list-style-type: circle;
+    font-weight: bold;
+  }
+</style>
+
+<h4 style="margin-left: 7px; margin-bottom: 25px">
+  Файлы для загрузки в Tensorflow-Projector / Кластеризация авторов
+</h4>
+
+<ul class="ul">
+  {% for folder in data_folders %}
+  <a
+    href="/open-folder-projector/{{folder}}"
+    target="blank"
+    style="color: black"
+    ><li style="margin-top: 12px">{{ folder }}</li>
+    <img src="../static/picture/subfiles_author_cluster_small.png" />
+  </a>
+  {% endfor %}
+</ul>
+
+{% endblock %}

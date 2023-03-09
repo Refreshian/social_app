@@ -1,20 +1,81 @@
-{% extends "base_index.html" %}
+{% extends "base.html" %}
+
+{% block head %}
+
+    <meta charset=utf-8 />
+    <meta name=viewport content=width=device-width, initial-scale=1.0 />
+    <meta name=generator content=Codeply />
+    <base target=_self>
+    <link rel="stylesheet" type="text/css" href="../static/cdn/media_rating/8.0.1_normalize.min.css"></link>
+    <script src="../static/cdn/media_rating/2.4.0_Chart.min.js"></script>
+
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css"/>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+
+{% endblock %}
 
 {% block title %}
 Authors Clustering
 {% endblock %}
 
+
 {% block body %}
-<br>
-<form action="/authors" method="POST">
-    <select name="file_choose" class="form-select" aria-label="Пример выбора по умолчанию" style="width: 270px; height: 40px">
-        <option selected>Выберите файл для анализа</option>
-        {% for i in range(0, len_files) %}
-            <option value="{{ files[i] }}">{{ files[i] }}</option>
-        {% endfor %}
-    </select>
-<!--    <input type="hidden" name="filename" value="{{ files[i] }}">-->
-    <input type="submit" href="{{ url_for('authors') }}" name="go" value="Запуск" style="height: 30px; width: 70px">
-</form>
+
+<style>
+.highcharts-figure {
+    display:flex;
+    justify-content: center;
+}
+</style>
+
+<figure class="highcharts-figure">
+
+    <div class="container">
+      <form action="/authors" method="POST">
+          <select name="file_choose" title="thing" class="form-select-sm" aria-label="Пример выбора по умолчанию">
+          <option selected>select File</option>
+              {% for i in range(0, len_files) %}
+                  <!-- <option value="{{ files[i] }}">{{ files[i] }}</option> -->
+                  <option value="{{ files[i] }}" name="{{ files[i] }}">{{ files[i] }}</option>
+              {% endfor %}
+          </select>
+          <!--    <input type="hidden" name="filename" value="{{ files[i] }}">-->
+          <!-- <input type="text" name="daterange" value="01/01/2022 - 01/12/2022" /> -->
+          <input type="submit" class="btn btn-light" href="{{ url_for('authors') }}" name="send" value="Запуск">
+      </form>
+    </div>
+  </figure>
+
+  <script>
+    $(function() {
+      $('input[name="daterange"]').daterangepicker({
+        opens: 'left'
+      }, function(start, end, label) {
+        console.log("A new date selection was made: " + start.format('YYYY-MM-DD') + ' to ' + end.format('YYYY-MM-DD'));
+      });
+    });
+    </script>
+
+    <script>
+      $(function() {
+        $('input[name="daterange"]').daterangepicker({
+          opens: 'center',
+          singleDatePicker: false,
+          startDate: new Date(),
+          showDropdowns: true,
+          timePicker: true,
+          timePicker24Hour: true,
+          timePickerIncrement: 10,
+          autoUpdateInput: true,
+        }, function(start, end, label) {
+          console.log("A new date selection was made: " + start.format('YYYY-MM-DD') + ' to ' + end.format('YYYY-MM-DD'));
+        });
+      });
+    </script>
 
 {% endblock %}

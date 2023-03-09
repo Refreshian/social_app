@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% block head %}
+
+
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+
+<title>Кластеризация BERT</title>
+
+<!-- Add icon library -->
+<link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+/>
+
+{% endblock %}
+
+{% block body %}
+
+<style>
+  .center {
+    margin: auto;
+    width: 50%;
+  }
+
+  #center {
+    margin: auto;
+    left: 50%;
+  }
+
+  #center2 {
+    margin: auto;
+    width: 50%;
+  }
+
+  figure .image {
+    width: 100%;
+  }
+
+  figure {
+      text-align: center;
+      display: inline;
+      margin: 3px; /* not needed unless you want centered */
+  }
+
+</style>
+
+{% if chart_topic_model_vis %}
+
+<figure class="highcharts-figure">
+  <div class="container">
+    <form action="/BertTopic" method="POST" enctype="multipart/form-data">
+      <select name="file_choose" class="form-select-sm">
+        <option selected>select File</option>
+        {% for i in range(0, len_files) %}
+        <option value="{{ files[i] }}">{{ files[i] }}</option>
+        {% endfor %}
+
+      <input
+        type="submit"
+        class="btn btn-light"
+        href="{{ url_for('BertTopic') }}"
+        name="send"
+        value="Запуск"
+      />
+    </form>
+  </div>
+</figure>
+
+    <!-- https://stackoverflow.com/questions/36262748/save-plotly-plot-to-local-file-and-insert-into-html -->
+    <!-- <div id="center">{{ chart_topic_model_vis }}</div> -->
+    <div id="center">
+      <div style="text-align: center; margin-top: 10px;">{{ chart_topic_model_vis }}</div>
+      <div style="text-align: center; margin-top: 30px;">{{ chart_topic_model_hierarchy }}</div>
+      <div style="text-align: center; margin-top: 150px;">{{ chart_topic_model_barchart }}</div>
+      <div style="text-align: center; margin-top: 15px;">{{ chart_topic_model_heatmap }}</div>
+    </div>
+  </body>
+
+{% elif not chart_topic_model_vis %}
+
+<figure class="highcharts-figure">
+  <div class="container" id="center2">
+    <form action="/BertTopic" method="POST" enctype="multipart/form-data">
+      <select name="file_choose" class="form-select-sm">
+        <option selected>select File</option>
+        {% for i in range(0, len_files) %}
+        <option value="{{ files[i] }}">{{ files[i] }}</option>
+        {% endfor %}
+      </select>
+
+      <input
+        type="submit"
+        class="btn btn-light"
+        href="{{ url_for('BertTopic') }}"
+        name="send"
+        value="Запуск"
+      />
+    </form>
+
+  </div>
+</figure>
+
+
+{% endif %}
+
+{% endblock %}

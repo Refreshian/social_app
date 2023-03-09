@@ -6,7 +6,7 @@ MultiCheckboxSelect css@v1.0.6 */
     width: 15px;
     height: 15px;
     background-color: transparent;
-    border: 2px solid #46D2C4;
+    border: 2px solid rgba(5, 5, 5, 0.51);
     border-radius: 2px;
     justify-self: center;
     align-self: center;
@@ -70,7 +70,7 @@ MultiCheckboxSelect css@v1.0.6 */
     font-size: 12px;
     flex-grow: 1;
     width: 100%;
-    caret-color: #46d2c4;
+    caret-color: #000202;
 }
 
 .multi-checkbox-select-wrapper .input-wrapper svg {
@@ -88,7 +88,7 @@ MultiCheckboxSelect css@v1.0.6 */
 .multi-checkbox-select-wrapper .input-wrapper svg.clear {
     padding: 3px;
     padding-right: 0;
-    stroke: #0af6e6;
+    stroke: #09B20BFF;
     flex-shrink: 1;
     opacity: 0;
     transition: all 0.3s cubic-bezier(.55,.07,.52,1.34);
@@ -98,7 +98,7 @@ MultiCheckboxSelect css@v1.0.6 */
 .multi-checkbox-select-wrapper .input-wrapper svg.search {
     padding: 0;
     margin: 0;
-    fill: #0af6e6;
+    fill: #09B20BFF;
     width: 18px;
     margin-left: 9px;
     margin-right: 3px;
@@ -136,12 +136,12 @@ MultiCheckboxSelect css@v1.0.6 */
 
 .multiselect-dropdown-wrapper .dropdown>div:hover { 
     cursor: pointer;
-    background-color: #00ffe517;
+    background-color: #09B20BFF;
     border-radius: 5px;
 }
 
 .multiselect-dropdown-wrapper .dropdown:not([data-multiple])>div:hover {
-    background-color: #46d2c4;
+    background-color: #09b20b;
     color: white;
 }
 

@@ -1,0 +1,76 @@
+{% extends 'base.html' %} {% block head %} {% endblock %} {% block body %}
+
+<style>
+  .container {
+    height: 200px;
+    position: relative;
+    /* border: 3px solid green; */
+  }
+
+  .center {
+    margin: 0;
+    position: absolute;
+    top: 40%;
+    left: 10%;
+    -ms-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
+  }
+</style>
+
+<style>
+  .grid-container {
+    display: grid;
+    grid-template-columns: auto auto;
+    grid-template-columns: repeat(auto-fill, minmax(25rem, 40rem));
+  }
+  .grid-item {
+    background-color: rgba(255, 255, 255, 0.8);
+    /* border: 1px solid rgba(0, 0, 0, 0.8); */
+    font-size: 20px;
+    text-align: left;
+  }
+</style>
+
+<link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+/>
+
+<form
+action="{{ url_for('tonality_fit') }}"
+method="POST"
+enctype="multipart/form-data"
+style="margin-left: 25px"
+id="category"
+name="filenames"
+>
+<div class="grid-container">
+  <div class="grid-item">
+
+      <h4>Файл с примерами для обучения</h4>
+      <p><input type="file" name="filename" multiple="" id="element1" /></p>
+      <!-- <input type="submit" value="ОК" id="element2" /> -->
+
+  </div>
+  <div class="grid-item">
+    <h4>Выберите тему для обучения</h4>
+    <div class="container">
+        <select name="file_choose">
+          <option selected>select File</option>
+          {% for i in range(0, len_files) %}
+          <option value="{{ files[i] }}">{{ files[i] }}</option>
+          {% endfor %}
+  
+        <input
+          type="submit"
+          class="btn btn-light"
+          href="{{ url_for('tonality_fit') }}"
+          name="send"
+          value="Запуск"
+        />
+      
+    </div></div>
+</div>
+</form>
+
+{% endblock %}

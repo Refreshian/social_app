@@ -38,7 +38,7 @@ app.debug = True
 app.secret_key = 'a(d)fs#$T12eF#4-key'
 
 # path_to_files = "/home/centos/home/centos/social_app/data"
-path_to_files = 'D:\\social_app_vsc\\data'
+path_to_files = '/home/dev/social_app/data'
 session = flask.session
 app.config['UPLOAD_FOLDER'] = path_to_files
 
@@ -190,22 +190,21 @@ def tonality():
         #     neg_authors[list(hub_neg.keys())[i]] = dict(
         #         Counter(neg_tabl[neg_tabl['hub'] == list(hub_neg.keys())[i]]['fullname'].values))
 
-        percent_pos = len(data_tonality_hub_neg_data)
-        percent_neg = len(data_tonality_hub_pos_data)
+        count_pos = data_tonality_hub_neg_data[0]
+        count_neg = data_tonality_hub_pos_data[0]
 
-        if percent_pos == 0 and percent_neg == 0: # если не было негативных или позитивных сообщений
+        if count_pos == 0 and count_neg == 0: # если не было негативных или позитивных сообщений
             flash('Не найдено негативных и позитивных сообщений!')
             return redirect(url_for('tonality_landscape'))
 
-        if percent_neg == 0:
-            percent_neg = 0
-            percent_pos = 100
-        elif percent_pos == 0:
-            percent_neg = 100
+        if count_neg == 0:
+            count_pos = 100
+        elif count_pos == 0:
+            count_neg = 100
         else:
-            count_sum = percent_pos + percent_neg
-            percent_pos = np.round((percent_pos / count_sum), 1)*100
-            percent_neg = np.round((percent_neg / count_sum), 1)*100
+            count_sum = count_pos + count_neg
+            percent_pos = np.round((count_pos / count_sum), 2)*100
+            percent_neg = np.round((count_neg / count_sum), 2)*100
 
 
         data = {

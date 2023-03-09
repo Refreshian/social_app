@@ -1,0 +1,89 @@
+{% extends 'base.html' %} {% block head %}
+
+<style>
+  // декоративные стили
+  *,
+  *::after,
+  *::before {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+  }
+
+  ul {
+    list-style: none;
+    padding: 0;
+    margin: 20px;
+  }
+
+  h3 {
+    margin: 0;
+  }
+
+  .products__list {
+    display: grid;
+    gap: 30px 20px;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  }
+
+  .products__item {
+    display: grid;
+    border-radius: 7px;
+    box-shadow: 0 5px 15px #d3d3d3;
+    overflow: hidden;
+  }
+
+  .products__title {
+    padding: 10px;
+  }
+
+  .products img {
+    display: block;
+    width: 100%;
+    margin-top: auto;
+    border-style: solid;
+    border: #000000;
+    border-width: 3px;
+  }
+
+  #dotted {
+    border-style: solid;
+  }
+</style>
+<!-- Add icon library -->
+<link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+/>
+{% endblock %} {% block body %}
+
+<!-- https://codepen.io/danilabr/pen/mdqRjQy -->
+<div class="products">
+  <ul class="products__list">
+    <li class="products__item" id="dotted">
+      <h3 class="products__title">BERT-классификация</h3>
+      <a href="/BertTopic"
+        ><img src="../static/picture/BERT_cluster.png" alt="фото товара"
+      /></a>
+    </li>
+
+    <li class="products__item" id="dotted">
+      <h3 class="products__title">LDA-классификация</h3>
+      <a href="/LdaTopic"
+        ><img src="../static/picture/LDA_Cluster.png" alt="фото товара"
+      /></a>
+    </li>
+
+    <li class="products__item" id="dotted">
+      <h3 class="products__title">Ручной поиск тематик (k-means)</h3>
+      <a href="/Kmeans"
+        ><img src="../static/picture/Kmeans_cluster_2.png" alt="фото товара"
+      /></a>
+    </li>
+  </ul>
+</div>
+
+{% endblock %}

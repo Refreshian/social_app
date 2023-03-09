@@ -11,6 +11,10 @@
 <!-- <link href="custom.css" rel="stylesheet"></link> -->
 
 <style>
+
+    .highcharts-credits {
+display: none !important;
+}
  
   </style>
 
@@ -32,14 +36,16 @@
                 <a href="{{ url_for('information_graph') }}">Information Graph</a>
                 <a href="{{ url_for('media_rating') }}">Media Rating</a>
                 <a href="{{ url_for('voice') }}">Voice of Customer</a>
-                <a class="isDisabled" href="#">Competitive Environment</a>
-                <a class="isDisabled" href="#">External Influence</a>
-                <a href="{{ url_for('datalake') }}">Files</a>
-                <a class="isDisabled" href="#">Author Clustering</a>
-                <a href="{{ url_for('mension') }}">Mension Classification</a>
+                <a href="{{ url_for('competitors') }}">Competitive Environment</a>
+                <a href="{{ url_for('external_factors') }}">External Influence</a>
+                <a href="{{ url_for('data') }}">Data</a>
+                <a href="{{ url_for('clusterisation') }}">Author Clustering</a>
+                <a href="{{ url_for('classification') }}"> Texts Classification </a>
             </div>
         </div> 
         <a href="#news">FAQ</a>
+        <a class="isDisabled" href="#">Exit</a>
+<!--            "{{ url_for('index') }}"-->
         </div>
 
       

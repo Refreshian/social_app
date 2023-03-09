@@ -1,0 +1,82 @@
+{% extends 'base.html' %} {% block head %}
+
+<style>
+  .container {
+    height: 200px;
+    position: relative;
+    /* border: 3px solid green; */
+  }
+
+  .center {
+    margin: 0;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    -ms-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
+  }
+
+  .button {
+    width: 250px;
+    height: 90px;
+    color: #000000;
+    font-family: 'Lato', sans-serif;
+    margin: 0;
+    cursor: pointer;
+    position: relative;
+    display: inline-block;
+    box-shadow: inset 2px 2px 2px 0px rgba(255, 255, 255, 0.5),
+      7px 7px 20px 0px rgba(0, 0, 0, 0.1), 4px 4px 5px 0px rgba(0, 0, 0, 0.1);
+    outline: none;
+
+    border: 2;
+    font-weight: bold;
+    font-size: large;
+  }
+  .btn-16 {
+    border: none;
+    color: #000;
+    z-index: 1;
+  }
+  .btn-16:after {
+    position: absolute;
+    content: '';
+    width: 0;
+    height: 100%;
+    direction: rtl;
+    z-index: -1;
+    box-shadow: -7px -7px 20px 0px #fff9, -4px -4px 5px 0px #fff9,
+      7px 7px 20px 0px #0002, 4px 4px 5px 0px #0001;
+    transition: all 0.3s ease;
+  }
+
+  .btn-16:active {
+    top: 2px;
+  }
+</style>
+<!-- Add icon library -->
+<link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+/>
+{% endblock %} {% block body %}
+
+<!-- https://snipp.ru/handbk/emoji -->
+<div class="container">
+  <div class="center">
+    <a href="/tonality_fit"
+      ><button class="button">
+        Обучение тональности <br />
+        &#128187; &#128240; &#129302;
+      </button></a
+    >
+    <a href="/tonality_check"
+      ><button class="button">
+        Проверка тональности <br />
+        &#128578; &#128528; &#128544;
+      </button></a
+    >
+  </div>
+</div>
+
+{% endblock %}

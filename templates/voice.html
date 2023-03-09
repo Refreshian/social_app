@@ -182,15 +182,22 @@
           </div>
       </form>
         
-      <script>
-        $(function() {
-          $('input[name="daterange"]').daterangepicker({
-            opens: 'left'
-          }, function(start, end, label) {
-            console.log("A new date selection was made: " + start.format('YYYY-MM-DD') + ' to ' + end.format('YYYY-MM-DD'));
+        <script>
+          $(function() {
+            $('input[name="daterange"]').daterangepicker({
+              opens: 'center',
+              singleDatePicker: false,
+              startDate: new Date(),
+              showDropdowns: true,
+              timePicker: true,
+              timePicker24Hour: true,
+              timePickerIncrement: 10,
+              autoUpdateInput: true,
+            }, function(start, end, label) {
+              console.log("A new date selection was made: " + start.format('YYYY-MM-DD') + ' to ' + end.format('YYYY-MM-DD'));
+            });
           });
-        });
-        </script>
+          </script>
 
     <script src="https://code.highcharts.com/highcharts.js"></script>
     <script src="https://code.highcharts.com/highcharts-more.js"></script>
@@ -206,7 +213,8 @@
 
 
         <script>
-        var data = JSON.parse('{{ data|tojson }}');
+        // var data = JSON.parse('{{ data|tojson }}');
+        var data = {{ data|safe }};
         var names = JSON.parse('{{ dict_names|tojson }}');
         var country = {}
 
@@ -231,7 +239,7 @@
             }
         },
         title: {
-            text: "Media voice {{ theme }}"
+            text: "Упоминания в {{ theme }}"
         },
         tooltip: {
             outside: true
@@ -277,7 +285,7 @@
             endOnTick: true,
             showLastLabel: true,
             accessibility: {
-                description: "Распределение по тональности"
+                description: "Распределение сообщений по источникам, типам и тональности"
             }
         },
         plotOptions: {
@@ -471,14 +479,13 @@
     left: 0;
 }
   #container2 {
-    width: 1500px;
-    height: 800px;
-    margin: 0 auto;
+    width: auto;
+    min-height: 1800px;
+    margin: auto;
     margin-top: 250px;
-    margin-block-end: 100px;
+    margin-block-end: auto;
   }
 
-  .
     </style>
 
   </body>
@@ -556,14 +563,14 @@
 
     Highcharts.chart("container2", {
     title: {
-        text: "Voice values streaming"
+        text: "Распределение упоминаний"
     },
 
     tooltip: {
         headerFormat: null,
         pointFormat:
       "{point.fromNode.name} \u2192 {point.toNode.name}: {point.weight:.0f} сообщ.",
-        nodeFormat: "{point.name}: {point.sum:.2f} quads"
+        nodeFormat: "{point.name}: {point.sum:.2f} сообщ."
     },
     series: [
         {
@@ -633,164 +640,171 @@
                 <div class = "input-group" style="margin-top: 5px; width: 700px;">
                     <input type = "text" class = "form-control" name="text_search" placeholder="Поиск по текстам">
                 </div>
-                <script>
-                  $(function() {
-                    $('input[name="daterange"]').daterangepicker({
-                      opens: 'left'
-                    }, function(start, end, label) {
-                      console.log("A new date selection was made: " + start.format('YYYY-MM-DD') + ' to ' + end.format('YYYY-MM-DD'));
-                    });
-                  });
-                  </script>
+            <script>
+              $(function() {
+                $('input[name="daterange"]').daterangepicker({
+                  opens: 'center',
+                  singleDatePicker: false,
+                  startDate: new Date(),
+                  showDropdowns: true,
+                  timePicker: true,
+                  timePicker24Hour: true,
+                  timePickerIncrement: 10,
+                  autoUpdateInput: true,
+                }, function(start, end, label) {
+                  console.log("A new date selection was made: " + start.format('YYYY-MM-DD') + ' to ' + end.format('YYYY-MM-DD'));
+                });
+              });
+              </script>
             <input type="submit" class="btn btn-light" href="{{ url_for('voice') }}" name="send" value="Запуск" style="margin-top: 5px">
         </form>
 
 
-    <script src="https://code.highcharts.com/highcharts.js"></script>
-    <script src="https://code.highcharts.com/highcharts-more.js"></script>
-    <script src="https://code.highcharts.com/modules/exporting.js"></script>
-    <script src="https://code.highcharts.com/modules/export-data.js"></script>
-    <script src="https://code.highcharts.com/modules/accessibility.js"></script>
+<!--    <script src="https://code.highcharts.com/highcharts.js"></script>-->
+<!--    <script src="https://code.highcharts.com/highcharts-more.js"></script>-->
+<!--    <script src="https://code.highcharts.com/modules/exporting.js"></script>-->
+<!--    <script src="https://code.highcharts.com/modules/export-data.js"></script>-->
+<!--    <script src="https://code.highcharts.com/modules/accessibility.js"></script>-->
 
-    <!-- Flag sprites service provided by Martijn Lafeber,
-      https://github.com/lafeber/world-flags-sprite/blob/master/LICENSE -->
-    <link
-      rel="stylesheet"
-      href="https://github.com/downloads/lafeber/world-flags-sprite/flags16.css"
-    />
+<!--    &lt;!&ndash; Flag sprites service provided by Martijn Lafeber,-->
+<!--      https://github.com/lafeber/world-flags-sprite/blob/master/LICENSE &ndash;&gt;-->
+<!--    <link-->
+<!--      rel="stylesheet"-->
+<!--      href="https://github.com/downloads/lafeber/world-flags-sprite/flags16.css"-->
+<!--    />-->
 
-    <div id="container"></div>
+<!--    <div id="container"></div>-->
 
 
-        <script>
-        const country = {
-        Norway: "nos",
-        "United States": "usc",
-        Germany: "des",
-        "Soviet Union": "ussr",
-        Canada: "ats"
-    };
+<!--        <script>-->
+<!--        const country = {-->
+<!--        Norway: "nos",-->
+<!--        "United States": "usc",-->
+<!--        Germany: "des",-->
+<!--        "Soviet Union": "ussr",-->
+<!--        Canada: "ats"-->
+<!--    };-->
 
-    Highcharts.chart("container", {
-        colors: ["#FFD700", "#C0C0C0", "#CD7F32"],
+<!--    Highcharts.chart("container", {-->
+<!--        colors: ["#FFD700", "#C0C0C0", "#CD7F32"],-->
 
-        chart: {
-            type: "column",
-            inverted: true,
-            polar: true
-        },
-        accessibility: {
-            keyboardNavigation: {
-                seriesNavigation: {
-                    mode: "serialize"
-                }
-            }
-        },
-        title: {
-            text: "Winter Olympic medals per existing country (TOP 5)"
-        },
-        tooltip: {
-            outside: true
-        },
-        pane: {
-            size: "85%",
-            innerSize: "20%",
-            endAngle: 270
-        },
-        xAxis: {
-            tickInterval: 1,
-            labels: {
-                align: "right",
-                useHTML: true,
-                allowOverlap: true,
-                step: 1,
-                y: 3,
-                style: {
-                    fontSize: "13px"
-                },
-                formatter: function () {
-                    return `${
-                        this.value
-                    } <span class='f16'><span id='flag' class='flag ${
-                        country[this.value]
-                    }'></span></span>`;
-                }
-            },
-            lineWidth: 0,
-            categories: ["Norway", "Soviet Union + Russia", "United States", "Germany", "Canada"],
-            /* https://www.topendsports.com/events/winter/medal-tally/all-time.htm */
-            accessibility: {
-                description: "Countries"
-            }
-        },
-        yAxis: {
-            crosshair: {
-                enabled: true,
-                color: "#333"
-            },
-            lineWidth: 0,
-            tickInterval: 25,
-            reversedStacks: false,
-            endOnTick: true,
-            showLastLabel: true,
-            accessibility: {
-                description: "Number of medals"
-            }
-        },
-        plotOptions: {
-            column: {
-                stacking: "normal",
-                borderWidth: 0,
-                pointPadding: 0,
-                groupPadding: 0.15
-            }
-        },
-        series: [
-            {
-                name: "Gold medals",
-                data: [148, 133, 113, 112, 77]
-            },
-            {
-                name: "Silver medals",
-                data: [133, 114, 122, 104, 72]
-            },
-            {
-                name: "Bronze medals",
-                data: [124, 117, 95, 70, 76]
-            }
-        ]
-    });
+<!--        chart: {-->
+<!--            type: "column",-->
+<!--            inverted: true,-->
+<!--            polar: true-->
+<!--        },-->
+<!--        accessibility: {-->
+<!--            keyboardNavigation: {-->
+<!--                seriesNavigation: {-->
+<!--                    mode: "serialize"-->
+<!--                }-->
+<!--            }-->
+<!--        },-->
+<!--        title: {-->
+<!--            text: "Winter Olympic medals per existing country (TOP 5)"-->
+<!--        },-->
+<!--        tooltip: {-->
+<!--            outside: true-->
+<!--        },-->
+<!--        pane: {-->
+<!--            size: "85%",-->
+<!--            innerSize: "20%",-->
+<!--            endAngle: 270-->
+<!--        },-->
+<!--        xAxis: {-->
+<!--            tickInterval: 1,-->
+<!--            labels: {-->
+<!--                align: "right",-->
+<!--                useHTML: true,-->
+<!--                allowOverlap: true,-->
+<!--                step: 1,-->
+<!--                y: 3,-->
+<!--                style: {-->
+<!--                    fontSize: "13px"-->
+<!--                },-->
+<!--                formatter: function () {-->
+<!--                    return `${-->
+<!--                        this.value-->
+<!--                    } <span class='f16'><span id='flag' class='flag ${-->
+<!--                        country[this.value]-->
+<!--                    }'></span></span>`;-->
+<!--                }-->
+<!--            },-->
+<!--            lineWidth: 0,-->
+<!--            categories: ["Norway", "Soviet Union + Russia", "United States", "Germany", "Canada"],-->
+<!--            /* https://www.topendsports.com/events/winter/medal-tally/all-time.htm */-->
+<!--            accessibility: {-->
+<!--                description: "Countries"-->
+<!--            }-->
+<!--        },-->
+<!--        yAxis: {-->
+<!--            crosshair: {-->
+<!--                enabled: true,-->
+<!--                color: "#333"-->
+<!--            },-->
+<!--            lineWidth: 0,-->
+<!--            tickInterval: 25,-->
+<!--            reversedStacks: false,-->
+<!--            endOnTick: true,-->
+<!--            showLastLabel: true,-->
+<!--            accessibility: {-->
+<!--                description: "Number of medals"-->
+<!--            }-->
+<!--        },-->
+<!--        plotOptions: {-->
+<!--            column: {-->
+<!--                stacking: "normal",-->
+<!--                borderWidth: 0,-->
+<!--                pointPadding: 0,-->
+<!--                groupPadding: 0.15-->
+<!--            }-->
+<!--        },-->
+<!--        series: [-->
+<!--            {-->
+<!--                name: "Gold medals",-->
+<!--                data: [148, 133, 113, 112, 77]-->
+<!--            },-->
+<!--            {-->
+<!--                name: "Silver medals",-->
+<!--                data: [133, 114, 122, 104, 72]-->
+<!--            },-->
+<!--            {-->
+<!--                name: "Bronze medals",-->
+<!--                data: [124, 117, 95, 70, 76]-->
+<!--            }-->
+<!--        ]-->
+<!--    });-->
 
-        </script>
-        <script>
-        window.addEventListener('DOMContentLoaded', (event) => {
-          /* Script for setting iframe height when on Highcharts.com */
-              try {
+<!--        </script>-->
+<!--        <script>-->
+<!--        window.addEventListener('DOMContentLoaded', (event) => {-->
+<!--          /* Script for setting iframe height when on Highcharts.com */-->
+<!--              try {-->
 
-                // Allow hiding the description by search param
-                const search = window.location.search;
-                if(search && search.includes('hide-description')){
-                  const description = document.querySelector('.highcharts-description, .highcharts-linked-description');
-                  if(description){
-                    description.style.display = 'none';
-                  }
-                }
+<!--                // Allow hiding the description by search param-->
+<!--                const search = window.location.search;-->
+<!--                if(search && search.includes('hide-description')){-->
+<!--                  const description = document.querySelector('.highcharts-description, .highcharts-linked-description');-->
+<!--                  if(description){-->
+<!--                    description.style.display = 'none';-->
+<!--                  }-->
+<!--                }-->
 
-                const iframes = window.parent.document.getElementsByTagName('iframe');
+<!--                const iframes = window.parent.document.getElementsByTagName('iframe');-->
 
-                for(let iframe of iframes){
-                  const { height } = iframe.contentWindow.document.body.getBoundingClientRect();
-                  if (
-                    height &&
-                    height > iframe.height
-                  ) {
-                    iframe.setAttribute('height', height);
-                    iframe.style.setProperty('height', height + 25 + 'px')
-                  }
-                }
-              } catch (e) {}
-        });
-        </script>
+<!--                for(let iframe of iframes){-->
+<!--                  const { height } = iframe.contentWindow.document.body.getBoundingClientRect();-->
+<!--                  if (-->
+<!--                    height &&-->
+<!--                    height > iframe.height-->
+<!--                  ) {-->
+<!--                    iframe.setAttribute('height', height);-->
+<!--                    iframe.style.setProperty('height', height + 25 + 'px')-->
+<!--                  }-->
+<!--                }-->
+<!--              } catch (e) {}-->
+<!--        });-->
+<!--        </script>-->
         {% endif %}
 
 

@@ -1,0 +1,420 @@
+{% extends 'base.html' %}
+{% block head %}
+    <meta charset="utf-8">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.min.js"></script>
+
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css"/>
+    <script src="https://cdn.zingchart.com/zingchart.min.js"></script>
+
+    <link rel="stylesheet" href="/static/css/multi-checkbox-select.css" />
+
+    <!-- Add icon library -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+
+    <title></title>
+
+{% endblock %}
+
+{% block body %}
+{% if data %}
+  <style>
+    html, body {
+      height:100%;
+      width:100%;
+    }
+
+    #myChart {
+      height:35%;
+      width:100%;
+      min-height:150px;
+    }
+    .zc-ref {
+      display: none;
+    }
+
+    #myChart2 {
+      height:100%;
+      width:100%;
+      min-height:500px;
+    }
+    .zc-ref {
+      display: none;
+    }
+  </style>
+
+  <form action="/external_factors" method="POST" style="margin-left: 10px">
+    {% for message in get_flashed_messages() %}
+      <div class="alert alert-warning alert-dismissible fade show" role="alert" style="color: red;">
+      {{ message }}
+      </div>
+    {% endfor %}
+    <select name="file_choose" class="form-select-sm" style="margin-top: 10px;">
+    <option selected>Выбрать файл</option>
+        {% for i in range(0, len_files) %}
+            <option value="{{ files[i] }}">{{ files[i] }}</option>
+        {% endfor %}
+    </select>
+    <select name="external_factor" class="form-select-sm" aria-placeholder="Выбрать внешний фактор" aria-label="Выбрать внешний фактор">
+      <option selected>Выбрать внешний фактор</option>
+      {% for key in df_name_active.keys() %}
+        <option value="{{ key }}">{{df_name_active[key]}}</option>
+      {% endfor %}
+    </select>
+
+    <input type="text" name="daterange" value="01/01/2022 - 01/12/2022" />
+    <script>
+      $(function() {
+        $('input[name="daterange"]').daterangepicker({
+          opens: 'center',
+          singleDatePicker: false,
+          startDate: new Date(),
+          showDropdowns: true,
+          timePicker: true,
+          timePicker24Hour: true,
+          timePickerIncrement: 10,
+          autoUpdateInput: true,
+        }, function(start, end, label) {
+          console.log("A new date selection was made: " + start.format('YYYY-MM-DD') + ' to ' + end.format('YYYY-MM-DD'));
+        });
+      });
+      </script>
+    <input type="submit" class="btn btn-light" href="{{ url_for('external_factors') }}" name="send" value="Запуск">
+  </form>
+
+    <!-- https://app.zingsoft.com/demos/create/ZD8OGRK1?fork -->
+    <div class="container">
+<!--    <div id='myChart'><a class="zc-ref" href="https://www.zingchart.com/">Charts by ZingChart</a></div>-->
+	<div id='myChart'></div>
+    </div>
+    <!-- https://app.zingsoft.com/demos/create/N9FM5XJ5?fork -->
+    <div class="container">
+<!--    <div id='myChart2'><a class="zc-ref" href="https://www.zingchart.com/">Powered by ZingChart</a></div>-->
+    <div id='myChart2'></div>
+    </div>
+
+  <script>
+    var datas = JSON.parse('{{ data|tojson }}');
+    console.log(datas)
+
+    window.feed = function(callback) {
+      var tick = {};
+      tick.plot0 = Math.ceil(350 + (Math.random() * 500));
+      callback(JSON.stringify(tick));
+    };
+
+    var myConfig = {
+      type: "gauge",
+      globals: {
+        fontSize: 25
+      },
+      plotarea:{
+        marginTop:80
+      },
+      plot:{
+        size:'100%',
+        valueBox: {
+          placement: 'center',
+          text:'%v', //default
+          fontSize:20,
+          rules:[
+            {
+              rule: '%v >= -3.9',
+              text: '%v<br>Корреляции не наблюдается'
+            },
+            {
+              rule: '%v <= 3.9',
+              text: '%v<br>Корреляции не наблюдается'
+            },
+            {
+              rule: '%v >= 0.8 && %v <= 1.0',
+              text: '%v<br>Сильная положит.корреляция'
+            },
+            {
+              rule: '%v < 0.8 && %v > 0.6',
+              text: '%v<br>Средняя положит.корреляция'
+            },
+            {
+              rule: '%v < 0.6 && %v > 0.4',
+              text: '%v<br>Слабая положит.корреляция'
+            },
+            {
+              rule: '%v <= -0.8 && %v >= -1.0',
+              text: '%v<br>Сильная отрицат.корреляция'
+            },
+            {
+              rule: '%v < -0.6 && %v > -0.8',
+              text: '%v<br>Средняя отрицат.корреляция'
+            },
+            {
+              rule: '%v < -0.4 && %v > -0.6',
+              text: '%v<br>Слабая отрицат.корреляция'
+            },
+          ]
+        }
+      },
+      tooltip:{
+        borderRadius:5
+      },
+      scaleR:{
+        aperture:180,
+        minValue:-1,
+        maxValue:1,
+        step:0.2,
+        center:{
+          visible:false
+        },
+        tick:{
+          visible:false
+        },
+        item:{
+          offsetR:0,
+          rules:[
+            {
+              rule:'%i == 9',
+              offsetX:15
+            }
+          ]
+        },
+        labels:['-1', '1'],
+        ring:{
+          size:50,
+          rules:[
+            {
+              rule:'%v >= -1.0 && %v < -0.8',
+              backgroundColor:'#32CD32'
+            },
+            {
+              rule:'%v > -0.9 && %v < -0.6',
+              backgroundColor:'#9ACD32'
+            },
+            {
+              rule:'%v >= -0.6 && %v < -0.4',
+              backgroundColor:'#FFFF00'
+            },
+                    {
+              rule:'%v >= 0.8 && %v < 1.0',
+              backgroundColor:'#32CD32'
+            },
+            {
+              rule:'%v > 0.59 && %v < 0.8',
+              backgroundColor:'#9ACD32'
+            },
+            {
+              rule:'%v >= 0.4 && %v < 0.6',
+              backgroundColor:'#FFFF00'
+            }
+          ]
+        }
+      },
+      // refresh:{
+      //     type:"feed",
+      //     transport:"js",
+      //     url:"feed()",
+      //     interval:1500,
+      //     resetTimeout:1000
+      // },
+      series : [
+        {
+          values : [parseFloat(datas.corr)], // starting value
+          backgroundColor:'black',
+          indicator:[4,-4, 4,-4, 0.2],
+          animation:{
+            effect:2,
+            method:1,
+            sequence:4,
+            speed: 900
+        },
+        }
+      ]
+    };
+
+    zingchart.render({
+      id : 'myChart',
+      data : myConfig,
+      height: 500,
+      width: '100%'
+    });
+  </script>
+
+  <script>
+
+    const colors = ["#75E492", "#e987cf", "#75C6E4", "#9375E4", "#e49375", '#FFDAB9', '#EEE8AA', '#F0E68C', '#BDB76B', '#CD5C5C', '#F08080', '#FA8072', '#E9967A', '#FFA07A', '#DC143C', '#FF0000', '#B22222', '#8B0000', '#FF7F50', '#FF6347', '#FF4500', '#FF8C00', '#FFA500', '#FFC0CB', '#FFB6C1', '#FF69B4', '#FF1493', '#C71585', '#DB7093', '#FFF8DC', '#FFEBCD', '#FFE4C4', '#FFDEAD', '#F5DEB3', '#DEB887', '#D2B48C', '#BC8F8F', '#F4A460', '#DAA520', '#B8860B', '#CD853F', '#D2691E', '#8B4513', '#A0522D', '#A52A2A', '#800000', '#00FFFF', '#E0FFFF', '#AFEEEE', '#7FFFD4', '#40E0D0', '#48D1CC', '#00CED1', '#5F9EA0', '#4682B4', '#B0C4DE', '#B0E0E6', '#ADD8E6', '#87CEEB', '#87CEFA', '#00BFFF', '#ADFF2F', '#7FFF00', '#7CFC00', '#00FF00', '#32CD32', '#98FB98', '#90EE90', '#00FA9A', '#00FF7F', '#3CB371', '#2E8B57', '#228B22', '#008000', '#006400', '#9ACD32', '#6B8E23', '#808000', '#556B2F', '#66CDAA', '#8FBC8F', '#20B2AA', '#008B8B', '#008080', '#F0FFF0', '#F5FFFA', '#F0FFFF', '#F0F8FF', '#F8F8FF', '#F5F5F5', '#FFF5EE', '#F5F5DC', '#FDF5E6', '#FFFAF0', '#FFFFF0', '#FAEBD7', '#FAF0E6', '#FFF0F5', '#FFE4E1', '#DCDCDC', '#D3D3D3', '#C0C0C0', '#A9A9A9', '#808080', '#696969', '#778899', '#708090', '#2F4F4F']
+    var data = JSON.parse('{{ data|tojson }}');
+    var data_dynamic_chart = []
+
+    for(var i = 0; i < data.data.length; i++) {
+      var obj = {};
+
+      obj['values'] = data.data[i][1];
+      obj['text'] = data.data[i][0];
+      obj["line-color"] = colors[i];
+      obj["legend-item"] = {
+        "background-color": colors[i],
+        "borderRadius": 5,
+        "font-color": "white"
+      };
+      obj["legend-marker"] = {
+        "visible": false
+      };
+      obj["marker"] = {
+        "background-color": "#007790",
+        "border-width": 1,
+        "shadow": 0,
+        "border-color": "#69dbf1"
+      };
+      obj["highlight-marker"] = {
+        "size": 6,
+        "background-color": "#007790",
+      };
+
+      data_dynamic_chart.push(obj);}
+
+
+    var myConfig2 =
+    {
+      "type": "line",
+      "utc": true,
+      "title": {
+        "text": "Динамика",
+        "font-size": "24px",
+        "adjust-layout": true
+      },
+      "plotarea": {
+        "margin": "dynamic 45 60 dynamic",
+      },
+      "legend": {
+        "layout": "float",
+        "background-color": "none",
+        "border-width": 0,
+        "shadow": 0,
+        "align": "center",
+        "adjust-layout": true,
+        "toggle-action": "remove",
+        "item": {
+          "padding": 7,
+          "marginRight": 17,
+          "cursor": "hand"
+        }
+      },
+      "scale-x": {
+        "values": data.unixtime_ms,
+        "shadow": 0,
+        "step": 86400000,
+        "transform": {
+          "type": "date",
+          "all": "%Y %D, %d %M<br />",
+          "item": {
+            "visible": false
+          }
+        },
+        "label": {
+          "visible": false
+        },
+        "minor-ticks": 0
+      },
+      "scale-y": {
+        "line-color": "#f6f7f8",
+        "shadow": 0,
+        "guide": {
+          "line-style": "dashed"
+        },
+        "label": {
+          "text": "Количество сообщений / Индекс Биржи",
+        },
+        "minor-ticks": 0,
+        "thousands-separator": ","
+      },
+      "crosshair-x": {
+        "line-color": "#efefef",
+        "plot-label": {
+          "border-radius": "5px",
+          "border-width": "1px",
+          "border-color": "#f6f7f8",
+          "padding": "10px",
+          "font-weight": "bold"
+        },
+        "scale-label": {
+          "font-color": "#000",
+          "background-color": "#f6f7f8",
+          "border-radius": "5px"
+        }
+      },
+      "tooltip": {
+        "visible": false
+      },
+      "plot": {
+        "highlight": true,
+        "tooltip-text": "%t views: %v<br>%k",
+        "shadow": 0,
+        "line-width": "2px",
+        "marker": {
+          "type": "circle",
+          "size": 3
+        },
+        "highlight-state": {
+          "line-width": 3
+        },
+        "animation": {
+          "effect": 1,
+          "sequence": 2,
+          "speed": 100,
+        }
+      },
+      "series": data_dynamic_chart
+    };
+
+    zingchart.render({
+      id: 'myChart2',
+      data: myConfig2,
+      height: '100%',
+      width: '100%'
+    });
+  </script>
+
+{% elif not data %}
+<form action="/external_factors" method="POST" style="margin-left: 10px">
+  {% for message in get_flashed_messages() %}
+    <div class="alert alert-warning alert-dismissible fade show" role="alert" style="color: red;">
+    {{ message }}
+    </div>
+  {% endfor %}
+  <select name="file_choose" class="form-select-sm" style="margin-top: 10px;">
+  <option selected>Выбрать файл</option>
+      {% for i in range(0, len_files) %}
+          <option value="{{ files[i] }}">{{ files[i] }}</option>
+      {% endfor %}
+  </select>
+  <select name="external_factor" class="form-select-sm" aria-placeholder="Выбрать внешний фактор" aria-label="Выбрать внешний фактор">
+    <option selected>Выбрать внешний фактор</option>
+    {% for key in df_name_active.keys() %}
+      <option value="{{ key }}">{{df_name_active[key]}}</option>
+    {% endfor %}
+  </select>
+
+  <input type="text" name="daterange" value="01/01/2022 - 01/12/2022" />
+    <script>
+      $(function() {
+        $('input[name="daterange"]').daterangepicker({
+          opens: 'center',
+          singleDatePicker: false,
+          startDate: new Date(),
+          showDropdowns: true,
+          timePicker: true,
+          timePicker24Hour: true,
+          timePickerIncrement: 10,
+          autoUpdateInput: true,
+        }, function(start, end, label) {
+          console.log("A new date selection was made: " + start.format('YYYY-MM-DD') + ' to ' + end.format('YYYY-MM-DD'));
+        });
+    });
+    </script>
+  <input type="submit" class="btn btn-light" href="{{ url_for('external_factors') }}" name="send" value="Запуск">
+</form>
+
+
+{% endif %}
+{% endblock %}

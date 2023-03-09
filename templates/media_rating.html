@@ -23,7 +23,7 @@
     margin: 0;
     color: #313131;
     font-family: sans-serif;
-    min-width: 600px;
+    min-width: 1200px;
   }
   body.toc{
     font-family: 'Roboto', sans-serif;
@@ -71,7 +71,7 @@
     max-width: 50vw;
   }
   .action {
-    float: right;
+    float: left;
     line-height: 50px;
     margin-right: 10px;
     text-decoration: none;
@@ -146,8 +146,8 @@
       .highcharts-figure,
 .highcharts-data-table table {
     min-width: 800px;
-    max-width: 1200px;
-    min-height: 800px;
+    max-width: 800px;
+    min-height: 1200px;
 }
 
 .highcharts-data-table table {
@@ -186,6 +186,10 @@
     background: #f1f7ff;
 }
 
+.highcharts-credits {
+display: none !important;
+}
+
     </style>
 
 {% endblock %}
@@ -208,7 +212,7 @@
 
   <div class="container">
     <form action="/media_rating" method="POST" style="width: 1000px;">
-        <select name="file_choose" class="form-select-sm" aria-label="Пример выбора по умолчанию">
+        <select name="file_choose" class="form-select-sm">
         <option selected>select File</option>
             {% for i in range(0, len_files) %}
                 <option value="{{ files[i] }}">{{ files[i] }}</option>
@@ -218,14 +222,21 @@
         <input type="text" name="daterange" value="01/01/2022 - 01/12/2022" />
 
         <script>
-        $(function() {
-          $('input[name="daterange"]').daterangepicker({
-            opens: 'left'
-          }, function(start, end, label) {
-            console.log("A new date selection was made: " + start.format('YYYY-MM-DD') + ' to ' + end.format('YYYY-MM-DD'));
+          $(function() {
+            $('input[name="daterange"]').daterangepicker({
+              opens: 'center',
+              singleDatePicker: false,
+              startDate: new Date(),
+              showDropdowns: true,
+              timePicker: true,
+              timePicker24Hour: true,
+              timePickerIncrement: 10,
+              autoUpdateInput: true,
+            }, function(start, end, label) {
+              console.log("A new date selection was made: " + start.format('YYYY-MM-DD') + ' to ' + end.format('YYYY-MM-DD'));
+            });
           });
-        });
-        </script>
+          </script>
         <input type="submit" class="btn btn-light" href="{{ url_for('media_rating') }}" name="send" value="Запуск">
     </form>
 
@@ -234,7 +245,8 @@
 </figure>
 
     <script>
-    var data = JSON.parse('{{ data|tojson }}');
+    // var data = JSON.parse('{{ data|tojson }}');
+    var data = {{ data|safe }};
 
     var smi_pos = []
     var smi_neg = []
@@ -265,7 +277,7 @@
         height: '100%'
     },
     title: {
-        text: '{{ theme }}: Tonality Media'
+        text: '{{ theme }}: тональность в СМИ'
     },
     tooltip: {
         useHTML: true,
@@ -555,7 +567,7 @@
       },
   
       title: {
-          text: "{{ theme }}: Dynamics in Media"
+          text: "{{ theme }}: Динамика тональности в Медиа"
       },
   
       // subtitle: {
@@ -582,7 +594,7 @@
           endOnTick: false,
           crosshair: true,
           title: {
-              text: "Socmedia Index", 
+              text: "Соцмедиа индекс", 
               style: "bold"
           },
           labels: {
@@ -610,7 +622,7 @@
       plotOptions: {
           series: {
               dataLabels: {
-                  enabled: false,
+                  enabled: true,
                   format: "{point.name}",
               },
               cursor: 'pointer',
@@ -662,6 +674,8 @@
             } catch (e) {}
       });
       </script>
+    </figure>
+  </figure>
 </div>
 
 </html>

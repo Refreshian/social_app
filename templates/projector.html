@@ -1,0 +1,35 @@
+{% extends 'base.html' %} {% block head %}
+<title>Кластеризация авторов</title>
+<link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+/>
+{% endblock %} {% block body %}
+
+<style>
+  .okno {
+    display: flex;
+    justify-content: center;
+    /* width: 200px;
+    /* height: 50px; */
+    text-align: center;
+    padding: 10px;
+    /* border: 1px solid #8bd13b; */
+    border-radius: 10px;
+    color: #0000cc; */
+  }
+</style>
+
+<div class="okno">
+  <a href="/author_cluster_files">Загрузите файлы для анализа (кнопка Load)</a>
+</div>
+
+<p style="text-align: center">
+  <iframe
+    src="https://projector.tensorflow.org/"
+    onload="this.width=1250;this.height=900;"
+    style="border: none"
+  ></iframe>
+</p>
+
+{% endblock %}

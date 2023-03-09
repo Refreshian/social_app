@@ -1,26 +1,40 @@
-{% extends 'base.html' %}
-{% block head %}
+{% extends 'base.html' %} {% block head %}
 
-    <link rel="stylesheet" href="/static/css/multi-checkbox-select.css" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.min.js"></script>
+<link rel="stylesheet" href="/static/css/multi-checkbox-select.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.min.js"></script>
 
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"></script>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
-    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css"/>
+<script
+  type="text/javascript"
+  src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"
+></script>
+<script
+  type="text/javascript"
+  src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"
+></script>
+<script
+  type="text/javascript"
+  src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"
+></script>
+<link
+  rel="stylesheet"
+  type="text/css"
+  href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css"
+/>
 
-    <!-- Add icon library -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<!-- Add icon library -->
+<link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+/>
 
-
-    <style>
+<style>
   body {
     margin: 0;
     color: #313131;
     font-family: sans-serif;
     min-width: 300px;
   }
-  body.toc{
+  body.toc {
     font-family: 'Roboto', sans-serif;
     font-size: 15px;
   }
@@ -48,7 +62,7 @@
   }
 
   .highcharts-samples-navbar {
-    background-color: #47475C;
+    background-color: #47475c;
     height: 50px;
   }
   .highcharts-samples-navbar .sample-navbar-brand img {
@@ -73,7 +87,7 @@
     font-size: 0.8em;
   }
   a.action {
-    color: #424BCD;
+    color: #424bcd;
   }
   a.action:hover {
     text-decoration: underline;
@@ -99,7 +113,7 @@
   }
 
   .embed .highcharts-samples-navbar {
-    background-color: #EBEBEB;
+    background-color: #ebebeb;
     color: #3d3d3d;
     height: 50px;
   }
@@ -107,18 +121,20 @@
     display: none;
   }
   .embed a.action {
-    color: #424BCD;
+    color: #424bcd;
   }
 
   .nonav .highcharts-samples-navbar {
     display: none;
   }
 
-  li{
+  li {
     max-width: 60rem;
   }
 
-  ul, menu, dir {
+  ul,
+  menu,
+  dir {
     display: block;
     list-style-type: disc;
     margin-block-start: 1em;
@@ -127,302 +143,381 @@
     margin-inline-end: 0px;
     padding-inline-start: 40px;
     line-height: 1.25rem;
-}
-
-@media only screen and (max-width: 800px) {
-  .actions .action {
-    font-size: 0.65em;
   }
-}
 
-.inline {
-display: inline;
-}
+  @media only screen and (max-width: 800px) {
+    .actions .action {
+      font-size: 0.65em;
+    }
+  }
 
+  .inline {
+    display: inline;
+  }
 </style>
-    <style>
-      #container {
+<style>
+  #container {
     min-width: 1000px;
     max-width: 2000px;
     margin: 0 auto;
     height: 800px;
-}
+  }
 
-#input-group-prepend {
-  flex: 0 0 auto; 
-  display: flex;
-  align-items: center;
-}
+  #input-group-prepend {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+  }
 
-#input-group { 
-  display: flex;
-  align-items: center;
-  padding: .25rem;
-  border: 1px solid #ddd;
-  border-radius: .25rem;
-}
+  #input-group {
+    display: flex;
+    align-items: center;
+    padding: 0.25rem;
+    border: 1px solid #ddd;
+    border-radius: 0.25rem;
+  }
 
-#input-group > #form-control { 
-  flex: 1 1 auto;
-  border: 0;
-  background: transparent;
-  padding: 0 .25rem;
-}
-
+  #input-group > #form-control {
+    flex: 1 1 auto;
+    border: 0;
+    background: transparent;
+    padding: 0 0.25rem;
+  }
 </style>
 
-{% endblock %}
+{% endblock %} {% block body %} {% if data %}
 
-{% block body %}
+<figure>
+  {% for message in get_flashed_messages() %}
+  <div
+    class="alert alert-warning alert-dismissible fade show"
+    role="alert"
+    style="color: red; margin-block-end: 5px"
+  >
+    {{ message }}
+  </div>
+  {% endfor %}
 
-  <figure>
-    {% for message in get_flashed_messages() %}
-    <div class="alert alert-warning alert-dismissible fade show" role="alert" style="color: red;">
-      {{ message }}
+  <form
+    action="/information_graph"
+    method="POST"
+    style="margin-left: -30px; margin-top: -5px"
+  >
+    <div class="input-group">
+      <div class="input-group-prepend" style="height: 28px">
+        <select name="file_choose" class="form-select-sm">
+          <option selected>select File</option>
+          {% for i in range(0, len_files) %}
+          <option value="{{ files[i] }}">{{ files[i] }}</option>
+          {% endfor %}
+        </select>
+        <input type="text" name="daterange" value="01/01/2022 - 01/12/2022" />
+        <input
+          type="submit"
+          href="{{ url_for('information_graph') }}"
+          name="send"
+          value="Запуск"
+        />
       </div>
-    {% endfor %}
-
-    <form action="/information_graph" method="POST">
-      <div class="input-group">
-        <div class="input-group-prepend" id="button-addon3" style="height: 28px;">
-          <select name="file_choose" class="form-select-sm">
-            <option selected>select File</option>
-                {% for i in range(0, len_files) %}
-                    <option value="{{ files[i] }}">{{ files[i] }}</option>
-                {% endfor %}
-            </select>
-            <input type="text" name="daterange" value="01/01/2022 - 01/12/2022"/>
-            <input type="submit" href="{{ url_for('information_graph') }}" name="send" value="Запуск">
-          </div>
+    </div>
+    <div class="input-group">
+      <div class="input-group-prepend">
+        <div>
+          <input
+            type="text"
+            name="text_search"
+            size="30"
+            placeholder="поиск по тексту"
+            style="margin-top: 1px"
+          />
         </div>
-        <div class="input-group">
-          <div class="input-group-prepend" id="button-addon3">
-                <div>
-                <input type = "text" name="text_search" size="30" placeholder="поиск по тексту" style="margin-top: 5px;">
-                </div>
-                <div style="margin-top: 5px;">
-                  <input type="checkbox" class="form-check-input" id="dropdownCheck1" name="posts">
-                  <label class="form-check-label" for="dropdownCheck2">
-                  Посты
-                </label>
-                <input type="checkbox" class="form-check-input" id="dropdownCheck2" name="reposts">
-                  <label class="form-check-label" for="dropdownCheck2">
-                  Репосты
-                </label>
-                <input type="checkbox" class="form-check-input" id="dropdownCheck3" name="smi">
-                  <label class="form-check-label" for="dropdownCheck2">
-                  СМИ
-                </label>
-            </div>
-          </div>
+        <div style="margin-top: 4px">
+          <input
+            type="checkbox"
+            class="form-check-input"
+            id="dropdownCheck1"
+            name="posts"
+          />
+          <label class="form-check-label" for="dropdownCheck2"> Посты </label>
+          <input
+            type="checkbox"
+            class="form-check-input"
+            id="dropdownCheck2"
+            name="reposts"
+          />
+          <label class="form-check-label" for="dropdownCheck2"> Репосты </label>
+          <input
+            type="checkbox"
+            class="form-check-input"
+            id="dropdownCheck3"
+            name="smi"
+          />
+          <label class="form-check-label" for="dropdownCheck2"> СМИ </label>
+        </div>
+      </div>
 
-          <div class="input-group">
-            <div class="input-group-prepend" id="button-addon3">
-              <div style="margin-top: 5px;"></div>
-                <input type="text" class="inline" placeholder="текстов (от)" name="text_min" id="text_min" style="width: 75px;">
-                <input type="text" class="inline" placeholder="текстов (до)" name="text_max" id="text_max" style="width: 75px;">
-              </div>
-            </div>
-          </div>
-        {% if data.len_messages %}
-          <p style="scroll-margin-top: -10px"> {{ data.len_messages }} текста(ов) и {{ data.authors_count }} автора(ов) </p>
-        {% endif %}
-        {% if data.data_hub %}
-          <select id="example" name="hub_select" id="hub_select"></select>
-        {% endif %}
-    </form>
+      <!-- <div class="input-group">
+        <div class="input-group-prepend" id="button-addon3">
+          <div style="margin-top: 5px"></div>
+          <input
+            type="text"
+            class="inline"
+            placeholder="текстов (от)"
+            name="text_min"
+            id="text_min"
+            style="width: 75px"
+          />
+          <input
+            type="text"
+            class="inline"
+            placeholder="текстов (до)"
+            name="text_max"
+            id="text_max"
+            style="width: 75px"
+          />
+        </div>
+      </div> -->
+    </div>
+    {% if data.len_messages %}
+    <p style="scroll-margin-top: -10px">
+      {{ data.len_messages }} текста(ов) и {{ data.authors_count }} автора(ов)
+    </p>
+    <!-- {% endif %} {% if data.data_hub %}
+    <select id="example" name="hub_select" id="hub_select"></select>
+    {% endif %} -->
+  </form>
 
-<script>
-  $(function() {
-    $('input[name="daterange"]').daterangepicker({
-      opens: 'left'
-    }, function(start, end, label) {
-      console.log("A new date selection was made: " + start.format('YYYY-MM-DD') + ' to ' + end.format('YYYY-MM-DD'));
+  <script>
+    $(function () {
+      $('input[name="daterange"]').daterangepicker(
+        {
+          opens: 'center',
+          singleDatePicker: false,
+          startDate: new Date(),
+          showDropdowns: true,
+          timePicker: true,
+          timePicker24Hour: true,
+          timePickerIncrement: 10,
+          autoUpdateInput: true,
+        },
+        function (start, end, label) {
+          console.log(
+            'A new date selection was made: ' +
+              start.format('YYYY-MM-DD') +
+              ' to ' +
+              end.format('YYYY-MM-DD')
+          );
+        }
+      );
     });
-  });
   </script>
 
-<script src="https://code.jquery.com/jquery-3.6.0.slim.min.js"></script>
-<script src="/static/js/multiCheckboxSelect.js"></script>
-<script>
-var data = JSON.parse('{{ data|tojson }}');
-var options = {
-    placeholder: 'Выбрать источник',
-    entryName: 'Источник',
-    data: data.data_hub,
-    multiple: true
-}
+  <script src="https://code.jquery.com/jquery-3.6.0.slim.min.js"></script>
+  <script src="/static/js/multiCheckboxSelect.js"></script>
+  <!-- <script>
+    var data = JSON.parse('{{ data|tojson }}');
+    var options = {
+      placeholder: 'Выбрать источник',
+      entryName: 'Источник',
+      data: data.data_hub,
+      multiple: true,
+    };
 
-$('#example').multiCheckboxSelect(options)
-</script>
+    $('#example').multiCheckboxSelect(options);
+  </script> -->
 
-<script>
-try {
-  fetch(new Request("https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js", { method: 'HEAD', mode: 'no-cors' })).then(function(response) {
-    return true;
-  }).catch(function(e) {
-    var carbonScript = document.createElement("script");
-    carbonScript.src = "//cdn.carbonads.com/carbon.js?serve=CK7DKKQU&placement=wwwjqueryscriptnet";
-    carbonScript.id = "_carbonads_js";
-    document.getElementById("carbon-block").appendChild(carbonScript);
-  });
-} catch (error) {
-  console.log(error);
-}
-</script>
+  <script>
+    try {
+      fetch(
+        new Request(
+          'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js',
+          { method: 'HEAD', mode: 'no-cors' }
+        )
+      )
+        .then(function (response) {
+          return true;
+        })
+        .catch(function (e) {
+          var carbonScript = document.createElement('script');
+          carbonScript.src =
+            '//cdn.carbonads.com/carbon.js?serve=CK7DKKQU&placement=wwwjqueryscriptnet';
+          carbonScript.id = '_carbonads_js';
+          document.getElementById('carbon-block').appendChild(carbonScript);
+        });
+    } catch (error) {
+      console.log(error);
+    }
+  </script>
 
-<script type="text/javascript">
-  var _gaq = _gaq || [];
-  _gaq.push(['_setAccount', 'UA-36251023-1']);
-  _gaq.push(['_setDomainName', 'jqueryscript.net']);
-  _gaq.push(['_trackPageview']);
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-36251023-1']);
+    _gaq.push(['_setDomainName', 'jqueryscript.net']);
+    _gaq.push(['_trackPageview']);
 
-  (function() {
-    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-  })();
-</script>
+    (function () {
+      var ga = document.createElement('script');
+      ga.type = 'text/javascript';
+      ga.async = true;
+      ga.src =
+        ('https:' == document.location.protocol
+          ? 'https://ssl'
+          : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0];
+      s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
 
-<script src="https://code.highcharts.com/highcharts.js"></script>
-<script src="https://code.highcharts.com/modules/networkgraph.js"></script>
-<script src="https://code.highcharts.com/modules/accessibility.js"></script>
+  <script src="https://code.highcharts.com/highcharts.js"></script>
+  <script src="https://code.highcharts.com/modules/networkgraph.js"></script>
+  <script src="https://code.highcharts.com/modules/accessibility.js"></script>
 
-<script src="https://code.highcharts.com/highcharts-more.js"></script>
-<script src="https://code.highcharts.com/modules/exporting.js"></script>
+  <script src="https://code.highcharts.com/highcharts-more.js"></script>
+  <script src="https://code.highcharts.com/modules/exporting.js"></script>
 
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"></script>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
-    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+  <script
+    type="text/javascript"
+    src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"
+  ></script>
+  <script
+    type="text/javascript"
+    src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"
+  ></script>
+  <script
+    type="text/javascript"
+    src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"
+  ></script>
+  <link
+    rel="stylesheet"
+    type="text/css"
+    href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css"
+  />
 
-<div id="container"></div>
-    <script>
+  <div id="container"></div>
+  <script>
     /* eslint-disable default-case */
-var dirDist50 = "#E8544E",
-    dirDist10 = "#FFD265",
-    dirDistLess10 = "#2AA775";
+    var dirDist50 = '#E8544E',
+      dirDist10 = '#FFD265',
+      dirDistLess10 = '#2AA775';
 
-var data = JSON.parse('{{ data|tojson }}');
+    var data = JSON.parse('{{ data|tojson }}');
 
-var node = []
-node.push({
-                    id: data.data_authors[0],
-                    marker: {
-                        radius: data.data_rep_er[0]
-                    },
-                    hubs: data.all_hubs[0],
-                    er: data.data_rep_er[0],
-                    audience: data.data_rep_audience[0],
-                    author_name: data.data_authors[0],
-                    color: dirDistLess10
-                })
+    var node = [];
+    node.push({
+      id: data.data_authors[0],
+      marker: {
+        radius: data.data_rep_er[0],
+      },
+      hubs: data.all_hubs[0],
+      er: data.data_rep_er[0],
+      audience: data.data_rep_audience[0],
+      author_name: data.data_authors[0],
+      color: dirDistLess10,
+    });
 
-for (i = 1; i < data.data_rep_er.length; i++) {
-node.push({
-                    id: data.data_authors[i],
-                    marker: {
-                        radius: data.data_rep_er[i]
-                    },
-                    hubs: data.all_hubs[i], 
-                    er: data.data_rep_er[i],
-                    audience: data.data_rep_audience[i],
-                    author_name: data.data_authors[i],
-                    color: dirDist10
-                })
-}
+    for (i = 1; i < data.data_rep_er.length; i++) {
+      node.push({
+        id: data.data_authors[i],
+        marker: {
+          radius: data.data_rep_er[i],
+        },
+        hubs: data.all_hubs[i],
+        er: data.data_rep_er[i],
+        audience: data.data_rep_audience[i],
+        author_name: data.data_authors[i],
+        color: dirDist10,
+      });
+    }
 
-Highcharts.chart("container", {
-    chart: {
-        type: "networkgraph",
-        marginTop: 80
-    },
-
-    title: {
-        text: "Information Stream {{ theme }}"
-    },
-
-    tooltip: {
-        useHTML: true,
-        pointFormat: '<b>{point.author_name}:</b> Вовлеченность: {point.marker.radius}'
-    },
-
-    accessibility: {
-          point: {
-              valueDescriptionFormat:
-            "Hubs: {point.hubs}, Вовлеченность: {point.radius}, Аудитория: {point.audience}"
-          }
+    Highcharts.chart('container', {
+      chart: {
+        type: 'networkgraph',
+        marginTop: 80,
       },
 
-    plotOptions: {
+      title: {
+        text: 'Распространение информации',
+      },
+
+      tooltip: {
+        useHTML: true,
+        pointFormat:
+          '<b>{point.author_name}:</b> Вовлеченность: {point.marker.radius}',
+      },
+
+      accessibility: {
+        point: {
+          valueDescriptionFormat:
+            'Hubs: {point.hubs}, Вовлеченность: {point.radius}, Аудитория: {point.audience}',
+        },
+      },
+
+      plotOptions: {
         networkgraph: {
-            keys: ["from", "to"],
-            layoutAlgorithm: {
-                enableSimulation: true,
-                integration: "euler",
-                linkLength: 50,
-                maxIterations: 150,
-                gravitationalConstant: false,
-                friction: false,
-                approximation: true,
-                theta: true,
-                maxSpeed: true,
-            }
-        }
-    },
+          keys: ['from', 'to'],
+          layoutAlgorithm: {
+            enableSimulation: true,
+            integration: 'euler',
+            linkLength: 50,
+            maxIterations: 150,
+            gravitationalConstant: false,
+            friction: false,
+            approximation: true,
+            theta: true,
+            maxSpeed: true,
+          },
+        },
+      },
 
-
-    series: [
+      series: [
         {
-            marker: {
-                radius: 20
+          marker: {
+            radius: 20,
+          },
+          dataLabels: {
+            enabled: true,
+            format: '{point.author_name}, Аудитория: {point.audience}',
+            linkFormat: '',
+            allowOverlap: false,
+            style: {
+              textOutline: false,
             },
-            dataLabels: {
-                enabled: true,
-                format: '{point.author_name}, Аудитория: {point.audience}',
-                linkFormat: '',
-                allowOverlap: false,
-                style: {
-                    textOutline: false
-                }
-            },
-            data: data.df_rep_auth,
-            
-            nodes: node
-        }
-    ]
-});
+          },
+          data: data.df_rep_auth,
 
-    </script>
-    <script>
+          nodes: node,
+        },
+      ],
+    });
+  </script>
+  <script>
     window.addEventListener('DOMContentLoaded', (event) => {
       /* Script for setting iframe height when on Highcharts.com */
-          try {
+      try {
+        // Allow hiding the description by search param
+        const search = window.location.search;
+        if (search && search.includes('hide-description')) {
+          const description = document.querySelector(
+            '.highcharts-description, .highcharts-linked-description'
+          );
+          if (description) {
+            description.style.display = 'none';
+          }
+        }
 
-            // Allow hiding the description by search param
-            const search = window.location.search;
-            if(search && search.includes('hide-description')){
-              const description = document.querySelector('.highcharts-description, .highcharts-linked-description');
-              if(description){
-                description.style.display = 'none';
-              }
-            }
+        const iframes = window.parent.document.getElementsByTagName('iframe');
 
-            const iframes = window.parent.document.getElementsByTagName('iframe');
-
-            for(let iframe of iframes){
-              const { height } = iframe.contentWindow.document.body.getBoundingClientRect();
-              if (
-                height &&
-                height > iframe.height
-              ) {
-                iframe.setAttribute('height', height);
-                iframe.style.setProperty('height', height + 25 + 'px')
-              }
-            }
-          } catch (e) {}
+        for (let iframe of iframes) {
+          const { height } =
+            iframe.contentWindow.document.body.getBoundingClientRect();
+          if (height && height > iframe.height) {
+            iframe.setAttribute('height', height);
+            iframe.style.setProperty('height', height + 25 + 'px');
+          }
+        }
+      } catch (e) {}
     });
-    </script>
+  </script>
 </figure>
 
 <!-- scatter graph -->
@@ -430,115 +525,276 @@ Highcharts.chart("container", {
 <style>
   #container2 {
     max-width: auto;
-    min-height: 800px;
+    min-height: 1200px;
     max-height: auto;
     margin: auto;
-    margin-top: 50px;
+    margin-top: 120px;
   }
-  </style>
-  
+</style>
+
 <figure>
   <div id="container2"></div>
   <script>
     Highcharts.setOptions({
-  colors: ['#058DC7', '#50B432', '#ED561B', '#DDDF00', '#24CBE5', '#64E572', '#FF9655', '#FFF263', '#6AF9C4']
-});
+      colors: [
+        '#50B432',
+        '#058DC7',
+        '#ED561B',
+        '#DDDF00',
+        '#24CBE5',
+        '#64E572',
+        '#FF9655',
+        '#6AF9C4',
+        '#FFF263',
+      ],
+    });
 
-var date = JSON.parse('{{ multivalue_dict|tojson }}');
-const series = [];
+    // var date = JSON.parse('{{ multivalue_dict|tojson }}');
 
-for (var key in date) {
+    var date = {{ multivalue_dict|safe }};
 
-  var data = []
-  for (i = 0; i < date[key].length; i++) 
-      data.push({ x:date[key][i][0], y: date[key][i][1], name: date[key][i][2], url: date[key][i][3], 
-      hub: key})
+    const series = [];
 
-  series.push({
-    name: key,
-    data: data})
-}
+    for (var key in date) {
+      var data = [];
+      for (i = 0; i < date[key].length; i++)
+        data.push({
+          x: date[key][i][0],
+          y: date[key][i][1],
+          name: date[key][i][2],
+          url: date[key][i][3],
+          hub: key,
+        });
 
-
-const colors = Highcharts.getOptions().colors.map(
-  c => Highcharts.color(c).setOpacity(0.8).get()
-);
-
-Highcharts.chart("container2", {
-  chart: {
-    type: "scatter",
-    zoomType: "xy"
-  },
-  colors,
-  title: {
-    text: "Media Graph"
-  },
-
-  xAxis: {   
-  type: 'datetime',
-         dateTimeLabelFormats: { 
-            year: '%b'
-         },
-
-    title: {
-      text: "Дата / время"
-    },
-
-  },
-  yAxis: {
-    title: {
-      text: "Аудитория"
-    },
-    labels: {
-      format: "{value}"
+      series.push({
+        name: key,
+        data: data,
+      });
     }
-  },
-  legend: {
-    enabled: true
-  },
-  plotOptions: {
-    series: {
-      dataGrouping: {
-          enabled: true
-      }
-  },
-    scatter: {
-      marker: {
-        radius: 4.5,
-        symbol: "circle",
-        states: {
-          hover: {
-            enabled: true,
-            lineColor: "rgb(100,100,100)"
-          }
-        }
+
+    const colors = Highcharts.getOptions().colors.map((c) =>
+      Highcharts.color(c).setOpacity(1.0).get()
+    );
+
+    Highcharts.chart('container2', {
+      chart: {
+        type: 'scatter',
+        zoomType: 'xy',
       },
-      cursor: 'pointer',
-        point: {
-            events: {
-                click: function () {
-                  window.open(this.options.url);
-                }
-            }
-        }
-    }
-},
-tooltip: {
-    useHTML: true,
-    headerFormat: "<table>",
-    pointFormat:
-    "<tr><th>Источник:</th><td>{point.hub}</td></tr>" +
-    "<tr><th>Автор:</th><td>{point.name}</td></tr>" + 
-    "<tr><th>Аудитория:</th><td>{point.y}</td></tr>",
-    // "<tr><th>Публикаций за период:</th><td>{point.z}</td></tr>",
-    footerFormat: "</table>",
-    followPointer: true,
-    shared: true,
-},
-  series: series
-});
+      colors,
+      title: {
+        text: 'Динамика по авторам и источникам',
+      },
 
-</script>
+      xAxis: {
+        type: 'datetime',
+        dateTimeLabelFormats: {
+          year: '%b',
+        },
+
+        title: {
+          text: 'Дата / время',
+        },
+      },
+      yAxis: {
+        title: {
+          text: 'Аудитория',
+        },
+        labels: {
+          format: '{value}',
+        },
+      },
+      legend: {
+        enabled: true,
+      },
+      plotOptions: {
+        series: {
+          turboThreshold: 25000,
+          dataGrouping: {
+            enabled: true,
+          },
+          dataLabels: {
+            enabled: true,
+            format: '{point.name}',
+            turboThreshold: 25000,
+          },
+        },
+        scatter: {
+          marker: {
+            radius: 6.5,
+            symbol: 'circle',
+            // states: {
+            //   hover: {
+            //     enabled: true,
+            //     format: "{point.name}",
+            //     lineColor: "rgb(100,100,100)"
+            //   }
+            // }
+          },
+          cursor: 'pointer',
+          point: {
+            events: {
+              click: function () {
+                window.open(this.options.url);
+              },
+            },
+          },
+        },
+      },
+      tooltip: {
+        useHTML: true,
+        headerFormat: '<table>',
+        pointFormat:
+          '<tr><th>Источник:</th><td>{point.hub}</td></tr>' +
+          '<tr><th>Автор:</th><td>{point.name}</td></tr>' +
+          '<tr><th>Аудитория:</th><td>{point.y}</td></tr>',
+        // "<tr><th>Публикаций за период:</th><td>{point.z}</td></tr>",
+        footerFormat: '</table>',
+        followPointer: true,
+        shared: true,
+        turboThreshold: 25000,
+      },
+      series: series,
+    });
+  </script>
 </figure>
-</html>
-{% endblock %}
+
+{% elif not data %}
+
+<figure>
+  {% for message in get_flashed_messages() %}
+  <div
+    class="alert alert-warning alert-dismissible fade show"
+    role="alert"
+    style="color: red; margin-block-end: 5px"
+  >
+    {{ message }}
+  </div>
+  {% endfor %}
+
+  <form
+    action="/information_graph"
+    method="POST"
+    style="margin-left: -30px; margin-top: -5px"
+  >
+    <div class="input-group">
+      <div class="input-group-prepend" style="height: 28px">
+        <select name="file_choose" class="form-select-sm">
+          <option selected>select File</option>
+          {% for i in range(0, len_files) %}
+          <option value="{{ files[i] }}">{{ files[i] }}</option>
+          {% endfor %}
+        </select>
+        <input type="text" name="daterange" value="01/01/2022 - 01/12/2022" />
+        <script>
+          $(function () {
+            $('input[name="daterange"]').daterangepicker(
+              {
+                opens: 'center',
+                singleDatePicker: false,
+                startDate: new Date(),
+                showDropdowns: true,
+                timePicker: true,
+                timePicker24Hour: true,
+                timePickerIncrement: 10,
+                autoUpdateInput: true,
+              },
+              function (start, end, label) {
+                console.log(
+                  'A new date selection was made: ' +
+                    start.format('YYYY-MM-DD') +
+                    ' to ' +
+                    end.format('YYYY-MM-DD')
+                );
+              }
+            );
+          });
+        </script>
+        <input
+          type="submit"
+          href="{{ url_for('information_graph') }}"
+          name="send"
+          value="Запуск"
+        />
+      </div>
+    </div>
+    <div class="input-group">
+      <div class="input-group-prepend">
+        <div>
+          <input
+            type="text"
+            name="text_search"
+            size="30"
+            placeholder="поиск по тексту"
+            style="margin-top: 1px"
+          />
+        </div>
+        <div style="margin-top: 4px">
+          <input
+            type="checkbox"
+            class="form-check-input"
+            id="dropdownCheck1"
+            name="posts"
+          />
+          <label class="form-check-label" for="dropdownCheck2"> Посты </label>
+          <input
+            type="checkbox"
+            class="form-check-input"
+            id="dropdownCheck2"
+            name="reposts"
+          />
+          <label class="form-check-label" for="dropdownCheck2"> Репосты </label>
+          <input
+            type="checkbox"
+            class="form-check-input"
+            id="dropdownCheck3"
+            name="smi"
+          />
+          <label class="form-check-label" for="dropdownCheck2"> СМИ </label>
+        </div>
+      </div>
+
+      <!-- <div class="input-group">
+        <div class="input-group-prepend" id="button-addon3">
+          <div style="margin-top: 5px"></div>
+          <input
+            type="text"
+            class="inline"
+            placeholder="текстов (от)"
+            name="text_min"
+            id="text_min"
+            style="width: 75px"
+          />
+          <input
+            type="text"
+            class="inline"
+            placeholder="текстов (до)"
+            name="text_max"
+            id="text_max"
+            style="width: 75px"
+          />
+        </div>
+      </div> -->
+    </div>
+  </form>
+</figure>
+
+<script
+  type="text/javascript"
+  src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"
+></script>
+<script
+  type="text/javascript"
+  src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"
+></script>
+<script
+  type="text/javascript"
+  src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"
+></script>
+<link
+  rel="stylesheet"
+  type="text/css"
+  href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css"
+/>
+
+{% endif %} {% endblock %}

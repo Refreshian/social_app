@@ -1,0 +1,98 @@
+{% extends 'base.html' %} {% block head %}
+<link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+/>
+{% endblock %} {% block body %}
+
+<style>
+  .container {
+    height: 200px;
+    position: relative;
+    /* border: 3px solid green; */
+  }
+
+  .center {
+    margin: 0;
+    position: absolute;
+    top: 30%;
+    left: 45%;
+    -ms-transform: translate(-45%, -45%);
+    transform: translate(-45%, -45%);
+    width: 100%;
+    text-align: center;
+  }
+
+  form.inline {
+    float: left;
+    width: 100%;
+    text-align: center;
+  }
+
+  .border {
+    border: 1px solid rgb(92, 98, 105);
+    padding: 10px;
+   }
+
+</style>
+
+{% if not text %}
+
+<div class="container">
+  <div class="center">
+    <form role="form" action="/tonality_check" method="POST" >
+        <p style="font-size:x-large"> Введите текст и выберите тему для проверки</p>
+        <input name="text_search" type="search" size="50">
+
+            <select title="thing" class="form-control" id="myselect" name="thing" required>
+                <option value="{{ thing }}"> {{ thing }} </option>
+                {% for i in range(0, len_files) %}
+                    <option value="{{ files[i] }}" name="{{ files[i] }}" id="{{ files[i] }}" {% if thing =="{{ files[i] }}" %} selected {% endif %} >{{ files[i] }}</option>
+                {% endfor %}
+            </select>
+
+          <input
+            type="submit"
+            class="btn btn-light"
+            href="{{ url_for('tonality_check') }}"
+            name="send"
+            value="Ок"
+          />
+    </form>
+  </div>
+</div>
+
+{% elif text %}
+
+<div class="container">
+  <div class="center">
+    <form role="form" action="/tonality_check" method="POST" >
+        <p style="font-size:x-large"> Введите текст и выберите тему для проверки</p>
+        <input name="text_search" type="search" size="30">
+
+            <select title="thing" class="form-control" id="myselect" name="thing" required>
+                <option value="{{ thing }}"> {{ thing }} </option>
+                {% for i in range(0, len_files) %}
+                    <option value="{{ files[i] }}" name="{{ files[i] }}" id="{{ files[i] }}" {% if thing =="{{ files[i] }}" %} selected {% endif %} >{{ files[i] }}</option>
+                {% endfor %}
+            </select>
+
+          <input
+            type="submit"
+            class="btn btn-light"
+            href="{{ url_for('tonality_check') }}"
+            name="send"
+            value="Ок"
+          />
+    </form>
+    <p class="border"> {{ text }} </p>
+    <div>
+      {{ prediction }}
+    </div>
+  </div>
+</div>
+
+
+
+{% endif %}
+{% endblock %}

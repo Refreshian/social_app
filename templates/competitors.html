@@ -1,0 +1,1136 @@
+{% extends 'base.html' %}
+{% block head %}
+
+   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2-bootstrap-css/1.4.6/select2-bootstrap.min.css">
+
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.4/css/select2.min.css" rel="stylesheet" />
+
+
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.2.1/js/bootstrap.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.4/js/select2.min.js"></script>
+
+
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.min.js"></script>
+
+    <!-- <script type="text/javascript" src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"></script> -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <style>
+
+  body {
+    margin: 0;
+    color: #313131;
+    font-family: sans-serif;
+    min-width: 300px;
+  }
+  body.toc{
+    font-family: 'Roboto', sans-serif;
+    font-size: 15px;
+  }
+  h1 {
+    font-size: 2em;
+    margin: 0.67em 0;
+    font-weight: bolder;
+    text-transform: uppercase;
+  }
+  h2 {
+    font-size: 1.5em;
+    margin: 0.83em 0;
+    font-weight: bolder;
+    text-transform: uppercase;
+  }
+  h3 {
+    font-size: 1.17em;
+    margin: 1em 0;
+    font-weight: bolder;
+    text-transform: uppercase;
+  }
+  h4 {
+    font-weight: bolder;
+    text-transform: uppercase;
+  }
+
+  .highcharts-samples-navbar {
+    background-color: #47475C;
+    height: 50px;
+  }
+  .highcharts-samples-navbar .sample-navbar-brand img {
+    height: 66px;
+    margin-top: auto;
+    margin-bottom: auto;
+    height: auto;
+    max-height: 95%;
+    margin-left: 5px;
+    width: auto;
+    max-width: 50vw;
+  }
+  .actions {
+    float: right;
+    max-width: 50vw;
+  }
+  .action {
+    float: right;
+    line-height: 50px;
+    margin-right: 10px;
+    text-decoration: none;
+    font-size: 0.8em;
+  }
+  a.action {
+    color: #424BCD;
+  }
+  a.action:hover {
+    text-decoration: underline;
+  }
+  .action i.fab {
+    font-size: 1.6em;
+  }
+  .action i.fa-jsfiddle {
+    font-weight: 700;
+  }
+  .highcharts-samples-navbar a.action {
+    color: #eeeaea;
+  }
+  .description {
+    max-width: 800px;
+    margin: 1em auto;
+    padding: 10px;
+  }
+  .error {
+    text-align: center;
+    font-style: italic;
+    color: red;
+  }
+
+  .embed .highcharts-samples-navbar {
+    background-color: #EBEBEB;
+    color: #3d3d3d;
+    height: 50px;
+  }
+  .embed .sample-navbar-brand {
+    display: none;
+  }
+  .embed a.action {
+    color: #424BCD;
+  }
+
+  .nonav .highcharts-samples-navbar {
+    display: none;
+  }
+
+  li{
+    max-width: 60rem;
+  }
+
+  ul, menu, dir {
+    display: block;
+    list-style-type: disc;
+    margin-block-start: 1em;
+    margin-block-end: 1em;
+    margin-inline-start: 0px;
+    margin-inline-end: 0px;
+    padding-inline-start: 40px;
+    line-height: 1.25rem;
+}
+
+@media only screen and (max-width: 800px) {
+  .actions .action {
+    font-size: 0.65em;
+  }
+}
+
+.grid-container {
+  display: grid;
+  margin-top: 20px;
+  grid-template-areas: "donut-1 donut-2";
+  grid-template-columns: 800px 800px;
+  grid-template-rows: 800px 800px;
+}
+
+.donut-1 {
+  grid-area: donut-1;
+}
+.donut-2 {
+  grid-area: donut-2;
+}
+
+</style>
+    <style>
+      #container {
+    min-width: 310px;
+    height: 400px;
+    margin: 0 auto;
+}
+
+body {
+ 	font-family: 'Ubuntu', sans-serif;
+/*	font-weight: bold;*/
+}
+.select2-container {
+  min-width: 600px;
+}
+
+.select2-results__option {
+  padding-right: 20px;
+  vertical-align: middle;
+}
+.select2-results__option:before {
+  content: "";
+  display: inline-block;
+  position: relative;
+  height: 20px;
+  width: 20px;
+  border: 2px solid #e9e9e9;
+  border-radius: 4px;
+  background-color: #fff;
+  margin-right: 20px;
+  vertical-align: middle;
+}
+.select2-results__option[aria-selected=true]:before {
+  font-family:fontAwesome;
+  content: "\f00c";
+  color: #fff;
+  background-color: #f77750;
+  border: 0;
+  display: inline-block;
+  padding-left: 3px;
+}
+.select2-container--default .select2-results__option[aria-selected=true] {
+	background-color: #fff;
+}
+.select2-container--default .select2-results__option--highlighted[aria-selected] {
+	background-color: #eaeaeb;
+	color: #272727;
+}
+.select2-container--default .select2-selection--multiple {
+	margin-bottom: 10px;
+}
+.select2-container--default.select2-container--open.select2-container--below .select2-selection--multiple {
+	border-radius: 4px;
+}
+.select2-container--default.select2-container--focus .select2-selection--multiple {
+	border-color: #73dc17;
+	border-width: 2px;
+}
+.select2-container--default .select2-selection--multiple {
+	border-width: 2px;
+}
+.select2-container--open .select2-dropdown--below {
+
+	border-radius: 6px;
+	box-shadow: 0 0 10px rgba(0,0,0,0.5);
+
+}
+.select2-selection .select2-selection--multiple:after {
+	content: 'hhghgh';
+}
+/* select with icons badges single*/
+.select-icon .select2-selection__placeholder .badge {
+	display: none;
+}
+.select-icon .placeholder {
+/* 	display: none; */
+}
+.select-icon .select2-results__option:before,
+.select-icon .select2-results__option[aria-selected=true]:before {
+	display: none !important;
+	/* content: "" !important; */
+}
+.select-icon  .select2-search--dropdown {
+	display: none;
+}
+
+  body {
+    margin: 0;
+    color: #313131;
+    font-family: sans-serif;
+    min-width: 300px;
+  }
+  body.toc{
+    font-family: 'Roboto', sans-serif;
+    font-size: 15px;
+  }
+  h1 {
+    font-size: 2em;
+    margin: 0.67em 0;
+    font-weight: bolder;
+    text-transform: uppercase;
+  }
+  h2 {
+    font-size: 1.5em;
+    margin: 0.83em 0;
+    font-weight: bolder;
+    text-transform: uppercase;
+  }
+  h3 {
+    font-size: 1.17em;
+    margin: 1em 0;
+    font-weight: bolder;
+    text-transform: uppercase;
+  }
+  h4 {
+    font-weight: bolder;
+    text-transform: uppercase;
+  }
+
+  .highcharts-samples-navbar {
+    background-color: #47475C;
+    height: 50px;
+  }
+  .highcharts-samples-navbar .sample-navbar-brand img {
+    height: 66px;
+    margin-top: auto;
+    margin-bottom: auto;
+    height: auto;
+    max-height: 95%;
+    margin-left: 5px;
+    width: auto;
+    max-width: 50vw;
+  }
+  .actions {
+    float: right;
+    max-width: 50vw;
+  }
+  .action {
+    float: right;
+    line-height: 50px;
+    margin-right: 10px;
+    text-decoration: none;
+    font-size: 0.8em;
+  }
+  a.action {
+    color: #424BCD;
+  }
+  a.action:hover {
+    text-decoration: underline;
+  }
+  .action i.fab {
+    font-size: 1.6em;
+  }
+  .action i.fa-jsfiddle {
+    font-weight: 700;
+  }
+  .highcharts-samples-navbar a.action {
+    color: #eeeaea;
+  }
+  .description {
+    max-width: 800px;
+    margin: 1em auto;
+    padding: 10px;
+  }
+  .error {
+    text-align: center;
+    font-style: italic;
+    color: red;
+  }
+
+  .embed .highcharts-samples-navbar {
+    background-color: #EBEBEB;
+    color: #3d3d3d;
+    height: 50px;
+  }
+  .embed .sample-navbar-brand {
+    display: none;
+  }
+  .embed a.action {
+    color: #424BCD;
+  }
+
+  .nonav .highcharts-samples-navbar {
+    display: none;
+  }
+
+  li{
+    max-width: 60rem;
+  }
+
+  ul, menu, dir {
+    display: block;
+    list-style-type: disc;
+    margin-block-start: 1em;
+    margin-block-end: 1em;
+    margin-inline-start: 0px;
+    margin-inline-end: 0px;
+    padding-inline-start: 40px;
+    line-height: 1.25rem;
+}
+
+@media only screen and (max-width: 800px) {
+  .actions .action {
+    font-size: 0.65em;
+  }
+}
+
+.highcharts-figure,
+.highcharts-data-table table {
+    min-width: 420px;
+    max-width: 800px;
+    margin: 1em auto;
+}
+
+.highcharts-data-table table {
+    font-family: Verdana, sans-serif;
+    border-collapse: collapse;
+    border: 1px solid #ebebeb;
+    margin: 10px auto;
+    text-align: center;
+    width: 100%;
+    max-width: 500px;
+}
+
+.highcharts-data-table caption {
+    padding: 1em 0;
+    font-size: 1.2em;
+    color: #555;
+}
+
+.highcharts-data-table th {
+    font-weight: 600;
+    padding: 0.5em;
+}
+
+.highcharts-data-table td,
+.highcharts-data-table th,
+.highcharts-data-table caption {
+    padding: 0.5em;
+}
+
+.highcharts-data-table thead tr,
+.highcharts-data-table tr:nth-child(even) {
+    background: #f8f8f8;
+}
+
+.highcharts-data-table tr:hover {
+    background: #f1f7ff;
+}
+
+#container2 {
+      min-height: auto;
+      min-width: auto;
+      margin-top: auto;
+      margin-left: auto;
+  }
+
+#container3 {
+    min-height: auto;
+    min-width: auto;
+    margin-top: auto;
+    margin-left: auto;
+}
+
+#container4 {
+    min-height: 600px;
+    min-width: auto;
+    margin-top: auto;
+    margin-left: auto;
+}
+
+#container5 {
+    min-height: 600px;
+    min-width: auto;
+    margin-top: auto;
+    margin-left: auto;
+}
+
+ul {
+  text-align: left;
+  margin-right: 0%;
+}
+
+.reduce>ul>li {
+  display: inline-block;
+  width: 45%;
+}
+
+@media screen and (max-width: 600px) {
+  .reduce>ul>li {
+    width: 45% !important;
+  }
+}
+
+.gridMap {
+  float: left;
+  /* border: 1px solid; */
+  height: 200px;
+  width: 100%;
+  margin: 1px;
+}
+
+@media screen and (max-width: 600px) {
+  .gridMap {
+    width: 80% !important;
+  }
+}
+
+.reduce {
+  width: 100%;
+  height: 80px;
+  /* border: 0; */
+  /*transform: scale(0.75);*/
+  transform-origin: 0 0;
+  margin-top: 100px;
+}
+
+h1 {
+  text-align: center;
+}
+
+p {
+  text-align: center;
+}
+
+.reduce {
+  width: 100%;
+  height: 50px;
+  /* border: 0; */
+  /*transform: scale(0.75);*/
+  transform-origin: 0 2;
+}
+</style>
+
+
+
+{% endblock %}
+
+{% block body %}
+
+
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://code.highcharts.com/modules/data.js"></script>
+<script src="https://code.highcharts.com/modules/exporting.js"></script>
+<script src="https://code.highcharts.com/modules/series-label.js"></script>
+<script src="https://code.highcharts.com/modules/accessibility.js"></script>
+<script src="https://code.highcharts.com/themes/high-contrast-light.js"></script>
+
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://code.highcharts.com/highcharts-more.js"></script>
+<script src="https://code.highcharts.com/modules/exporting.js"></script>
+<script src="https://code.highcharts.com/modules/accessibility.js"></script>
+
+{% if not dg %}
+
+<form action="/competitors" method="POST" style="margin-top: 20px; text-align: center;">
+
+   <div class="input-group">
+      <select class="js-select2" multiple="multiple" name="selected_files" id="selected_files">
+         {% for i in range(0, files|length) %}
+            <option value="{{ files[i] }}" data-badge=""> {{ files[i] }}</option>
+         {% endfor %}
+      </select>
+       <input type="text" name="daterange" value="01/01/2022 - 01/12/2022"/>
+       <input type="submit" href="{{ url_for('competitors') }}" name="send" value="Запуск">
+     </div>
+   </form>
+
+    <script>
+      $(function() {
+        $('input[name="daterange"]').daterangepicker({
+          opens: 'center',
+          singleDatePicker: false,
+          startDate: new Date(),
+          showDropdowns: true,
+          timePicker: true,
+          timePicker24Hour: true,
+          timePickerIncrement: 10,
+          autoUpdateInput: true,
+        }, function(start, end, label) {
+          console.log("A new date selection was made: " + start.format('YYYY-MM-DD') + ' to ' + end.format('YYYY-MM-DD'));
+        });
+      });
+    </script>
+
+      <script>
+      $(".js-select2").select2({
+                closeOnSelect : false,
+                placeholder : "Выберите темы для сравнения",
+                allowHtml: true,
+                allowClear: true,
+                tags: true // создает новые опции на лету
+            });
+      </script>
+
+
+{% elif dg %}
+
+<form action="/competitors" method="POST" style="margin-top: 20px; text-align: center;">
+
+  <div class="input-group">
+     <select class="js-select2" multiple="multiple" name="selected_files" id="selected_files">
+        {% for i in range(0, files|length) %}
+           <option value="{{ files[i] }}" data-badge=""> {{ files[i] }}</option>
+        {% endfor %}
+     </select>
+      <input type="text" name="daterange" value="01/01/2022 - 01/12/2022"/>
+      <input type="submit" href="{{ url_for('competitors') }}" name="send" value="Запуск">
+    </div>
+  </form>
+
+    <script>
+      $(function() {
+        $('input[name="daterange"]').daterangepicker({
+          opens: 'center',
+          singleDatePicker: false,
+          startDate: new Date(),
+          showDropdowns: true,
+          timePicker: true,
+          timePicker24Hour: true,
+          timePickerIncrement: 10,
+          autoUpdateInput: true,
+        }, function(start, end, label) {
+          console.log("A new date selection was made: " + start.format('YYYY-MM-DD') + ' to ' + end.format('YYYY-MM-DD'));
+        });
+      });
+    </script>
+
+      <script>
+      $(".js-select2").select2({
+               closeOnSelect : false,
+               placeholder : "Выберите темы для сравнения",
+               allowHtml: true,
+               allowClear: true,
+               tags: true // создает новые опции на лету
+            });
+      </script>
+
+<div id="container" style="margin-top: 50px;"></div>
+<pre id="csv" style="display:none">{{ dg }}</pre>
+
+<hr>
+
+<!-- графики bubbles по соцмедиа и СМИ -->
+<!-- https://jsfiddle.net/mushigh/L0heyxa1/ -->
+  <!-- <h3>
+    Распределение по источникам
+  </h3> -->
+  <!-- <p>
+    Source: <a href="https://www.ecb.europa.eu/home/html/index.en.html">European Central Bank</a>
+  </p> -->
+
+  <div class="reduce">
+    <p> Распределение по источникам </p>
+    <ul>
+      <li>
+        <div class="gridMap" id="highcharts-gT_Eme5tu">
+          <figure class="highcharts-figure">
+            <div id="container2"></div>
+            </figure>
+        </div>
+      </li>
+      <li>
+        <div class="gridMap" id="highcharts-PganD5_th">
+          <figure class="highcharts-figure">
+            <div id="container3"></div>
+            </figure>
+    </ul>
+  </div>
+</div>
+
+<!-- График динамики с кругами/bubbles -->
+<div id="container4" style="margin-top: 800px;"></div>
+<hr>
+<div id="container5" style="margin-top: 50px;"></div>
+
+
+    <script>
+
+
+    Highcharts.chart("container", {
+    chart: {
+        type: "spline"
+    },
+    title: {
+        text: "Динамика обсуждений"
+    },
+   //  subtitle: {
+   //      text:
+   //      'Source: <a href="https://trends.google.com/trends/explore?date=all&q=%2Fm%2F02wxtgw,%2Fm%2F03wbl14,%2Fm%2F04r_8,%2Fm%2F0fpzzp,%2Fm%2F055yr">Google Trends </a>'
+   //  },
+
+    yAxis: {
+        max: 100,
+        title: {
+            enabled: false
+        }
+    },
+
+    tooltip: {
+        split: true,
+        xDateFormat: '%Y-%m-%d',
+        crosshairs: true
+    },
+
+    data: {
+      csv: document.getElementById('csv').innerHTML
+    }
+});
+
+    </script>
+    <script>
+    window.addEventListener('DOMContentLoaded', (event) => {
+      /* Script for setting iframe height when on Highcharts.com */
+          try {
+
+            // Allow hiding the description by search param
+            const search = window.location.search;
+            if(search && search.includes('hide-description')){
+              const description = document.querySelector('.highcharts-description, .highcharts-linked-description');
+              if(description){
+                description.style.display = 'none';
+              }
+            }
+
+            const iframes = window.parent.document.getElementsByTagName('iframe');
+
+            for(let iframe of iframes){
+              const { height } = iframe.contentWindow.document.body.getBoundingClientRect();
+              if (
+                height &&
+                height > iframe.height
+              ) {
+                iframe.setAttribute('height', height);
+                iframe.style.setProperty('height', height + 25 + 'px')
+              }
+            }
+          } catch (e) {}
+    });
+    </script>
+
+
+    <!-- bubbles-1 -->
+    <script>
+
+    // var data_back = JSON.parse('{{ data|tojson }}');
+    var data_back = {{ data|safe }};
+    var data_bobble_SMI = []
+    var data_bobble_Socmedia = []
+
+    for (i = 0; i < data_back.filename.length; i++) {
+      var obj = {}
+      obj["name"] = data_back.filename[i]
+      obj["data"] = []
+      for (j = 0; j < data_back.news_smi_name[i].length; j++) {
+        obj["data"].push({
+          name: data_back.news_smi_name[i][j],
+          value: data_back.news_smi_rating[i][j],
+          count: data_back.news_smi_count[i][j],
+        })
+      }
+      data_bobble_SMI.push(obj)
+    }
+
+
+    for (i = 0; i < data_back.filename.length; i++) {
+      var obj = {}
+      obj["name"] = data_back.filename[i]
+      obj["data"] = []
+      for (j = 0; j < data_back.list_socmedia[i].length; j++) {
+        obj["data"].push({
+          name: data_back.list_socmedia[i][j],
+          value: data_back.list_socmedia_rating[i][j],
+        })
+      }
+      data_bobble_Socmedia.push(obj)
+    }
+
+
+      Highcharts.chart('container2', {
+      chart: {
+          type: 'packedbubble',
+          height: '100%',
+      },
+      title: {
+          text: 'СМИ'
+      },
+      subtitle: {
+          text: 'Рейтинг в СМИ'
+      },
+      tooltip: {
+          useHTML: true,
+          pointFormat: '<b>{point.name}:</b> Индекс: {point.value} </n> Сообщений: {point.count}'
+      },
+      plotOptions: {
+          packedbubble: {
+              minSize: '30%',
+              maxSize: '100%',
+              layoutAlgorithm: {
+                  gravitationalConstant: 0.05,
+                  splitSeries: true,
+                  seriesInteraction: false,
+                  dragBetweenSeries: true,
+                  parentNodeLimit: true
+              },
+              dataLabels: {
+                  enabled: true,
+                  format: '{point.name}',
+                  style: {
+                      textOutline: 'none',
+                      fontWeight: 'normal'
+                  }
+              }
+          }
+      },
+      series: data_bobble_SMI,
+  });
+      </script>
+      <script>
+      window.addEventListener('DOMContentLoaded', (event) => {
+        /* Script for setting iframe height when on Highcharts.com */
+            try {
+
+              // Allow hiding the description by search param
+              const search = window.location.search;
+              if(search && search.includes('hide-description')){
+                const description = document.querySelector('.highcharts-description, .highcharts-linked-description');
+                if(description){
+                  description.style.display = 'none';
+                }
+              }
+
+              const iframes = window.parent.document.getElementsByTagName('iframe');
+
+              for(let iframe of iframes){
+                const { height } = iframe.contentWindow.document.body.getBoundingClientRect();
+                if (
+                  height &&
+                  height > iframe.height
+                ) {
+                  iframe.setAttribute('height', height);
+                  iframe.style.setProperty('height', height + 25 + 'px')
+                }
+              }
+            } catch (e) {}
+      });
+    </script>
+
+      <!-- bubbels-2 -->
+      <script>
+        Highcharts.chart('container3', {
+        chart: {
+            type: 'packedbubble',
+            height: '100%',
+            zoomType: "xy"
+        },
+        title: {
+            text: 'Соцмедиа'
+        },
+        subtitle: {
+            text: 'Аудитория в Соцмедиа'
+        },
+        tooltip: {
+            useHTML: true,
+            pointFormat: '<b>{point.name}:</b> Аудитория: {point.value}'
+        },
+        plotOptions: {
+            packedbubble: {
+                minSize: '30%',
+                maxSize: '100%',
+                layoutAlgorithm: {
+                    gravitationalConstant: 0.05,
+                    splitSeries: true,
+                    seriesInteraction: false,
+                    dragBetweenSeries: true,
+                    parentNodeLimit: true
+                },
+                dataLabels: {
+                    enabled: true,
+                    format: '{point.name}',
+                    style: {
+                        textOutline: 'none',
+                        fontWeight: 'normal'
+                    }
+                }
+            }
+        },
+        series: data_bobble_Socmedia
+    });
+        </script>
+        <script>
+        window.addEventListener('DOMContentLoaded', (event) => {
+          /* Script for setting iframe height when on Highcharts.com */
+              try {
+
+                // Allow hiding the description by search param
+                const search = window.location.search;
+                if(search && search.includes('hide-description')){
+                  const description = document.querySelector('.highcharts-description, .highcharts-linked-description');
+                  if(description){
+                    description.style.display = 'none';
+                  }
+                }
+
+                const iframes = window.parent.document.getElementsByTagName('iframe');
+
+                for(let iframe of iframes){
+                  const { height } = iframe.contentWindow.document.body.getBoundingClientRect();
+                  if (
+                    height &&
+                    height > iframe.height
+                  ) {
+                    iframe.setAttribute('height', height);
+                    iframe.style.setProperty('height', height + 25 + 'px')
+                  }
+                }
+              } catch (e) {}
+        });
+      </script>
+
+      <!-- Динамика с шарами  -->
+      <script>
+
+      // var data_back_3 = JSON.parse('{{ data_chart_3|tojson }}');
+      var data_back_3 = {{ data_chart_3|safe }};
+      var data_bobble_3 = [];
+
+      for (i = 0; i < data_back_3.filenames.length; i++) {
+        var obj = {}
+        obj["name"] = data_back_3.filenames[i]
+        obj["data"] = []
+        for (j = 0; j < data_back_3.date_bobble[i].length; j++) {
+          obj["data"].push({
+            x: data_back_3.date_bobble[i][j],
+            y: data_back_3.index_bobble[i][j],
+            z: data_back_3.z_index_bobble[i][j],
+            color: data_back_3.tonality_index_bobble[i][j],
+            url: data_back_3.tonality_url[i][j],
+            name: data_back_3.name_bobble[i][j],
+          })
+        }
+        data_bobble_3.push(obj)
+      }
+
+
+      Highcharts.chart('container4', {
+
+        chart: {
+          type: 'bubble',
+          zoomType: "xyz"
+        },
+
+        legend: {
+          enabled: true
+      },
+
+        xAxis: {
+        type: 'datetime',
+               dateTimeLabelFormats: {
+                  year: '%b'
+               },
+        },
+
+        yAxis: {
+
+          title: {
+              text: "Медиа Индекс",
+              style: "bold"
+          },
+        },
+
+
+        title: {
+          text: "Сравнение в СМИ"
+        },
+
+        // legend: {
+        //   enabled: true,
+        //   align: 'left',
+        //   layout: 'vertical',
+        //   verticalAlign: 'top',
+        //   itemMarginTop: 10,
+        //   bubbleLegend: {
+        //     enabled: true,
+        //     sizeBy: 'width',
+        //     ranges: [{
+        //       value: 1000
+        //     }, {
+        //       value: 700,
+        //       color: 'rgba(144, 237, 125, 0.5)',
+        //       borderColor: 'rgb(144, 237, 125)',
+        //       connectorColor: 'rgb(144, 237, 125)'
+        //     }, {
+        //       value: 400,
+        //       color: 'rgba(67, 67, 72, 0.5)',
+        //       borderColor: 'rgb(67, 67, 72)',
+        //       connectorColor: 'rgb(67, 67, 72)'
+        //     }, {
+        //       value: 100,
+        //       color: 'rgba(247, 163, 92, 0.5)',
+        //       borderColor: 'rgb(247, 163, 92)',
+        //       connectorColor: 'rgb(247, 163, 92)'
+        //     }],
+        //     connectorDistance: 40,
+        //     maxSize: 70
+        //   }
+        // },
+
+        plotOptions: {
+          series: {
+              dataLabels: {
+                  enabled: true,
+                  format: "{point.name}",
+              },
+              // sizeBy: 'width',
+              // maxSize: 100,
+              cursor: 'pointer',
+              point: {
+                  events: {
+                      click: function () {
+                        window.open(this.options.url);
+                      }
+                  }
+              }
+          }
+      },
+
+        // tooltip: {
+        //   useHTML: true,
+        //   headerFormat: "<table>",
+        //   pointFormat:
+        //   '<tr><th colspan="2"><h3>{point.name}</h3></th></tr>' +
+        //   "<tr><th>Медиа Индекс:</th><td>{point.y}</td></tr>",
+        //   // "<tr><th>Публикаций за период:</th><td>{point.z}</td></tr>",
+        //   footerFormat: "</table>",
+        //   followPointer: true,
+        //   shared: true,
+        // },
+
+        tooltip: {
+          useHTML: true,
+          // headerFormat: "<table>",
+          pointFormat:
+          '<tr><th colspan="2"><h3>{point.name}</h3></th></tr>' +
+          "<tr><th> Медиа Индекс: </th><td>{point.y}</td></tr>",
+          // "<tr><th>Публикаций за период:</th><td>{point.z}</td></tr>",
+          // footerFormat: "</table>",
+          followPointer: true,
+          shared: true,
+      },
+
+        series: data_bobble_3,
+      });
+
+
+      // var data_back_3 = JSON.parse('{{ data_chart_4|tojson }}');
+      var data_back_3 = {{ data_chart_4|safe }};
+      var data_bobble_4 = []; 
+
+      for (i = 0; i < data_back_3.filenames.length; i++) {
+        var obj = {}
+        obj["name"] = data_back_3.filenames[i]
+        obj["data"] = []
+        for (j = 0; j < data_back_3.date_bobble[i].length; j++) {
+          obj["data"].push({
+            x: data_back_3.date_bobble[i][j],
+            y: data_back_3.index_bobble[i][j],
+            z: data_back_3.z_index_bobble[i][j],
+            color: data_back_3.tonality_index_bobble[i][j],
+            url: data_back_3.tonality_url[i][j],
+            name: data_back_3.name_bobble[i][j],
+          })
+        }
+        data_bobble_4.push(obj)
+      }
+
+      Highcharts.chart('container5', {
+
+      chart: {
+        type: 'bubble',
+        zoomType: "xyz"
+      },
+
+      xAxis: {
+      type: 'datetime',
+            dateTimeLabelFormats: {
+                year: '%b'
+            },
+      },
+
+      yAxis: {
+        title: {
+            text: "Аудитория",
+            style: "bold"
+        },
+        },
+
+      title: {
+          text: "Сравнение в Соцмедиа"
+        },
+
+      // legend: {
+      //   enabled: true,
+      //   align: 'left',
+      //   layout: 'vertical',
+      //   verticalAlign: 'top',
+      //   itemMarginTop: 10,
+      //   bubbleLegend: {
+      //     enabled: true,
+      //     sizeBy: 'width',
+      //     ranges: [{
+      //       value: 1000
+      //     }, {
+      //       value: 700,
+      //       color: 'rgba(144, 237, 125, 0.5)',
+      //       borderColor: 'rgb(144, 237, 125)',
+      //       connectorColor: 'rgb(144, 237, 125)'
+      //     }, {
+      //       value: 400,
+      //       color: 'rgba(67, 67, 72, 0.5)',
+      //       borderColor: 'rgb(67, 67, 72)',
+      //       connectorColor: 'rgb(67, 67, 72)'
+      //     }, {
+      //       value: 100,
+      //       color: 'rgba(247, 163, 92, 0.5)',
+      //       borderColor: 'rgb(247, 163, 92)',
+      //       connectorColor: 'rgb(247, 163, 92)'
+      //     }],
+      //     connectorDistance: 40,
+      //     maxSize: 70
+      //   }
+      // },
+
+      plotOptions: {
+          series: {
+              dataLabels: {
+                  enabled: true,
+                  format: "{point.name}",
+              },
+              // sizeBy: 'width',
+              // maxSize: 100,
+              cursor: 'pointer',
+              point: {
+                  events: {
+                      click: function () {
+                        window.open(this.options.url);
+                      }
+                  }
+              }
+          }
+      },
+
+      tooltip: {
+          useHTML: true,
+          // headerFormat: "<table>",
+          pointFormat:
+          '<tr><th colspan="2"><h3>{point.name}</h3></th></tr>' +
+          "<tr><th>Аудитория: </th><td>{point.y}</td></tr>",
+          // "<tr><th>Публикаций за период:</th><td>{point.z}</td></tr>",
+          // footerFormat: "</table>",
+          followPointer: true,
+          shared: true,
+      },
+
+      series: data_bobble_4,
+      });
+      </script>
+
+  </body>
+
+
+{% endif %}
+{% endblock %}

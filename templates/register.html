@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    </style>
+    <!-- <link rel='stylesheet' id='wp-block-library-css'  href='https://bootstraptor.com/wp-includes/css/dist/block-library/style.min.css?ver=5.3.14' type='text/css' media='all' /> -->
+    <!-- <link rel='stylesheet' id='dg2pb_style-css'  href='https://bootstraptor.com/wp-content/plugins/small-phone-button-basic/assets/styles.css?ver=1.1.0.' type='text/css' media='all' /> -->
+    <link rel='stylesheet' id='child-understrap-styles-css'  href='../static/css/child-theme.min.css' type='text/css' media='all' />
+    <link rel='stylesheet' id='font-awesome-official-css'  href='https://use.fontawesome.com/releases/v5.11.2/css/all.css' type='text/css' media='all' integrity="sha384-KA6wR/X5RY4zFAHpv/CnoG2UW1uogYfdnP67Uv7eULvTveboZJg0qUpmJZb5VqzN" crossorigin="anonymous" />
+    <!-- <link rel='stylesheet' id='heateor_sss_frontend_css-css'  href='https://bootstraptor.com/wp-content/plugins/sassy-social-share/public/css/sassy-social-share-public.css?ver=3.3.40' type='text/css' media='all' /> -->
+    <!-- <link rel='stylesheet' id='font-awesome-official-v4shim-css'  href='https://use.fontawesome.com/releases/v5.11.2/css/v4-shims.css' type='text/css' media='all' integrity="sha384-/EdpJd7d6gGFiQ/vhh7iOjiZdf4+6K4al/XrX6FxxZwDSrAdWxAynr4p/EA/vyPQ" crossorigin="anonymous" /> -->
+    <style id='font-awesome-official-v4shim-inline-css' type='text/css'>
+
+    </style>
+    </head>
+
+<section class="pt-5 pb-5 mt-0 align-items-center d-flex bg-dark" style="min-height: 100vh; background-size: cover; background-image: url('../static/background-mountin.png');">
+    <div class="container-fluid">
+
+      <div class="row  justify-content-center align-items-center d-flex-row text-center h-100">
+        <div class="col-12 col-md-4 col-lg-3   h-50 ">
+          <div class="card shadow">
+            <div class="card-body mx-auto">
+                <div class="row">
+                    <img src="../static/HEADS-made.png" class="logo">
+                </div>
+              <h4 class="card-title mt-3 text-center" style="color: #000000;">Создать аккаунт</h4>
+              <form action="{{ url_for('register') }}" method="POST">
+                <div class="form-group input-group">
+                  <div class="input-group-prepend">
+                    <span class="input-group-text"> <i class="fa fa-user"></i> </span>
+                  </div>
+                  <input name="name" class="form-control" placeholder="Имя" type="text">
+                </div>
+                <div class="form-group input-group">
+                  <div class="input-group-prepend">
+                    <span class="input-group-text"> <i class="fa fa-envelope"></i> </span>
+                  </div>
+                  <input name="email" class="form-control" placeholder="Email" type="email">
+                </div>
+                <div class="form-group input-group">
+                  <div class="input-group-prepend">
+                    <span class="input-group-text"> <i class="fa fa-lock"></i> </span>
+                  </div>
+                  <input class="form-control" name="psw" placeholder="Пароль" type="password">
+                </div>
+                <div class="form-group input-group">
+                  <div class="input-group-prepend">
+                    <span class="input-group-text"> <i class="fa fa-lock"></i> </span>
+                  </div>
+                  <input class="form-control" name="psw2" placeholder="Повтор пароля" type="password">
+                </div>
+                <div class="form-group">
+                  <button type="submit" class="btn btn-primary btn-block"> Создать </button>
+                </div>
+                <p class="text-center" style="color: #000000;"> Уже есть аккаунт?
+                  <a href="{{ url_for('login') }}">Вход</a>
+                </p>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+ </section>
+ </html>

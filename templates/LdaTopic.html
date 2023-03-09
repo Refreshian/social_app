@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% block head %}
+<title>Кластеризация LDA</title>
+<link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+/>
+{% endblock %}
+
+{% block body %}
+
+<style>
+
+
+  figure {
+      text-align: center;
+      display: inline;
+      margin: 3px; /* not needed unless you want centered */
+  }
+
+</style>
+
+{% if not LdaTopic %}
+
+<figure class="highcharts-figure">
+  <div class="container">
+    <form action="/LdaTopic" method="POST" enctype="multipart/form-data">
+      <select name="file_choose" class="form-select-sm">
+        <option selected>select File</option>
+        {% for i in range(0, len_files) %}
+        <option value="{{ files[i] }}">{{ files[i] }}</option>
+        {% endfor %}
+
+      <input
+        type="submit"
+        class="btn btn-light"
+        href="{{ url_for('ldatopic') }}"
+        name="send"
+        value="Ок"
+      />
+    </form>
+  </div>
+</figure>
+
+{% elif LdaTopic %}
+
+<figure class="highcharts-figure">
+  <div class="container">
+    <form action="/LdaTopic" method="POST">
+      <select name="file_choose" >
+        <option selected>select File</option>
+        {% for i in range(0, len_files) %}
+        <option value="{{ files[i] }}">{{ files[i] }}</option>
+        {% endfor %}
+      </select>
+
+      <input
+        type="submit"
+        class="btn btn-light"
+        href="{{ url_for('ldatopic') }}"
+        name="send"
+        value="Запуск"
+      />
+    </form>
+
+  </div>
+  <div >
+</div>
+</figure>
+
+<p style="text-align:center"><iframe src="{{ url_for('show') }}" onload="this.width=1250;this.height=900;" style="border: none;"></iframe></p>
+
+{% endif %}
+{% endblock %}

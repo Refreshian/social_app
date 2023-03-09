@@ -309,7 +309,7 @@ textarea, label {
       width: 96px;
       bottom: 14px; }
     .section-title h3::after {
-      background-color: #FA6862;
+      background-color: #FA68622;
       width: 73px; }
   .section-title.light h3 {
     color: #fff; }
@@ -342,8 +342,13 @@ textarea, label {
   background-size: cover;
   vertical-align: middle; }
   .page-home .overlay {
-    background-color: rgba(14, 17, 24, 0.97);
+    background-color: rgba(0, 0, 0, 0.6);
 }
+
+  /*Black color*/
+/*  .page-home .overlay {*/
+/*    background-color: rgba(14, 17, 24, 0.97);*/
+/*}*/
 
 /* End of container */
 .hexagon-item {
