@@ -47,6 +47,50 @@
     display: flex;
     justify-content: center;
   }
+
+  .tooltip {
+    position: relative;
+    display: inline-block;
+    border-bottom: 1px dotted black;
+  }
+
+  .tooltip .tooltiptext {
+    visibility: hidden;
+    width: 750px;
+    height: 70px;
+    background-color: #555;
+    color: #fff;
+    text-align: left;
+    border-radius: 6px;
+    padding: -150px 0;
+    position: absolute;
+    z-index: 1;
+    bottom: -100%;
+    left: 50%;
+    margin-left: 60px;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .tooltip .tooltiptext::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 20%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: #555 transparent transparent transparent;
+  }
+
+  .tooltip:hover .tooltiptext {
+    visibility: visible;
+    opacity: 1;
+  }
+
+  .tooltip-inner {
+    white-space: pre-line;
+  }
 </style>
 
 <figure class="highcharts-figure">
@@ -67,7 +111,7 @@
         {% endfor %}
       </select>
       <!--    <input type="hidden" name="filename" value="{{ files[i] }}">-->
-      <input type="text" name="daterange" value="01/01/2022 - 01/12/2022" />
+      <!-- <input type="text" name="daterange" value="01/01/2022 - 01/12/2022" /> -->
       <input
         type="submit"
         class="btn btn-outline-dark"
@@ -100,14 +144,60 @@
 {% elif names %}
 
 <style>
-  /* .highcharts-figure {
-      display:flex;
-      justify-content: center;
-  } */
+  .highcharts-figure {
+    display: flex;
+    width: 100%;
+    justify-content: center;
+  }
 
   .container {
     display: flex;
+    width: 100%;
     justify-content: center;
+  }
+
+  .tooltip {
+    position: relative;
+    display: inline-block;
+    border-bottom: 1px dotted black;
+  }
+
+  .tooltip .tooltiptext {
+    visibility: hidden;
+    width: 750px;
+    height: 50px;
+    background-color: #555;
+    color: #fff;
+    text-align: left;
+    border-radius: 6px;
+    padding: 0px;
+    position: absolute;
+    z-index: 1;
+    bottom: -80%;
+    left: 30%;
+    margin-left: 40px;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .tooltip .tooltiptext::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 20%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: #555 transparent transparent transparent;
+  }
+
+  .tooltip:hover .tooltiptext {
+    visibility: visible;
+    opacity: 1;
+  }
+
+  .tooltip-inner {
+    white-space: pre-line;
   }
 </style>
 
@@ -131,6 +221,16 @@
       <!--    <input type="hidden" name="filename" value="{{ files[i] }}">-->
       <!-- <input type="text" name="daterange" value="01/01/2022 - 01/12/2022" /> -->
       <input
+        class="form-check-input"
+        type="checkbox"
+        value=""
+        id="flexCheckDefault"
+        name="unique_authors"
+      />
+      <label class="form-check-label" for="flexCheckDefault">
+        Уникальные авторы
+      </label>
+      <input
         type="submit"
         class="btn btn-outline-dark"
         href="{{ url_for('authors') }}"
@@ -138,6 +238,13 @@
         value="Ок"
       />
     </form>
+    <div class="tooltip" style="margin-left: 5px">
+      Запрос
+      <span class="tooltiptext"
+        >Тема: {{filename}} <br />
+        Уникальные авторы: {{unique_author}}
+      </span>
+    </div>
   </div>
 </figure>
 

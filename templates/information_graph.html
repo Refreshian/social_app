@@ -1,5 +1,5 @@
 {% extends 'base.html' %} {% block head %}
-
+<title>Information Graph</title>
 <link rel="stylesheet" href="/static/css/multi-checkbox-select.css" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.min.js"></script>
 
@@ -32,7 +32,7 @@
     margin: 0;
     color: #313131;
     font-family: sans-serif;
-    min-width: 300px;
+    min-width: 100%;
   }
   body.toc {
     font-family: 'Roboto', sans-serif;
@@ -157,8 +157,8 @@
 </style>
 <style>
   #container {
-    min-width: 1000px;
-    max-width: 2000px;
+    min-width: 100%;
+    /* max-width: 2000px; */
     margin: 0 auto;
     height: 800px;
   }
@@ -182,6 +182,50 @@
     border: 0;
     background: transparent;
     padding: 0 0.25rem;
+  }
+
+  .tooltip {
+    position: relative;
+    display: inline-block;
+    border-bottom: 1px dotted black;
+  }
+
+  .tooltip .tooltiptext {
+    visibility: hidden;
+    width: 750px;
+    height: 100px;
+    background-color: #555;
+    color: #fff;
+    text-align: left;
+    border-radius: 6px;
+    padding: -250px 0;
+    position: absolute;
+    z-index: 1;
+    bottom: -200%;
+    left: 50%;
+    margin-left: 60px;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .tooltip .tooltiptext::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 20%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: #555 transparent transparent transparent;
+  }
+
+  .tooltip:hover .tooltiptext {
+    visibility: visible;
+    opacity: 1;
+  }
+
+  .tooltip-inner {
+    white-space: pre-line;
   }
 </style>
 
@@ -218,6 +262,16 @@
           name="send"
           value="Запуск"
         />
+        <div class="tooltip">
+          Запрос
+          <span class="tooltiptext"
+            >Тема: {{filename}} <br />
+            Даты: {{date}} <br />
+            Поиск: {{text_search}} <br />
+            Фильтр: {{type_post}} <br />
+            Длина графа: {{reposts_len}}
+          </span>
+        </div>
       </div>
     </div>
     <div class="input-group">
@@ -230,7 +284,17 @@
             placeholder="поиск по тексту"
             style="margin-top: 1px"
           />
+          <select class="custom-select" name="reposts_len" id="changeRows">
+            <option value="20" selected>Длина графа</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+            <option value="300">200</option>
+            <option value="300">300</option>
+            <option value="500">500</option>
+            <option value="1000">1000</option>
+          </select>
         </div>
+
         <div style="margin-top: 4px">
           <input
             type="checkbox"
@@ -255,36 +319,13 @@
           <label class="form-check-label" for="dropdownCheck2"> СМИ </label>
         </div>
       </div>
-
-      <!-- <div class="input-group">
-        <div class="input-group-prepend" id="button-addon3">
-          <div style="margin-top: 5px"></div>
-          <input
-            type="text"
-            class="inline"
-            placeholder="текстов (от)"
-            name="text_min"
-            id="text_min"
-            style="width: 75px"
-          />
-          <input
-            type="text"
-            class="inline"
-            placeholder="текстов (до)"
-            name="text_max"
-            id="text_max"
-            style="width: 75px"
-          />
-        </div>
-      </div> -->
     </div>
     {% if data.len_messages %}
     <p style="scroll-margin-top: -10px">
       {{ data.len_messages }} текста(ов) и {{ data.authors_count }} автора(ов)
     </p>
-    <!-- {% endif %} {% if data.data_hub %}
-    <select id="example" name="hub_select" id="hub_select"></select>
-    {% endif %} -->
+
+    {% endif %}
   </form>
 
   <script>
@@ -395,100 +436,171 @@
 
   <div id="container"></div>
   <script>
-    /* eslint-disable default-case */
-    var dirDist50 = '#E8544E',
-      dirDist10 = '#FFD265',
-      dirDistLess10 = '#2AA775';
 
-    var data = JSON.parse('{{ data|tojson }}');
-
-    var node = [];
-    node.push({
-      id: data.data_authors[0],
-      marker: {
-        radius: data.data_rep_er[0],
-      },
-      hubs: data.all_hubs[0],
-      er: data.data_rep_er[0],
-      audience: data.data_rep_audience[0],
-      author_name: data.data_authors[0],
-      color: dirDistLess10,
-    });
-
-    for (i = 1; i < data.data_rep_er.length; i++) {
-      node.push({
-        id: data.data_authors[i],
-        marker: {
-          radius: data.data_rep_er[i],
-        },
-        hubs: data.all_hubs[i],
-        er: data.data_rep_er[i],
-        audience: data.data_rep_audience[i],
-        author_name: data.data_authors[i],
-        color: dirDist10,
+    (function(H) {
+      H.wrap(H.seriesTypes.networkgraph.prototype.pointClass.prototype, 'getLinkPath', function(p) {
+        var left = this.fromNode,
+          right = this.toNode;
+        // Start always from left to the right node, to prevent rendering
+        // labels upside down
+        if (left.plotX > right.plotX) {
+          left = this.toNode;
+          right = this.fromNode;
+        }
+        return [
+          ['M', left.plotX || 0, left.plotY || 0],
+          ['L', right.plotX || 0, right.plotY || 0],
+          ['L', right.plotX - 20, right.plotY - 20],
+        ]
       });
-    }
+    }(Highcharts));
 
-    Highcharts.chart('container', {
-      chart: {
-        type: 'networkgraph',
-        marginTop: 80,
-      },
+        /* eslint-disable default-case */
+        var dirDist50 = '#E8544E',
+          dirDist10 = '#FFD265',
+          dirDistLess10 = '#2AA775';
 
-      title: {
-        text: 'Распространение информации',
-      },
+        // var data = JSON.parse('{{ data|tojson }}');
+        var data = {{ data|safe }};
 
-      tooltip: {
-        useHTML: true,
-        pointFormat:
-          '<b>{point.author_name}:</b> Вовлеченность: {point.marker.radius}',
-      },
+        var node = [];
 
-      accessibility: {
-        point: {
-          valueDescriptionFormat:
-            'Hubs: {point.hubs}, Вовлеченность: {point.radius}, Аудитория: {point.audience}',
-        },
-      },
+        for (i = 0; i < data.data_rep_er.length; i++) {
 
-      plotOptions: {
-        networkgraph: {
-          keys: ['from', 'to'],
-          layoutAlgorithm: {
-            enableSimulation: true,
-            integration: 'euler',
-            linkLength: 50,
-            maxIterations: 150,
-            gravitationalConstant: false,
-            friction: false,
-            approximation: true,
-            theta: true,
-            maxSpeed: true,
+          if (i == 0) {
+            node.push({
+            id: data.data_authors[0],
+            marker: {
+            radius: data.data_rep_audience_log[0],
+            },
+            hubs: data.all_hubs[0],
+            er: data.data_rep_er[0],
+            audience: data.data_rep_audience[0],
+            author_name: data.data_authors[0],
+            viewsCount: data.data_viewsCount[0],
+            color: dirDistLess10,
+            });
+          }
+
+          else {
+            node.push({
+            id: data.data_authors[i],
+            marker: {
+              radius: data.data_rep_audience_log[i]
+            },
+            hubs: data.all_hubs[i],
+            er: data.data_rep_er[i],
+            audience: data.data_rep_audience[i],
+            author_name: data.data_authors[i],
+            viewsCount: data.data_viewsCount[i],
+            color: dirDist10,
+            });
+          }
+        };
+
+        // var node = [];
+        // node.push({
+        //   id: data.data_authors[0],
+        //   marker: {
+        //     radius: data.data_rep_audience_log[0],
+        //   },
+        //   hubs: data.all_hubs[0],
+        //   er: data.data_rep_er[0],
+        //   audience: data.data_rep_audience[0],
+        //   author_name: data.data_authors[0],
+        //   viewsCount: data.data_viewsCount[0],
+        //   color: dirDistLess10,
+        // });
+
+        // for (i = 1; i < data.data_rep_er.length; i++) {
+        //   node.push({
+        //     id: data.data_authors[i],
+        //     marker: {
+        //       radius: data.data_rep_audience_log[i]
+        //     },
+        //     hubs: data.all_hubs[i],
+        //     er: data.data_rep_er[i],
+        //     audience: data.data_rep_audience[i],
+        //     author_name: data.data_authors[i],
+        //     viewsCount: data.data_viewsCount[i],
+        //     color: dirDist10,
+        //   });
+        // }
+
+        Highcharts.chart('container', {
+          chart: {
+            type: 'networkgraph',
+            marginTop: 80,
           },
-        },
-      },
 
-      series: [
-        {
-          marker: {
-            radius: 20,
+          title: {
+            text: 'Распространение информации',
           },
-          dataLabels: {
-            enabled: true,
-            format: '{point.author_name}, Аудитория: {point.audience}',
-            linkFormat: '',
-            allowOverlap: false,
-            style: {
-              textOutline: false,
+
+          tooltip: {
+            formatter: function () {
+              return (
+                '<b>' +
+                'Аудитория: ' +
+                this.point.audience +
+                '</b><br/>' +
+                'Вовлеченность: ' +
+                this.point.er +
+                '</b><br/>' +
+                'Источник: ' +
+                this.point.hubs +
+                '</b><br/>' +
+                'Просмотров: ' +
+                this.point.viewsCount
+              );
             },
           },
-          data: data.df_rep_auth,
 
-          nodes: node,
-        },
-      ],
-    });
+          accessibility: {
+            point: {
+              valueDescriptionFormat:
+                'Вовлеченность: {this.point.radius}',
+            },
+          },
+
+          plotOptions: {
+            networkgraph: {
+              keys: ['from', 'to'],
+              layoutAlgorithm: {
+                enableSimulation: false,
+                // linkLength: 10,
+                // maxIterations: 40,
+                // friction: true,
+                gravitationalConstant: false,
+                initialPositions: true,
+                // friction: false,
+                // approximation: true,
+                // theta: true,
+                // maxSpeed: true,
+              },
+            },
+          },
+
+          series: [
+            {
+              marker: {
+                radius: 20,
+              },
+              dataLabels: {
+                enabled: true,
+                format: '{point.author_name}',
+                linkFormat: '',
+                allowOverlap: false,
+                style: {
+                  textOutline: false,
+                },
+              },
+              data: data.df_rep_auth,
+
+              nodes: node,
+            },
+          ],
+        });
   </script>
   <script>
     window.addEventListener('DOMContentLoaded', (event) => {
@@ -728,6 +840,15 @@
             placeholder="поиск по тексту"
             style="margin-top: 1px"
           />
+          <select class="custom-select" name="reposts_len" id="changeRows">
+            <option value="20" selected>Длина графа</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+            <option value="300">200</option>
+            <option value="300">300</option>
+            <option value="500">500</option>
+            <option value="1000">1000</option>
+          </select>
         </div>
         <div style="margin-top: 4px">
           <input
@@ -753,28 +874,6 @@
           <label class="form-check-label" for="dropdownCheck2"> СМИ </label>
         </div>
       </div>
-
-      <!-- <div class="input-group">
-        <div class="input-group-prepend" id="button-addon3">
-          <div style="margin-top: 5px"></div>
-          <input
-            type="text"
-            class="inline"
-            placeholder="текстов (от)"
-            name="text_min"
-            id="text_min"
-            style="width: 75px"
-          />
-          <input
-            type="text"
-            class="inline"
-            placeholder="текстов (до)"
-            name="text_max"
-            id="text_max"
-            style="width: 75px"
-          />
-        </div>
-      </div> -->
     </div>
   </form>
 </figure>

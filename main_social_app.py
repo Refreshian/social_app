@@ -151,20 +151,32 @@ def menu():
 @app.route('/authors', methods=['GET', 'POST'], endpoint='authors')
 def graph():
 
-    json_files = [x + '.json' for x in os.listdir(path_tsne_data)]
+    os.chdir(path_to_files)
+    json_files = [pos_json for pos_json in os.listdir(os.getcwd()) if pos_json.endswith('.json')]
+    json_files = [x + '.json' for x in os.listdir(path_tsne_data) if x + '.json' in json_files]
     len_files = len(json_files)
 
     if 'send' in request.values.to_dict(flat=True):
         filename = request.values.to_dict(flat=True)['file_choose']
 
-        os.chdir(path_tsne_data + '/' + filename.replace('.json', ''))
-        tsne_data = codecs.open(filename.replace('.json', '_data_tsne.txt'), 'r', encoding='utf-8').read()
-        tsne_data = json.loads(tsne_data)
+        # если выбран чек-бокс с уникальными авторами выводим их из другой папки (data/TSNE/unique_authors)
+        if 'unique_authors' in request.values.to_dict(flat=True):
+            os.chdir(path_tsne_data + '/unique_authors')
+            tsne_data = codecs.open(filename.replace('.json', '_data_tsne.txt'), 'r', encoding='utf-8').read()
+            tsne_data = json.loads(tsne_data)
+            unique_author = 'Да'
+        
+        else:
+            os.chdir(path_tsne_data + '/' + filename.replace('.json', ''))
+            tsne_data = codecs.open(filename.replace('.json', '_data_tsne.txt'), 'r', encoding='utf-8').read()
+            tsne_data = json.loads(tsne_data)
+            unique_author = '-'
 
         names = tsne_data['author_name_str']
         coord_list_str = tsne_data['coord_list_str']
 
-        return render_template('visualizer.html', names=names, coord=coord_list_str, files=json_files, len_files=len_files)
+        return render_template('visualizer.html', names=names, coord=coord_list_str, files=json_files, len_files=len_files, filename=str(filename), 
+        unique_author=unique_author)
  
     return render_template('authors_cluster.html', files=json_files, len_files=len_files)
 
@@ -384,10 +396,15 @@ def tonality():
             "pos_list_data": pos_list_data,
             "pos_list_name": pos_list_name,
 
-            "data_tonality_hub_neg_data": data_tonality_hub_neg_data,
-            "data_tonality_hub_pos_data": data_tonality_hub_pos_data,
-            "data_tonality_hub_neg_name": data_tonality_hub_neg_name,
-            "data_tonality_hub_pos_name": data_tonality_hub_pos_name,
+            # "data_tonality_hub_neg_data": data_tonality_hub_neg_data,
+            # "data_tonality_hub_pos_data": data_tonality_hub_pos_data,
+            # "data_tonality_hub_neg_name": data_tonality_hub_neg_name,
+            # "data_tonality_hub_pos_name": data_tonality_hub_pos_name,
+
+            "data_tonality_hub_neg_data": data_tonality_hub_pos_data,
+            "data_tonality_hub_pos_data": data_tonality_hub_neg_data,
+            "data_tonality_hub_neg_name": data_tonality_hub_pos_name,
+            "data_tonality_hub_pos_name": data_tonality_hub_neg_name,
 
             "superDonatName": superDonatName,
 
@@ -463,12 +480,12 @@ def start_task():
 
         # parsing json
         try: 
-            with io.open('Як141 - аудитория.json', encoding='utf-8', mode='r') as train_file:
+            with io.open(filename, encoding='utf-8', mode='r') as train_file:
                 dict_train = json.load(train_file, strict=False)
 
         except:
             a = []
-            with open('Як141 - аудитория.json', encoding='utf-8', mode='r') as file:
+            with open(filename, encoding='utf-8', mode='r') as file:
                 for line in file:
                     a.append(line)
             dict_train = []
@@ -784,6 +801,187 @@ def start_task():
         print('done tsne embed')
         del dict_tsne
 
+
+        # TSNE to unique authors
+        # подготовка данных .csv для TSNE уникальных авторов (тексты авторов складываются и убираются дубли)
+        print('Start Unique Author tsne emb')
+        os.chdir(path_to_files)
+        embed = hub.load("universal-sentence-encoder-multilingual_3")
+
+        try: 
+            with io.open(filename, encoding='utf-8', mode='r') as train_file:
+                dict_train = json.load(train_file, strict=False)
+
+        except:
+            a = []
+            with open(filename, encoding='utf-8', mode='r') as file:
+                for line in file:
+                    a.append(line)
+            dict_train = []
+            for i in range(len(a)):
+                try:
+                    dict_train.append(ast.literal_eval(a[i]))
+                except:
+                    continue
+            dict_train = [x[0] for x in dict_train]
+
+
+        df = pd.DataFrame(dict_train)
+
+        # метаданные
+        # разбивка и сборка соцмедиа и СМИ в один датафрэйм с данными
+        df_meta = pd.DataFrame()
+
+        # случай выгрузки темы только по СМИ
+        if 'hubtype' not in df.columns:
+
+            dff = df
+            dff['timeCreate'] = [datetime.datetime.fromtimestamp(x).strftime('%Y-%m-%d %H:%M:%S') for x in dff['timeCreate'].values]
+            df_meta_smi_only = dff[['timeCreate', 'hub', 'toneMark', 'audience', 'url', 'text', 'citeIndex']]
+            # df_meta_smi_only.columns = ['timeCreate', 'hub', 'toneMark', 'audienceCount', 'url', 'text', 'citeIndex']
+            df_meta_smi_only['fullname'] = dff['hub']
+            df_meta_smi_only['author_type'] = 'Новости'
+            df_meta_smi_only['hubtype'] = 'Новости'
+            df_meta_smi_only['type'] = 'Новости'
+            df_meta_smi_only['er'] = 0
+        #     df_meta_smi_only = df_meta_smi_only[columns]
+
+            df_meta = df_meta_smi_only
+
+
+        if 'hubtype' in df.columns:
+
+            for i in range(2): # новости или соцмедиа
+
+                    if i == 0:
+                        dff = df[df['hubtype'] != 'Новости']
+                        if dff.shape[0] != 0:
+
+                            dff['timeCreate'] = [datetime.datetime.fromtimestamp(x).strftime('%Y-%m-%d %H:%M:%S') for x in dff['timeCreate'].values]
+                            df_meta_socm = dff[['timeCreate', 'hub', 'toneMark', 'audienceCount', 'url', 'er', 'hubtype', 'text', 'type']]
+                            df_meta_socm['fullname'] = pd.DataFrame.from_records(dff['authorObject'].values)['fullname'].values
+                            df_meta_socm['author_type'] = pd.DataFrame.from_records(dff['authorObject'].values)['author_type'].values
+
+                    if i == 1:
+                        dff = df[df['hubtype'] == 'Новости']
+                        if dff.shape[0] != 0:
+                            dff['timeCreate'] = [datetime.datetime.fromtimestamp(x).strftime('%Y-%m-%d %H:%M:%S') for x in dff['timeCreate'].values]
+                            df_meta_smi = dff[['timeCreate', 'hub', 'toneMark', 'audienceCount', 'url', 'er', 'hubtype', 'text', 'citeIndex']]
+                            df_meta_smi['fullname'] = dff['hub']
+                            df_meta_smi['author_type'] = 'Новости'
+                            df_meta_smi['hubtype'] = 'Новости'
+                            df_meta_smi['type'] = 'Новости'
+
+            if 'df_meta_smi' in locals() and 'df_meta_socm' in locals():
+                df_meta = pd.concat([df_meta_socm, df_meta_smi])
+            elif 'df_meta_smi' and 'df_meta_socm' not in locals():
+                df_meta = df_meta_smi
+            else:
+                df_meta = df_meta_socm
+
+
+        df_text = df[['text', 'authorObject', 'hub']]
+
+        # подготовка данных: текст и имя автора - замена имени автора если нет authorObject (это СМИ) - указывать hub (название СМИ)
+        a = []
+
+        for i in range(len(df_text['authorObject'].values)):
+            try:
+                a.append(df_text['authorObject'].values[i]['fullname'])
+            except:
+                a.append(df_text['hub'].values[i])
+                
+        df_text['author_name'] = a
+        df_text = df_text[['author_name', 'text']]
+        # df_text.drop(['authorObject', 'hub'], axis=1, inplace=True)
+        # группируем в словарь автор: сообщения
+        a = {k: g["text"].tolist() for k,g in df_text.groupby("author_name")}
+        # убираем дубли сообщений из текстов автора
+        a = {k:' '.join(list(set(v))) for (k,v) in a.items()}
+        # создаем финальный dataframe c автором и его уникальными текстами
+        df_text = pd.DataFrame(a.items())
+        df_text.columns = ['author_name', 'text']
+ 
+        regex = re.compile("[А-Яа-я:=!\)\()A-z\_\%/|]+")
+
+        def words_only(text, regex=regex):
+            try:
+                return " ".join(regex.findall(text))
+            except:
+                return ""
+
+        mystopwords = ['это', 'наш', 'тыс', 'млн', 'млрд', 'также', 'т', 'д', 'URL',
+                                                    'i', 's', 'v', 'info', 'a', 'подробнее', 'который', 'год',
+                                                    ' - ', '-', 'В', '—', '–', '-', 'в', 'который']
+
+        def preprocess_text(text):
+            text = text.lower().replace("ё", "е")
+            text = re.sub('((www\[^\s]+)|(https?://[^\s]+))', 'URL', text)
+            text = re.sub('@[^\s]+', 'USER', text)
+            text = re.sub('[^a-zA-Zа-яА-Я1-9]+', ' ', text)
+            text = re.sub(' +', ' ', text)
+            return text.strip()
+
+        def remove_stopwords(text, mystopwords=mystopwords):
+            try:
+                return " ".join([token for token in text.split() if not token in mystopwords])
+            except:
+                return ""
+
+        df_text['text'] = df_text['text'].apply(words_only)
+        df_text['text'] = df_text['text'].apply(preprocess_text)
+        df_text['text'] = df_text['text'].apply(remove_stopwords)
+
+        sent_ru = df_text['text'].values
+
+        os.chdir(path_to_files)
+        embed = hub.load("universal-sentence-encoder-multilingual_3")
+        a = []
+        for sent in sent_ru:
+            # a.append(embed(sent)[0].numpy())
+            a.append([numpy.round(x, 10) for x in embed(sent)[0].numpy()])
+        
+        embed_list = a
+        dff = pd.DataFrame(a)
+
+        tsne = manifold.TSNE(n_components=2, init='pca', random_state=0)
+        x_tsne = tsne.fit_transform(dff.values)
+
+        coord_list = []
+        for i in range(len(x_tsne.tolist())):
+            coord_list.append(', '.join([str(x) for x in x_tsne.tolist()[i]]))
+
+        names = df_text['author_name'].values.tolist()
+        names = [x if x != '' else 'None' for x in names]
+
+        regex = re.compile("[А-Яа-я:=!\)\()A-z\_\%/|]+")
+
+
+        names_list = [words_only(x) if type(x) != float else 'None' for x in names]
+        names_list = [preprocess_text(x) if type(x) != float else 'None' for x in names]
+        names_list = [remove_stopwords(x) if type(x) != float else 'None' for x in names]
+        names_list = ['None' if x == '' else x for x in names_list]
+
+        name_str = '\n'.join(names_list)
+        coord_list_str = '\n'.join(coord_list)
+
+        path_tsne_data_unique_authors = path_tsne_data + '/unique_authors'
+        os.chdir(path_tsne_data_unique_authors)
+        # try:
+        #     os.mkdir(filename.replace('.json', ''))
+        # except:
+        #     pass
+        # os.chdir(path_tsne_data_unique_authors + '/' + filename.replace('.json', ''))
+
+        # сохранение данных для tsne
+        dict_tsne = {}
+        dict_tsne['author_name_str'] = name_str
+        dict_tsne['coord_list_str'] = coord_list_str
+
+        with open(filename.replace('.json', '') + '_data_tsne.txt', 'w') as my_file:
+            json.dump(dict_tsne, my_file)
+
+
         ### Подготовка данных для LdaTopic
         os.chdir(path_to_files)
         print('stassrt') 
@@ -1015,13 +1213,25 @@ def delete_files_tut(filename):
     os.chdir(path_projector_files)
     if filename.replace('.json', '.tsv') in [f for f in listdir(path_projector_files) if isfile(join(path_projector_files, f))]:
         os.remove(path_projector_files + '/' + filename.replace('.json', '.tsv')) # удаляем файл .tsv из projector folder
+    
     os.chdir(path_projector_files)
     if filename.replace('.json', '.txt') in [f for f in listdir(path_projector_files) if isfile(join(path_projector_files, f))]:
         os.remove(path_projector_files + '/' + filename.replace('.json', '.txt')) # удаляем файл .txt из projector folder
 
+    # удаляем файл с TSNE для уникальных авторов
+    path_tsne_unique_data = '/home/dev/social_app/data/TSNE/unique_authors/'
+    os.chdir(path_tsne_unique_data)
+    file_to_del = filename.replace('.json', '_data_tsne.txt')
+    try:
+        print('DAJFNJDFNJDFNK!@!#MKOAFOAFSDFA')
+        print('yes')
+        os.remove(file_to_del)
+    except:
+        pass
+
     os.chdir(path_projector_files)
-    if filename.replace('.json', '') in next(os.walk(path_projector_files))[1]:
-        shutil.rmtree(path_projector_files + '/' + filename.replace('.json', '')) # удаляем папку из Projector
+    if filename.replace('.json', '.txt') in [f for f in listdir(path_projector_files) if isfile(join(path_projector_files, f))]:
+        os.remove(path_projector_files + '/' + filename.replace('.json', '.txt')) # удаляем файл .txt из projector folder
 
 
     os.chdir(path_to_files)
@@ -1044,6 +1254,18 @@ def information_graph():
     os.chdir(path_to_files)
     json_files = [pos_json for pos_json in os.listdir(os.getcwd()) if pos_json.endswith('.json')]
     len_files = len(json_files)
+
+    if 'reposts_len' in request.values.to_dict(flat=True):
+        reposts_len = int(request.values.to_dict(flat=True)['reposts_len'])
+
+    type_post = ''
+
+    regex = re.compile("[А-Яа-я:=!\)\()A-z\_\%/|]+")
+    def words_only(text, regex=regex):
+        try:
+            return " ".join(regex.findall(text))
+        except:
+            return ""
 
     if 'send' in request.values.to_dict(flat=True) and request.values.to_dict(flat=True)['text_search'] == '':
 
@@ -1103,7 +1325,7 @@ def information_graph():
                         if dff.shape[0] != 0:
                             
                             dff['timeCreate'] = [datetime.datetime.fromtimestamp(x).strftime('%Y-%m-%d %H:%M:%S') for x in dff['timeCreate'].values]
-                            df_meta_socm = dff[['timeCreate', 'hub', 'toneMark', 'audienceCount', 'url', 'er', 'hubtype', 'text', 'type']]
+                            df_meta_socm = dff[['timeCreate', 'hub', 'toneMark', 'audienceCount', 'url', 'er', 'hubtype', 'text', 'type', 'viewsCount']]
                             df_meta_socm['fullname'] = pd.DataFrame.from_records(dff['authorObject'].values)['fullname'].values
                             df_meta_socm['author_type'] = pd.DataFrame.from_records(dff['authorObject'].values)['author_type'].values
                             df_meta_socm.dropna(subset=['timeCreate'], inplace=True)
@@ -1114,7 +1336,7 @@ def information_graph():
                         dff = df[df['hubtype'] == 'Новости']
                         if dff.shape[0] != 0:
                             dff['timeCreate'] = [datetime.datetime.fromtimestamp(x).strftime('%Y-%m-%d %H:%M:%S') for x in dff['timeCreate'].values]
-                            df_meta_smi = dff[['timeCreate', 'hub', 'toneMark', 'audienceCount', 'url', 'er', 'hubtype', 'text']]
+                            df_meta_smi = dff[['timeCreate', 'hub', 'toneMark', 'audienceCount', 'url', 'er', 'hubtype', 'text', 'viewsCount']]
                             df_meta_smi['fullname'] = dff['hub']
                             df_meta_smi['author_type'] = 'Новости'
                             df_meta_smi['hubtype'] = 'Новости'
@@ -1175,30 +1397,40 @@ def information_graph():
 
         # фильтрация по типу сообщения
         if 'posts' in request.values.to_dict(flat=True):
+            type_post = 'Посты'
             if request.values.to_dict(flat=True)['posts'] == 'on':
                 df_meta = pd.concat([df_meta, df_meta_filter[
                     (df_meta_filter['type'] == 'Пост') | (df_meta_filter['type'] == 'Комментарий')]], ignore_index=True)
 
         if 'reposts' in request.values.to_dict(flat=True):
             if request.values.to_dict(flat=True)['reposts'] == 'on':
+                if type_post == '':
+                    type_post = 'Репосты'
+                else:
+                    type_post = type_post + ', Репосты'
                 df_meta = pd.concat([df_meta, df_meta_filter[
                     (df_meta_filter['type'] == 'Репост') | (df_meta_filter['type'] == 'Репост с дополнением')]],
                                     ignore_index=True)
 
         if 'smi' in request.values.to_dict(flat=True):
             if request.values.to_dict(flat=True)['smi'] == 'on':
+                if type_post == '':
+                    type_post = 'СМИ'
+                else:
+                    type_post = type_post + ', СМИ'
                 df_meta = pd.concat([df_meta, df_meta_filter[df_meta_filter['hubtype'] == 'Новости']],
                                     ignore_index=True)
 
         if 'posts' not in request.values.to_dict(flat=True) and 'reposts' not in request.values.to_dict(
                 flat=True) and 'smi' not in request.values.to_dict(flat=True):
-            df_meta = df_meta_filter
+                type_post = ''
+                df_meta = df_meta_filter
 
         if df_meta.shape[0] == 0:  # если по запросу найдено 0 сообщений - вывести flash
             flash('По запросу найдено 0 сообщений')
             return redirect(url_for('information_graph'))
 
-        df_data_rep = df_meta[['fullname', 'url', 'author_type', 'text', 'er', 'hub', 'audienceCount']]
+        df_data_rep = df_meta[['fullname', 'url', 'author_type', 'text', 'er', 'hub', 'audienceCount', 'viewsCount']]
         if 'smi' in request.values.to_dict(flat=True):
             df_rep_auth = list(df_data_rep['hub'].values)
         else:
@@ -1220,26 +1452,31 @@ def information_graph():
 
         theme = request.values.to_dict(flat=True)['file_choose'].split('_')[0]
 
-        er = [int(z) for z in [int(y) for y in [5 if x == 0 else x + 5 for x in data_rep_er]]]
-        er = [numpy.mean(er) if x > 5 * numpy.mean(er) else x for x in er]
-        er[0] = int(numpy.max(er) + 2)
+        er = [int(z) for z in [int(y) for y in [1 if x == 0 else x + 1 for x in data_rep_er]]]
+        # er = [numpy.mean(er) if x > 5 * numpy.mean(er) else x for x in er]
+        # er[0] = int(numpy.max(er) + 2)
 
         hubs = Counter(df_meta['hub'].values)
         hubs = hubs.most_common()
         hubs = [x[0] for x in hubs]
         hubs = [words_only(x) for x in hubs]
         data_audience = [int(z) for z in [int(y) for y in [5 if x == 0 else x for x in data_audience]]]
+        viewsCount = [0 if x == '' else x for x in df_data_rep['viewsCount'].values]
 
         data = {
-            "df_rep_auth": df_rep_auth_inverse[:100],
-            "data_rep_er": er[:100],
-            "data_rep_audience": data_audience[:100],
-            "data_authors": df_rep_auth[:100],
+            "df_rep_auth": df_rep_auth_inverse[:reposts_len],
+            "data_rep_er": data_rep_er[:reposts_len+1],
+            "data_viewsCount": viewsCount[:reposts_len+1],
+            "data_rep_audience_log": [np.log(x) for x in data_audience[:reposts_len+1]],
+            "data_rep_audience": data_audience[:reposts_len+1],
+            "data_authors": df_rep_auth[:reposts_len+1],
             "authors_count": len(set(df_rep_auth)),
             "len_messages": df_meta.shape[0],
             "data_hub": hubs,
-            "all_hubs": all_hubs[:100]
+            "all_hubs": all_hubs
         }
+
+        data = json.dumps(data, default=str)
 
 
         ### second graph
@@ -1271,12 +1508,19 @@ def information_graph():
         # with open('file.txt', 'w') as file:
         #     file.write(json.dumps(multivalue_dict))
 
+        
+        date = data_start + ' : ' + data_stop
+        # text_search = ', '.join(search_lst)
+
         return render_template('information_graph.html', theme=theme, len_files=len_files, files=json_files,
-                               data=data, multivalue_dict=multivalue_dict)
+                                data=data, multivalue_dict=multivalue_dict, type_post=type_post, date=str(date), filename=session['filename'], 
+                                reposts_len=reposts_len, text_search='')
 
 
     if 'send' in request.values.to_dict(flat=True) and request.values.to_dict(flat=True)['text_search'] != '':
 
+        print(request.values.to_dict(flat=True))
+        reposts_len = int(request.values.to_dict(flat=True)['reposts_len'])
         session['filename'] = request.values.to_dict(flat=True)['file_choose']
 
         # parsing json
@@ -1298,6 +1542,7 @@ def information_graph():
             dict_train = [x[0] for x in dict_train]
 
         df = pd.DataFrame(dict_train)
+        df = df.sort_values(by='timeCreate', ascending=True)
 
 
         # метаданные
@@ -1311,6 +1556,7 @@ def information_graph():
             dff['timeCreate'] = [datetime.datetime.fromtimestamp(x).strftime('%Y-%m-%d %H:%M:%S') for x in dff['timeCreate'].values]
             df_meta_smi_only = dff[['timeCreate', 'hub', 'toneMark', 'audience', 'url', 'text']]
             df_meta_smi_only.columns = ['timeCreate', 'hub', 'toneMark', 'audienceCount', 'url', 'text']
+            df_meta_smi_only['viewsCount'] = 0
             df_meta_smi_only['fullname'] = dff['hub']
             df_meta_smi_only['author_type'] = 'Новости'
             df_meta_smi_only['hubtype'] = 'Новости'
@@ -1333,7 +1579,7 @@ def information_graph():
                         if dff.shape[0] != 0:
                             
                             dff['timeCreate'] = [datetime.datetime.fromtimestamp(x).strftime('%Y-%m-%d %H:%M:%S') for x in dff['timeCreate'].values]
-                            df_meta_socm = dff[['timeCreate', 'hub', 'toneMark', 'audienceCount', 'url', 'er', 'hubtype', 'text', 'type']]
+                            df_meta_socm = dff[['timeCreate', 'hub', 'toneMark', 'audienceCount', 'url', 'er', 'hubtype', 'text', 'type', 'viewsCount']]
                             df_meta_socm['fullname'] = pd.DataFrame.from_records(dff['authorObject'].values)['fullname'].values
                             df_meta_socm['author_type'] = pd.DataFrame.from_records(dff['authorObject'].values)['author_type'].values
                             df_meta_socm.dropna(subset=['timeCreate'], inplace=True)
@@ -1344,7 +1590,7 @@ def information_graph():
                         dff = df[df['hubtype'] == 'Новости']
                         if dff.shape[0] != 0:
                             dff['timeCreate'] = [datetime.datetime.fromtimestamp(x).strftime('%Y-%m-%d %H:%M:%S') for x in dff['timeCreate'].values]
-                            df_meta_smi = dff[['timeCreate', 'hub', 'toneMark', 'audienceCount', 'url', 'er', 'hubtype', 'text']]
+                            df_meta_smi = dff[['timeCreate', 'hub', 'toneMark', 'audienceCount', 'url', 'er', 'hubtype', 'text', 'viewsCount']]
                             df_meta_smi['fullname'] = dff['hub']
                             df_meta_smi['author_type'] = 'Новости'
                             df_meta_smi['hubtype'] = 'Новости'
@@ -1388,6 +1634,13 @@ def information_graph():
             search_lst = [x.split('или') for x in search_lst]
             search_lst = [[x.strip().lower() for x in group] for group in search_lst]
 
+            try:
+                search_lst = [x[0] for x in search_lst]
+            except:
+                pass
+
+            text_search = ', '.join(search_lst)
+
             index_table = []
             text_val = df_meta['text'].values
             text_val = [x.lower() for x in text_val]
@@ -1417,14 +1670,21 @@ def information_graph():
                 flash('По запросу найдено 0 сообщений')
                 return redirect(url_for('information_graph'))
 
-            df_data_rep = df_meta[['fullname', 'url', 'author_type', 'text', 'audienceCount', 'hub', 'er', 'type']].sort_index(axis=0)
+            df_data_rep = df_meta[['fullname', 'url', 'author_type', 'text', 'audienceCount', 'hub', 'er', 'type', 'viewsCount']].sort_index(axis=0)
             df_rep_auth = list(df_data_rep['fullname'].values)
             data_rep_er = list(df_data_rep['er'].values)
             data_audience = list(df_data_rep['audienceCount'].values)
             all_hubs = list(df_data_rep['hub'].values)
 
-            all_hubs = [words_only(x) for x in all_hubs]
-            df_rep_auth = [words_only(x) for x in df_rep_auth]
+            regex = re.compile("[А-Яа-я:=!\)\()A-z\_\%/|]+")
+            def words_only(text, regex=regex):
+                try:
+                    return " ".join(regex.findall(text))
+                except:
+                    return ""
+
+            # all_hubs = [words_only(x) for x in all_hubs]
+            # df_rep_auth = [words_only(x) for x in df_rep_auth]
 
             for i in range(len(df_rep_auth) - 1):
                 if df_rep_auth[i + 1] == df_rep_auth[i]:
@@ -1448,16 +1708,22 @@ def information_graph():
 
             data_audience = [int(z) for z in [int(y) for y in [5 if x == 0 else x for x in data_audience]]]
 
+            viewsCount = [0 if x == '' else x for x in df_data_rep['viewsCount'].values]
+
             data = {
-                "df_rep_auth": df_rep_auth_inverse[:100],
-                "data_rep_er": data_rep_er[:100],
-                "data_rep_audience": data_audience[:100],
-                "data_authors": df_rep_auth[:100],
+                "df_rep_auth": df_rep_auth_inverse[:reposts_len],
+                "data_rep_er": data_rep_er[:reposts_len+1],
+                "data_viewsCount": viewsCount[:reposts_len+1],
+                "data_rep_audience_log": [np.log(x) for x in data_audience[:reposts_len+1]],
+                "data_rep_audience": data_audience[:reposts_len+1],
+                "data_authors": df_rep_auth[:reposts_len+1],
                 "authors_count": len(set(df_rep_auth)),
                 "len_messages": df_meta.shape[0],
                 "data_hub": hubs,
-                "all_hubs": all_hubs[:100]
+                "all_hubs": all_hubs
             }
+
+            print(data)
 
             ### second graph
             df_meta.fullname.fillna("СМИ", inplace=True)
@@ -1483,39 +1749,48 @@ def information_graph():
                 
 
             multivalue_dict = dict(multivalue_dict)
+            multivalue_dict = json.dumps(multivalue_dict)
 
-            print(multivalue_dict)
+            date = data_start + ' : ' + data_stop
+            text_search = ', '.join(search_lst)
 
             return render_template('information_graph.html', theme=theme, len_files=len_files, files=json_files,
-                                   data=data, multivalue_dict=multivalue_dict)
+                                   data=data, multivalue_dict=multivalue_dict, type_post=type_post, date=str(date), filename=session['filename'], 
+                                   text_search=text_search, reposts_len=reposts_len)
 
         df_meta_filter = df_meta
         df_meta = pd.DataFrame()
 
         # фильтрация по типу сообщения
         if 'posts' in request.values.to_dict(flat=True):
+            type_post = 'Посты'
             if request.values.to_dict(flat=True)['posts'] == 'on':
                 df_meta = pd.concat([df_meta, df_meta_filter[
                     (df_meta_filter['type'] == 'Пост') | (df_meta_filter['type'] == 'Комментарий')]], ignore_index=True)
 
         if 'reposts' in request.values.to_dict(flat=True):
             if request.values.to_dict(flat=True)['reposts'] == 'on':
+                if type_post == '':
+                    type_post = 'Репосты'
+                else:
+                    type_post = type_post + ', Репосты'
                 df_meta = pd.concat([df_meta, df_meta_filter[
                     (df_meta_filter['type'] == 'Репост') | (df_meta_filter['type'] == 'Репост с дополнением')]],
                                     ignore_index=True)
 
         if 'smi' in request.values.to_dict(flat=True):
             if request.values.to_dict(flat=True)['smi'] == 'on':
+                if type_post == '':
+                    type_post = 'СМИ'
+                else:
+                    type_post = type_post + ', СМИ'
                 df_meta = pd.concat([df_meta, df_meta_filter[df_meta_filter['hubtype'] == 'Новости']],
                                     ignore_index=True)
 
         if 'posts' not in request.values.to_dict(flat=True) and 'reposts' not in request.values.to_dict(
                 flat=True) and 'smi' not in request.values.to_dict(flat=True):
-            df_meta = df_meta_filter
-
-        if df_meta.shape[0] == 0:  # если по запросу найдено 0 сообщений - вывести flash
-            flash('По запросу найдено 0 сообщений')
-            return redirect(url_for('information_graph'))
+                type_post = ''
+                df_meta = df_meta_filter
 
         # if request.values.to_dict(flat=True)['text_min'] != '':
         #     df_meta = df_meta.iloc[int(request.values.to_dict(flat=True)['text_min']):]
@@ -1526,6 +1801,13 @@ def information_graph():
         # if request.values.to_dict(flat=True)['text_min'] != '' and request.values.to_dict(flat=True)['text_max'] != '':
         #     df_meta = df_meta.iloc[int(request.values.to_dict(flat=True)['text_min']):int(
         #         request.values.to_dict(flat=True)['text_max'])]
+
+        regex = re.compile("[А-Яа-я:=!\)\()A-z\_\%/|]+")
+        def words_only(text, regex=regex):
+            try:
+                return " ".join(regex.findall(text))
+            except:
+                return ""
 
         search_lst = request.values.to_dict(flat=True)['text_search'].split(',')
         search_lst = [x.split('или') for x in search_lst]
@@ -1548,13 +1830,13 @@ def information_graph():
             flash('По запросу найдено 0 сообщений')
             return redirect(url_for('information_graph'))
 
-        df_data_rep = df_meta[['fullname', 'url', 'author_type', 'text', 'er', 'hub', 'audienceCount']].sort_index(axis=0)
+        df_data_rep = df_meta[['fullname', 'url', 'author_type', 'text', 'er', 'hub', 'audienceCount', 'viewsCount']].sort_index(axis=0)
         df_rep_auth = list(df_data_rep['fullname'].values)
         data_rep_er = list(df_data_rep['er'].values)
         all_hubs = list(df_data_rep['hub'].values)
 
-        all_hubs = [words_only(x) for x in all_hubs]
-        df_rep_auth = [words_only(x) for x in df_rep_auth]
+        # all_hubs = [words_only(x) for x in all_hubs]
+        # df_rep_auth = [words_only(x) for x in df_rep_auth]
 
         for i in range(len(df_rep_auth) - 1):
             if df_rep_auth[i + 1] == df_rep_auth[i]:
@@ -1566,9 +1848,9 @@ def information_graph():
 
         theme = request.values.to_dict(flat=True)['file_choose'].split('_')[0]
 
-        er = [int(z) for z in [int(y) for y in [5 if x == 0 else x + 5 for x in data_rep_er]]]
-        er = [numpy.mean(er) if x > 5 * numpy.mean(er) else x for x in er]
-        er[0] = int(numpy.max(er) + 2)
+        er = [int(z) for z in [int(y) for y in [1 if x == 0 else x + 1 for x in data_rep_er]]]
+        # er = [numpy.mean(er) if x > 5 * numpy.mean(er) else x for x in er]
+        # er[0] = int(numpy.max(er) + 2)
 
         hubs = Counter(df_meta['hub'].values)
         hubs = hubs.most_common()
@@ -1578,15 +1860,20 @@ def information_graph():
         data_audience = list(df_data_rep['audienceCount'].values)
         data_audience = [int(z) for z in [int(y) for y in [5 if x == 0 else x for x in data_audience]]]
 
+        viewsCount = [0 if x == '' else x for x in df_data_rep['viewsCount'].values]
+        # viewsCount = [str(x) for x in viewsCount]
+
         data = {
-            "df_rep_auth": df_rep_auth_inverse[:100],
-            "data_rep_er": er[:100],
-            "data_rep_audience": data_audience[:100],
-            "data_authors": df_rep_auth[:100],
+            "df_rep_auth": df_rep_auth_inverse[:reposts_len],
+            "data_rep_er": er[:reposts_len+1],
+            "data_viewsCount": viewsCount[:reposts_len+1],
+            "data_rep_audience_log": [np.log(x) for x in data_audience[:reposts_len+1]],
+            "data_rep_audience": data_audience[:reposts_len+1],
+            "data_authors": df_rep_auth[:reposts_len+1],
             "authors_count": len(set(df_rep_auth)),
             "len_messages": df_meta.shape[0],
             "data_hub": hubs,
-            "all_hubs": all_hubs[:100]
+            "all_hubs": all_hubs
         }
 
         ### second graph
@@ -1608,9 +1895,14 @@ def information_graph():
                 words_only(row['fullname']), row['url']])
 
         multivalue_dict = dict(multivalue_dict)
+        multivalue_dict = json.dumps(multivalue_dict)
+
+        date = data_start + ' : ' + data_stop # даты поиска
+        text_search = ', '.join([', '.join(x).strip() for x in search_lst]) # текст поиска пользователя
 
         return render_template('information_graph.html', theme=theme, len_files=len_files, files=json_files,
-                               data=data, multivalue_dict=multivalue_dict)
+                               data=data, multivalue_dict=multivalue_dict, type_post=type_post, date=str(date), filename=session['filename'], 
+                               text_search=text_search, reposts_len=reposts_len)
 
     os.chdir(path_to_files)
     json_files = [pos_json for pos_json in os.listdir(os.getcwd()) if pos_json.endswith('.json')]
@@ -2132,6 +2424,14 @@ def voice():
         search_lst = [x.split('или') for x in search_lst]
         search_lst = [[x.strip().lower() for x in group] for group in search_lst]
 
+        try:
+            search_lst = [x[0] for x in search_lst]
+        except:
+            pass
+        print('*(&&^&*^64545$^%&*^*)')
+        print(search_lst)
+        text_search = ', '.join(search_lst)
+
         text_val = df_meta['text'].values
         text_val = [x.lower() for x in text_val]
 
@@ -2323,7 +2623,7 @@ def Kmeans():
         df = df[['text', 'url', 'hub']]
         df['label'] = clusters.labels_
 
-        clusters_len = np.arange(1, 50)
+        clusters_len = numpy.arange(1, 50)
 
 
         df.drop_duplicates(subset=['text'], inplace=True)
@@ -2449,10 +2749,10 @@ def Kmeans():
                 return ""
 
         data_table = {
-            "number": array_num, 
+            "number": [int(x) for x in array_num], 
             "texts": [remove_stopwords(x) for x in texts],
-            "url": url,
-            "hub": hubs,
+            "url": [remove_stopwords(x) for x in url],
+            "hub": [remove_stopwords(x) for x in hubs],
             "cluster": cluster
         }
 
