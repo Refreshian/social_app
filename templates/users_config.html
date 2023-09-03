@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+<!-- https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css -->
+<!-- <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"> -->
+
+<link rel="stylesheet" type="text/css" href="../static/css/font-awesome.min.css"></link>
+<link rel="stylesheet" type="text/css" href="../static/css/custom.css"></link>
+<!-- <link href="custom.css" rel="stylesheet"></link> -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/0.9.13/css/bootstrap-multiselect.css"
+    />
+    <title>Users Config</title>
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+    />
+    <script src="https://code.jquery.com/jquery-2.2.0.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/0.9.13/js/bootstrap-multiselect.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"
+    />
+  </head>
+
+  <body>
+    <div class="navbar">
+      <a href="/index" style="margin-left: 15px">Home</a>
+      <!-- <div class="dropdown">
+        <button class="dropbtn" onclick="myFunction()">Menu
+            <i class="fa fa-caret-down"></i>
+            </button>
+            <div class="dropdown-content" id="myDropdown">
+            <a href="{{ url_for('tonality_landscape') }}">Tonality landscape</a>
+            <a href="{{ url_for('information_graph') }}">Information Graph</a>
+            <a href="{{ url_for('media_rating') }}">Media Rating</a>
+            <a href="{{ url_for('voice') }}">Voice of Customer</a>
+            <a href="{{ url_for('competitors') }}">Competitive Environment</a>
+            <a href="{{ url_for('external_factors') }}">External Factors</a>
+            <a href="{{ url_for('data') }}">Data</a>
+            <a href="{{ url_for('clusterisation') }}">Author Clustering</a>
+            <a href="{{ url_for('classification') }}"> Texts Classification </a>
+        </div>
+    </div>  -->
+      <a href="{{ url_for('faq-page') }}">FAQ</a>
+      <a
+        href="{{ url_for('login') }}"
+        style="display: block; float: right; margin-right: 1px"
+        >Log out</a
+      >
+    </div>
+
+    <script>
+      /* When the user clicks on the button, 
+toggle between hiding and showing the dropdown content */
+      function myFunction() {
+        document.getElementById('myDropdown').classList.toggle('show');
+      }
+
+      // Close the dropdown if the user clicks outside of it
+      window.onclick = function (e) {
+        if (!e.target.matches('.dropbtn')) {
+          var myDropdown = document.getElementById('myDropdown');
+          if (myDropdown.classList.contains('show')) {
+            myDropdown.classList.remove('show');
+          }
+        }
+      };
+    </script>
+
+    <!-- Initialize the plugin: -->
+    <script type="text/javascript">
+      $(document).ready(function () {
+        $('#users').multiselect();
+      });
+    </script>
+
+    <!-- Initialize the plugin: -->
+    <script type="text/javascript">
+      $(document).ready(function () {
+        $('#files').multiselect();
+      });
+    </script>
+
+    <form action="/users_config" method="POST" style="margin-left: 10px">
+      <p style="font-size: 17px">
+        Выберите пользователя и настройте доступ к темам
+      </p>
+
+      <!-- Build your select: -->
+      <select id="users" name="users" multiple="multiple">
+        {% for i in range(0, users|length) %}
+        <option value="{{ users[i] }}" data-badge="">{{ users[i] }}</option>
+        {% endfor %}
+      </select>
+
+      <!-- Initialize the plugin: -->
+      <script type="text/javascript">
+        $(document).ready(function () {
+          $('#files').multiselect();
+        });
+      </script>
+
+      <!-- Build your select: -->
+      <select id="files" name="files" multiple="multiple">
+        {% for i in range(0, json_files|length) %}
+        <option value="{{ json_files[i] }}" data-badge="">
+          {{ json_files[i] }}
+        </option>
+        {% endfor %}
+      </select>
+      <input
+        type="submit"
+        class="btn btn-light"
+        href="{{ url_for('users_config') }}"
+        name="send"
+        value="Применить"
+      />
+    </form>
+    <br />
+    <hr />
+    <p style="margin-left: 10px">Пользователи и настроенные доступы</p>
+
+    <table style="margin-left: 10px">
+      <tr>
+        <th>Пользователь</th>
+        <th>E-mail</th>
+        <th>Компания</th>
+        <th>Права на темы</th>
+        <th>Удалить пользователя</th>
+      </tr>
+      {% for i in range(0, Users_obj|length) %}
+      <tr>
+        {% if Users_obj[i][1] != 'admin@admin.ru' %}
+        <td>{{ Users_obj[i][0] }}</td>
+        <td>{{ Users_obj[i][1] }}</td>
+        <td>{{ Users_obj[i][2] }}</td>
+        <td>{{ Users_obj[i][3] }}</td>
+        <td style="text-align: center">
+          <a href="/delete-user/{{ Users_obj[i][1] }}" style="color: tomato">
+            Удалить
+          </a>
+        </td>
+        {% endif %}
+      </tr>
+      {% endfor %}
+
+      <style>
+        th {
+          font-size: 13px;
+          font-weight: normal;
+          background: #b9c9fe;
+          border-top: 4px solid #aabcfe;
+          border-bottom: 1px solid white;
+          color: #039;
+          padding: 8px;
+          font-weight: bold;
+        }
+        td {
+          background: #e8edff;
+          border-bottom: 1px solid white;
+          color: #669;
+          border-top: 1px solid transparent;
+          padding: 8px;
+        }
+        tr:hover td {
+          background: #ccddff;
+        }
+      </style>
+    </table>
+  </body>
+</html>

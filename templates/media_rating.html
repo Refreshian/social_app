@@ -190,34 +190,181 @@
 display: none !important;
 }
 
+.container2 {
+  min-height: 12000px;
+}
+
+.tooltip {
+    position: relative;
+    display: inline-block;
+    border-bottom: 1px dotted black;
+}
+
+.tooltip .tooltiptext {
+    visibility: hidden;
+    width: 800px;
+    height: 50px;
+    background-color: #555;
+    color: #fff;
+    text-align: left;
+    border-radius: 6px;
+    padding: -25px 0;
+    position: absolute;
+    z-index: 1;
+    bottom: -100%;
+    left: 50%;
+    margin-left: 60px;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.tooltip .tooltiptext::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 20%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: #555 transparent transparent transparent;
+}
+
+.tooltip:hover .tooltiptext {
+    visibility: visible;
+    opacity: 1;
+}
+
+.tooltip-inner {
+    white-space: pre-line;
+}
+
     </style>
 
 {% endblock %}
 
 {% block body %}
 
-    {% for message in get_flashed_messages() %}
-    <div class="alert alert-warning alert-dismissible fade show" role="alert" style="color: red;">
-      {{ message }}
-    </div>
-    {% endfor %}
+{% if error_message %}
 
+<style>
+  #jstext {
+  text-align: center;
+  /* font-size: 20px; */
+  font-size: 1.5rem;
+  color: rgb(0, 0, 0);
+  font: italic normal bold normal 1.2em/1.5 Helvetica, Arial, sans-serif;
+}
+
+#progressBar { 
+  width: 100%; 
+ }
+
+</style>
+
+<script> 
+var error = {{ error_message|safe }};
+
+  function Redirect() 
+  {  
+      window.location="media_rating"; 
+  } 
+  document.write('<p id="jstext">' + '&#10031;&#10031;&#10031; <br/>' + error.error_name + '</p>'); 
+  setTimeout('Redirect()', 5000);   
+</script>
+
+<progress value="0" max="10" id="progressBar"></progress>
+
+<script>
+  var timeleft = 10;
+  var downloadTimer = setInterval(function(){
+    if(timeleft <= 0){
+      clearInterval(downloadTimer);
+    }
+    document.getElementById("progressBar").value = 11 - timeleft;
+    timeleft -= 1;
+  }, 500);
+</script>
+
+{% elif not data %}
+
+    <style>
+        form {
+  text-align: center;
+  margin-top: 10px;
+}
+    </style>
+
+  <form action="/media_rating" method="POST" >
+  <div class="input-group">
+    <div class="input-group-prepend" id="button-addon3">
+      <select class="custom-select" name="file_choose">
+        {% for key, val in folders_dict_files.items() %} {% if val|length != 0
+        %}
+        <optgroup label="{{ key }}">
+          {% for i in range(val|length) %}
+          <option style="font-family: Didot">{{ val[i] }}</option>
+          {% endfor %}
+        </optgroup>
+        {% elif val|length == 0 %}
+        <optgroup label="{{ key }}">
+          <option>{{ val[i] }}</option>
+          {% endif %}
+        </optgroup>
+        {% endfor %}
+      </select>
+      <input type="text" name="daterange" value="01/01/2022 - 01/12/2022"/>
+      <input type="submit" href="{{ url_for('media_rating') }}" name="send" value="Запуск">
+    </div>
+  </div>
+  </form>
+
+    <script>
+      $(function() {
+        $('input[name="daterange"]').daterangepicker({
+          opens: 'center',
+          singleDatePicker: false,
+          startDate: new Date(),
+          showDropdowns: true,
+          timePicker: true,
+          timePicker24Hour: true,
+          timePickerIncrement: 10,
+          autoUpdateInput: true,
+        }, function(start, end, label) {
+          console.log("A new date selection was made: " + start.format('YYYY-MM-DD') + ' to ' + end.format('YYYY-MM-DD'));
+        });
+      });
+      </script>
+
+
+{% elif data %}
 
 <script src="https://code.highcharts.com/highcharts.js"></script>
 <script src="https://code.highcharts.com/highcharts-more.js"></script>
 <script src="https://code.highcharts.com/modules/exporting.js"></script>
 <script src="https://code.highcharts.com/modules/accessibility.js"></script>
 
-<figure class="highcharts-figure" style="margin-top: 10px;">
 
-  <div class="container">
-    <form action="/media_rating" method="POST" style="width: 1000px;">
-        <select name="file_choose" class="form-select-sm">
-        <option selected>select File</option>
-            {% for i in range(0, len_files) %}
-                <option value="{{ files[i] }}">{{ files[i] }}</option>
-            {% endfor %}
-        </select>
+<form action="/media_rating" method="POST" >
+  <div class="input-group" style="margin-top: 10px;">
+    <div class="input-group-prepend" id="button-addon3">
+      <div class="tooltip">Запрос
+        <span class="tooltiptext">Тема: {{filename}} <br/> Даты: {{date}}</span>
+      </div>
+      <select class="custom-select" name="choose_file">
+        {% for key, val in folders_dict_files.items() %} {% if val|length != 0
+        %}
+        <optgroup label="{{ key }}">
+          {% for i in range(val|length) %}
+          <option style="font-family: Didot">{{ val[i] }}</option>
+          {% endfor %}
+        </optgroup>
+        {% elif val|length == 0 %}
+        <optgroup label="{{ key }}">
+          <option>{{ val[i] }}</option>
+          {% endif %}
+        </optgroup>
+        {% endfor %}
+      </select>
         <!--    <input type="hidden" name="filename" value="{{ files[i] }}">-->
         <input type="text" name="daterange" value="01/01/2022 - 01/12/2022" />
 
@@ -238,11 +385,12 @@ display: none !important;
           });
           </script>
         <input type="submit" class="btn btn-light" href="{{ url_for('media_rating') }}" name="send" value="Запуск">
-    </form>
+    </div>
+      </form>
 
-<div id="container"></div>
+
+<div id="container" style="margin-top: 20px;"></div>
   </div>
-</figure>
 
     <script>
     // var data = JSON.parse('{{ data|tojson }}');
@@ -274,7 +422,7 @@ display: none !important;
     Highcharts.chart('container', {
     chart: {
         type: 'packedbubble',
-        height: '100%'
+        height: '60%'
     },
     title: {
         text: '{{ theme }}: тональность в СМИ'
@@ -423,7 +571,7 @@ display: none !important;
       color: #eeeaea;
     }
     .description {
-      max-width: 800px;
+      max-width: 1000px;
       margin: 1em auto;
       padding: 10px;
     }
@@ -464,7 +612,7 @@ display: none !important;
       line-height: 1.25rem;
   }
   
-  @media only screen and (max-width: 800px) {
+  @media only screen and (max-width: 1000px) {
     .actions .action {
       font-size: 0.65em;
     }
@@ -473,59 +621,54 @@ display: none !important;
   
   </style>
       <style>
-        .highcharts-figure,
-  .highcharts-data-table table {
-      min-width: 310px;
-      max-width: 800px;
-      margin: 1em auto;
-  }
+  .highcharts-figure, .highcharts-data-table table {
+    min-width: auto;
+    max-width: auto;
+    margin-right: auto;
+    margin-left: auto;
+}
   
-  #container {
-      min-width: 1000px;
-      min-height: 1000px;
-      margin-top: 50px;
-  }
+.highcharts-data-table table {
+	font-family: Verdana, sans-serif;
+	border-collapse: collapse;
+	border: 1px solid #EBEBEB;
+	margin: 10px auto;
+	text-align: center;
+	width: 100%;
+  height: 100%;
+	max-width: 1500px;
+}
+.highcharts-data-table caption {
+    padding: 1em 0;
+    font-size: 1.2em;
+    color: #555;
+}
+.highcharts-data-table th {
+	font-weight: 600;
+    padding: 0.5em;
+}
+.highcharts-data-table td, .highcharts-data-table th, .highcharts-data-table caption {
+    padding: 0.5em;
+}
+.highcharts-data-table thead tr, .highcharts-data-table tr:nth-child(even) {
+    background: #f8f8f8;
+}
+.highcharts-data-table tr:hover {
+    background: #f1f7ff;
+}
 
-  #container2 {
-      height: 800px;
-      margin-top: 20px;
-  }
-  
-  .highcharts-data-table table {
-      font-family: Verdana, sans-serif;
-      border-collapse: collapse;
-      border: 1px solid #ebebeb;
-      margin: 10px auto;
-      text-align: center;
-      width: 100%;
-      max-width: 500px;
-  }
-  
-  .highcharts-data-table caption {
-      padding: 1em 0;
-      font-size: 1.2em;
-      color: #555;
-  }
-  
-  .highcharts-data-table th {
-      font-weight: 600;
-      padding: 0.5em;
-  }
-  
-  .highcharts-data-table td,
-  .highcharts-data-table th,
-  .highcharts-data-table caption {
-      padding: 0.5em;
-  }
-  
-  .highcharts-data-table thead tr,
-  .highcharts-data-table tr:nth-child(even) {
-      background: #f8f8f8;
-  }
-  
-  .highcharts-data-table tr:hover {
-      background: #f1f7ff;
-  }
+.menus {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+input[type="number"] {
+	min-width: 50px;
+}
+
+form {
+  text-align: center;
+}
 
       </style>
 
@@ -538,7 +681,7 @@ display: none !important;
 
   <figure>
     <figure>
-      <div id="container2"></div>
+      <div id="container2" style="min-height: 1200px;"></div>
 
       <script>
 
@@ -567,13 +710,8 @@ display: none !important;
       },
   
       title: {
-          text: "{{ theme }}: Динамика тональности в Медиа"
+          text: "{{ theme }}: Динамика тональности в СМИ"
       },
-  
-      // subtitle: {
-      //     text:
-      //     'Source: <a href="https://techcrunch.com/2019/05/18/big-revenues-huge-valuations-and-major-losses-charting-the-era-of-the-unicorn-ipo/" target="_blank">TechCrunch</a>'
-      // },
   
       accessibility: {
           point: {
@@ -678,6 +816,58 @@ display: none !important;
   </figure>
 </div>
 
-</html>
+{% elif not data %}
+
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://code.highcharts.com/highcharts-more.js"></script>
+<script src="https://code.highcharts.com/modules/exporting.js"></script>
+<script src="https://code.highcharts.com/modules/accessibility.js"></script>
+
+
+<form action="/media_rating" method="POST" >
+  <div class="input-group" style="margin-top: 10px;">
+    <div class="input-group-prepend" id="button-addon3">
+      <div class="tooltip">Запрос
+        <span class="tooltiptext">Тема: {{filename}} <br/> Даты: {{date}}</span>
+      </div>
+      <select class="custom-select" name="file_choose">
+        {% for key, val in folders_dict_files.items() %} {% if val|length != 0
+        %}
+        <optgroup label="{{ key }}">
+          {% for i in range(val|length) %}
+          <option style="font-family: Didot">{{ val[i] }}</option>
+          {% endfor %}
+        </optgroup>
+        {% elif val|length == 0 %}
+        <optgroup label="{{ key }}">
+          <option>{{ val[i] }}</option>
+          {% endif %}
+        </optgroup>
+        {% endfor %}
+      </select>
+        <!--    <input type="hidden" name="filename" value="{{ files[i] }}">-->
+        <input type="text" name="daterange" value="01/01/2022 - 01/12/2022" />
+
+        <script>
+          $(function() {
+            $('input[name="daterange"]').daterangepicker({
+              opens: 'center',
+              singleDatePicker: false,
+              startDate: new Date(),
+              showDropdowns: true,
+              timePicker: true,
+              timePicker24Hour: true,
+              timePickerIncrement: 10,
+              autoUpdateInput: true,
+            }, function(start, end, label) {
+              console.log("A new date selection was made: " + start.format('YYYY-MM-DD') + ' to ' + end.format('YYYY-MM-DD'));
+            });
+          });
+          </script>
+        <input type="submit" class="btn btn-light" href="{{ url_for('media_rating') }}" name="send" value="Запуск">
+    </div>
+      </form>
+
+{% endif %}
 
 {% endblock %}

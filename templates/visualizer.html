@@ -57,7 +57,7 @@
   .tooltip .tooltiptext {
     visibility: hidden;
     width: 750px;
-    height: 70px;
+    height: 55px;
     background-color: #555;
     color: #fff;
     text-align: left;
@@ -112,6 +112,18 @@
       </select>
       <!--    <input type="hidden" name="filename" value="{{ files[i] }}">-->
       <!-- <input type="text" name="daterange" value="01/01/2022 - 01/12/2022" /> -->
+      <div class="form-check">
+        <input
+          class="form-check-input"
+          type="checkbox"
+          value=""
+          id="flexCheckDefault"
+          name="unique_authors"
+        />
+        <label class="form-check-label" for="flexCheckDefault">
+          Уникальные авторы
+        </label>
+      </div>
       <input
         type="submit"
         class="btn btn-outline-dark"

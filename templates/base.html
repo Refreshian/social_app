@@ -38,17 +38,16 @@ display: none !important;
                 <a href="{{ url_for('voice') }}">Voice of Customer</a>
                 <a href="{{ url_for('competitors') }}">Competitive Environment</a>
                 <a href="{{ url_for('external_factors') }}">External Factors</a>
-                <a href="{{ url_for('data') }}">Data-Files</a>
+                <a href="{{ url_for('data') }}">Data</a>
                 <a href="{{ url_for('clusterisation') }}">Author Clustering</a>
                 <a href="{{ url_for('classification') }}"> Texts Classification </a>
             </div>
         </div> 
-        <a href="#news">FAQ</a>
-        <a class="isDisabled" href="#">Exit</a>
-<!--            "{{ url_for('index') }}"-->
+        <a href="{{ url_for('faq-page') }}">FAQ</a>
+        <a href="{{ url_for('login') }}" style="display: block; float: right; margin-right: 1px;">Log out</a>
+        
         </div>
-
-      
+        
       <script>
       /* When the user clicks on the button, 
       toggle between hiding and showing the dropdown content */

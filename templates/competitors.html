@@ -2,28 +2,35 @@
 {% block head %}
 
    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-
+   <title>Competitive Environment</title>
    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2-bootstrap-css/1.4.6/select2-bootstrap.min.css">
 
 	<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.4/css/select2.min.css" rel="stylesheet" />
-  <title>Competitive Environment</title>
+
 
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.2.1/js/bootstrap.min.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.4/js/select2.min.js"></script>
 
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.min.js"></script>
 
+  <!-- <script type="text/javascript" src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"></script> -->
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
-    <!-- <script type="text/javascript" src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"></script> -->
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
-    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+  <script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://code.highcharts.com/modules/data.js"></script>
+<script src="https://code.highcharts.com/modules/exporting.js"></script>
+<script src="https://code.highcharts.com/modules/series-label.js"></script>
+<script src="https://code.highcharts.com/modules/accessibility.js"></script>
+<script src="https://code.highcharts.com/themes/high-contrast-light.js"></script>
+<script src="https://code.highcharts.com/highcharts-more.js"></script>
 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-    <style>
+  <style>
 
   body {
     margin: 0;
@@ -493,6 +500,52 @@ p {
   /*transform: scale(0.75);*/
   transform-origin: 0 2;
 }
+
+.tooltip {
+    position: relative;
+    display: inline-block;
+    border-bottom: 1px dotted black;
+  }
+
+  .tooltip .tooltiptext {
+    visibility: hidden;
+    width: 750px;
+    height: 55px;
+    background-color: #555;
+    color: #fff;
+    text-align: left;
+    border-radius: 6px;
+    padding: -150px 0;
+    position: absolute;
+    z-index: 1;
+    bottom: -100%;
+    left: 50%;
+    margin-left: 60px;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .tooltip .tooltiptext::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 20%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: #555 transparent transparent transparent;
+  }
+
+  .tooltip:hover .tooltiptext {
+    visibility: visible;
+    opacity: 1;
+  }
+
+  .tooltip-inner {
+    white-space: pre-line;
+  }
+
+
 </style>
 
 
@@ -501,20 +554,50 @@ p {
 
 {% block body %}
 
+{% if error_message %}
 
-<script src="https://code.highcharts.com/highcharts.js"></script>
-<script src="https://code.highcharts.com/modules/data.js"></script>
-<script src="https://code.highcharts.com/modules/exporting.js"></script>
-<script src="https://code.highcharts.com/modules/series-label.js"></script>
-<script src="https://code.highcharts.com/modules/accessibility.js"></script>
-<script src="https://code.highcharts.com/themes/high-contrast-light.js"></script>
 
-<script src="https://code.highcharts.com/highcharts.js"></script>
-<script src="https://code.highcharts.com/highcharts-more.js"></script>
-<script src="https://code.highcharts.com/modules/exporting.js"></script>
-<script src="https://code.highcharts.com/modules/accessibility.js"></script>
 
-{% if not dg %}
+
+<style>
+  #jstext {
+    text-align: center;
+    /* font-size: 20px; */
+    font-size: 1.5rem;
+    color: rgb(0, 0, 0);
+    font: italic normal bold normal 1.2em/1.5 Helvetica, Arial, sans-serif;
+  }
+
+  #progressBar {
+    width: 100%;
+  }
+</style>
+
+<script>
+  var error = {{ error_message|safe }};
+
+    function Redirect()
+    {
+        window.location="competitors";
+    }
+    document.write('<p id="jstext">' + '&#10031;&#10031;&#10031; <br/>' + error.error_name + '</p>');
+    setTimeout('Redirect()', 5000);
+</script>
+
+<progress value="0" max="10" id="progressBar"></progress>
+
+<script>
+  var timeleft = 10;
+  var downloadTimer = setInterval(function () {
+    if (timeleft <= 0) {
+      clearInterval(downloadTimer);
+    }
+    document.getElementById('progressBar').value = 11 - timeleft;
+    timeleft -= 1;
+  }, 500);
+</script>
+
+{% elif not dg %}
 
 <form action="/competitors" method="POST" style="margin-top: 20px; text-align: center;">
 
@@ -562,6 +645,9 @@ p {
 <form action="/competitors" method="POST" style="margin-top: 20px; text-align: center;">
 
   <div class="input-group">
+    <div class="tooltip">Запрос
+      <span class="tooltiptext">Темы: {{filenames}} <br/> Даты: {{date}}</span>
+    </div>
      <select class="js-select2" multiple="multiple" name="selected_files" id="selected_files">
         {% for i in range(0, files|length) %}
            <option value="{{ files[i] }}" data-badge=""> {{ files[i] }}</option>
@@ -604,15 +690,6 @@ p {
 
 <hr>
 
-<!-- графики bubbles по соцмедиа и СМИ -->
-<!-- https://jsfiddle.net/mushigh/L0heyxa1/ -->
-  <!-- <h3>
-    Распределение по источникам
-  </h3> -->
-  <!-- <p>
-    Source: <a href="https://www.ecb.europa.eu/home/html/index.en.html">European Central Bank</a>
-  </p> -->
-
   <div class="reduce">
     <p> Распределение по источникам </p>
     <ul>
@@ -633,14 +710,12 @@ p {
 </div>
 
 <!-- График динамики с кругами/bubbles -->
-<div id="container4" style="margin-top: 800px;"></div>
+<div id="container4" style="margin-top: 900px; ; min-height: 1200px"></div>
 <hr>
-<div id="container5" style="margin-top: 50px;"></div>
+<div id="container5" style="margin-top: 150px; min-height: 1200px;"></div>
 
 
     <script>
-
-
     Highcharts.chart("container", {
     chart: {
         type: "spline"
@@ -927,7 +1002,7 @@ p {
         yAxis: {
 
           title: {
-              text: "Медиа Индекс",
+              text: "Соцмедиа Индекс",
               style: "bold"
           },
         },
@@ -936,38 +1011,6 @@ p {
         title: {
           text: "Сравнение в СМИ"
         },
-
-        // legend: {
-        //   enabled: true,
-        //   align: 'left',
-        //   layout: 'vertical',
-        //   verticalAlign: 'top',
-        //   itemMarginTop: 10,
-        //   bubbleLegend: {
-        //     enabled: true,
-        //     sizeBy: 'width',
-        //     ranges: [{
-        //       value: 1000
-        //     }, {
-        //       value: 700,
-        //       color: 'rgba(144, 237, 125, 0.5)',
-        //       borderColor: 'rgb(144, 237, 125)',
-        //       connectorColor: 'rgb(144, 237, 125)'
-        //     }, {
-        //       value: 400,
-        //       color: 'rgba(67, 67, 72, 0.5)',
-        //       borderColor: 'rgb(67, 67, 72)',
-        //       connectorColor: 'rgb(67, 67, 72)'
-        //     }, {
-        //       value: 100,
-        //       color: 'rgba(247, 163, 92, 0.5)',
-        //       borderColor: 'rgb(247, 163, 92)',
-        //       connectorColor: 'rgb(247, 163, 92)'
-        //     }],
-        //     connectorDistance: 40,
-        //     maxSize: 70
-        //   }
-        // },
 
         plotOptions: {
           series: {
@@ -988,24 +1031,12 @@ p {
           }
       },
 
-        // tooltip: {
-        //   useHTML: true,
-        //   headerFormat: "<table>",
-        //   pointFormat:
-        //   '<tr><th colspan="2"><h3>{point.name}</h3></th></tr>' +
-        //   "<tr><th>Медиа Индекс:</th><td>{point.y}</td></tr>",
-        //   // "<tr><th>Публикаций за период:</th><td>{point.z}</td></tr>",
-        //   footerFormat: "</table>",
-        //   followPointer: true,
-        //   shared: true,
-        // },
-
         tooltip: {
           useHTML: true,
           // headerFormat: "<table>",
           pointFormat:
           '<tr><th colspan="2"><h3>{point.name}</h3></th></tr>' +
-          "<tr><th> Медиа Индекс: </th><td>{point.y}</td></tr>",
+          "<tr><th> Соцмедиа Индекс: </th><td>{point.y}</td></tr>",
           // "<tr><th>Публикаций за период:</th><td>{point.z}</td></tr>",
           // footerFormat: "</table>",
           followPointer: true,
@@ -1062,38 +1093,6 @@ p {
           text: "Сравнение в Соцмедиа"
         },
 
-      // legend: {
-      //   enabled: true,
-      //   align: 'left',
-      //   layout: 'vertical',
-      //   verticalAlign: 'top',
-      //   itemMarginTop: 10,
-      //   bubbleLegend: {
-      //     enabled: true,
-      //     sizeBy: 'width',
-      //     ranges: [{
-      //       value: 1000
-      //     }, {
-      //       value: 700,
-      //       color: 'rgba(144, 237, 125, 0.5)',
-      //       borderColor: 'rgb(144, 237, 125)',
-      //       connectorColor: 'rgb(144, 237, 125)'
-      //     }, {
-      //       value: 400,
-      //       color: 'rgba(67, 67, 72, 0.5)',
-      //       borderColor: 'rgb(67, 67, 72)',
-      //       connectorColor: 'rgb(67, 67, 72)'
-      //     }, {
-      //       value: 100,
-      //       color: 'rgba(247, 163, 92, 0.5)',
-      //       borderColor: 'rgb(247, 163, 92)',
-      //       connectorColor: 'rgb(247, 163, 92)'
-      //     }],
-      //     connectorDistance: 40,
-      //     maxSize: 70
-      //   }
-      // },
-
       plotOptions: {
           series: {
               dataLabels: {
@@ -1129,7 +1128,6 @@ p {
       });
       </script>
 
-  </body>
 
 
 {% endif %}

@@ -1,0 +1,270 @@
+{% extends 'base.html' %} {% block head %}
+
+<title>faq-page</title>
+<meta charset="UTF-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FAQ PAGE</title>
+<link
+  href="https://fonts.googleapis.com/css2?family=Work+Sans&display=swap"
+  rel="stylesheet"
+/>
+<link rel="stylesheet" href="style.css" />
+<link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+/>
+
+{% endblock %} {% block body %}
+<style>
+  /* https://sweetcode.io/how-to-build-an-faq-page-with-html-and-javascript/ */
+
+  <style > body {
+    font-family: 'Work Sans', sans-serif;
+  }
+  .faq-heading {
+    border-bottom: #777;
+    padding: 20px 60px;
+  }
+  .faq-container {
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+  }
+  .hr-line {
+    width: 60%;
+    margin: auto;
+  }
+  /* Style the buttons that are used to open and close the faq-page body */
+  .faq-page {
+    /* background-color: #eee; */
+    color: #444;
+    cursor: pointer;
+    padding: 30px 20px;
+    width: 60%;
+    border: none;
+    outline: none;
+    transition: 0.4s;
+    margin: auto;
+  }
+  .faq-body {
+    margin: auto;
+    /* text-align: center; */
+    width: 50%;
+    padding: auto;
+  }
+
+  /* Add a background color to the button if it is clicked on (add the .active class with JS), and when you move the mouse over it (hover) */
+  .active,
+  .faq-page:hover {
+    background-color: #f9f9f9;
+  }
+
+  /* Style the faq-page panel. Note: hidden by default */
+  .faq-body {
+    padding: 0 18px;
+    background-color: white;
+    display: none;
+    overflow: hidden;
+  }
+
+  .faq-page:after {
+    content: '\02795';
+    /* Unicode character for "plus" sign (+) */
+    font-size: 13px;
+    color: #777;
+    float: right;
+    margin-left: 5px;
+  }
+
+  .active:after {
+    content: '\2796';
+    /* Unicode character for "minus" sign (-) */
+  }
+
+  .blue_text {
+    color: blue;
+  }
+</style>
+
+<main>
+  <h1 class="faq-heading">FAQ'S</h1>
+  <section class="faq-container">
+    <div class="faq-one">
+      <!-- faq question -->
+      <h1 class="faq-page">Как загрузить данные для анализа?</h1>
+      <!-- faq answer -->
+      <div class="faq-body">
+        <p style="font-size: larger">
+          Данные для анализа необходимо загрузить на страницу
+          <a href="/datalake"> загрузки файлов</a>, файл скачивается в формате json за любой период и с любым фильтром
+          (Соцмедиа, СМИ и др) из темы БА:
+        </p>
+        <img src="/static/picture/BA-download-file-json.png" />
+      </div>
+    </div>
+    <hr class="hr-line" />
+    <div class="faq-two">
+      <!-- faq question -->
+      <h1 class="faq-page">
+        Что анализирует вкладка
+        <span class="blue_text">Тональный ландшафт</span> / Tonality Landscape
+      </h1>
+      <!-- faq answer -->
+      <div class="faq-body">
+        <p style="font-size: larger">
+          Вкладка Тональный ландшафт анализирует отношение авторов сообщений/публикаций к
+          теме, показывает соотношение позитива к негативу, а также их
+          распределение с возможностью «проваливания» до конкретного автора
+        </p>
+      </div>
+    </div>
+    <hr class="hr-line" />
+    <div class="faq-two">
+      <!-- faq question -->
+      <h1 class="faq-page">
+        Что анализирует вкладка
+        <span class="blue_text">Информационый граф</span> / Information Graph
+      </h1>
+      <!-- faq answer -->
+      <div class="faq-body">
+        <p style="font-size: larger">
+          Информационный граф анализирует распространение информации по теме, в
+          т.ч. с указанием уточняющего поискового запроса, показывает динамику
+          во времени за заданный период с возможностью просмотра автора,
+          источника и аудитории. Возможно задать фильтрацию по типу сообщений:
+          пост, репост, СМИ
+        </p>
+      </div>
+    </div>
+    <hr class="hr-line" />
+    <div class="faq-two">
+      <!-- faq question -->
+      <h1 class="faq-page">
+        Что анализирует вкладка <span class="blue_text">Медиа Рейтинг</span> /
+        Media Rating
+      </h1>
+      <!-- faq answer -->
+      <div class="faq-body">
+        <p style="font-size: larger">
+          Медиа Рейтинг анализирует отношение СМИ к теме мониторинга, в т.ч. с
+          возможностью выбора периода / даты, отслеживает динамику тональности с
+          переходом на текст сообщения на источнике в режиме one-click (по
+          клику)
+        </p>
+      </div>
+    </div>
+    <hr class="hr-line" />
+    <div class="faq-two">
+      <!-- faq question -->
+      <h1 class="faq-page">
+        Что анализирует вкладка <span class="blue_text">Голос Клиента</span> /
+        Client Voice
+      </h1>
+      <!-- faq answer -->
+      <div class="faq-body">
+        <p style="font-size: larger">
+          Вкладка Голос Клиента показывает отношение пользователей к продуктам
+          компании / персоне / бренду, можно задать поисковый запрос,
+          отфильтровать тему по дате, получить разбивку обсуждений на типы
+          сообщений: пост, репост, комментарий, в т.ч. в разрезе их тональности
+        </p>
+      </div>
+    </div>
+    <hr class="hr-line" />
+    <div class="faq-two">
+      <!-- faq question -->
+      <h1 class="faq-page">
+        Что анализирует вкладка <span class="blue_text">Конкуренты</span> /
+        Competititve Environment
+      </h1>
+      <!-- faq answer -->
+      <div class="faq-body">
+        <p style="font-size: larger">
+          Вкладка Конкуренты сравнивает тему с конкурентами и показывает
+          распределение по динамике упоминаний, сравнивает с конкурентами в
+          разрезе по источникам, охвату и тональности
+        </p>
+      </div>
+    </div>
+    <hr class="hr-line" />
+    <div class="faq-two">
+      <!-- faq question -->
+      <h1 class="faq-page">
+        Что анализирует вкладка <span class="blue_text">Внешние факторы</span> /
+        External Factors
+      </h1>
+      <!-- faq answer -->
+      <div class="faq-body">
+        <p style="font-size: larger">
+          Вкладка Внешние факторы подгружает внешние данные (погода, курсы
+          валют, акций и т.д) и служит для оценки влияния и/или корреляции
+          внешних факторов на тему
+        </p>
+      </div>
+    </div>
+    <hr class="hr-line" />
+    <div class="faq-two">
+      <!-- faq question -->
+      <h1 class="faq-page">
+        Страница <span class="blue_text">Данные</span> / Show Data
+      </h1>
+      <!-- faq answer -->
+      <div class="faq-body">
+        <p style="font-size: larger">
+          Вкладка Данные показывает загруженные для анализа темы, а также
+          доп.обработанные файлы тем для их дальнейшей загрузки Projector-кластеризацию
+        </p>
+        <img src="/static/picture/data-files.png" />
+      </div>
+    </div>
+    <hr class="hr-line" />
+    <div class="faq-two">
+      <!-- faq question -->
+      <h1 class="faq-page">
+        Что анализирует вкладка
+        <span class="blue_text">Кластеризация авторов</span> / Authors
+        Clusterisation
+      </h1>
+      <!-- faq answer -->
+      <div class="faq-body">
+        <p style="font-size: larger">
+          Вкладка Кластеризация авторов показывает «близость» авторов в теме –
+          авторы группируются в кластеры на основе анализа их текстов (близкие
+          по смыслу авторы буду находиться в одном кластере), применяется два подхода: 
+          <ul style="margin-top: -10px;">
+            <li style="margin-top: 8px;">TSNE-кластеризация (для небольшого кол-ва авторов ~до 5 тыс). Рекомендуется для оперативного контроля ситуации (день-два-неделя), когда в явном виде фиксируются одинаковые по высказываниям/публикациям авторы</li>
+            <li style="margin-top: 8px;">Projector-кластеризация (неограниченное кол-во авторов). Для глубокого анализа за длительный период, когда авторы могут менять свое мнение - оказываться «близкими» уже с другими авторами</li>
+          </ul>
+        </p>
+        <img src="/static/picture/authors-clasterisation.png" />
+      </div>
+    </div>
+    <hr class="hr-line" />
+    <div class="faq-two">
+      <!-- faq question -->
+      <h1 class="faq-page">
+        Что анализирует вкладка
+        <span class="blue_text">Классификация текстов</span> / Texts
+        Classification
+      </h1>
+      <!-- faq answer -->
+      <div class="faq-body" style="margin-bottom: 100px;">
+        <p style="font-size: larger">
+          Вкладка Классификация текстов помогает распределить весь поток
+          сообщений по теме на отдельные смысловые тематики, применяется
+          три подхода:   
+          <ul style="margin-top: -10px;">
+            <li style="margin-top: 8px;">Автоматическая разбивка на тематики (BERT/Google алгоритм)</li>
+            <li style="margin-top: 8px;">Автоматическая группировка на тематики (LDA-алгоритм)</li>
+            <li style="margin-top: 8px;">Ручная классификация (ручной подбор кол-ва тематик)</li>
+          </ul>
+        </p>
+        <img src="/static/picture/texts-classify.png" />
+      </div>
+    </div>
+  </section>
+</main>
+<script src="/static/js/faq-page.js"></script>
+
+{% endblock %}

@@ -1,4 +1,51 @@
-{% extends 'base.html' %} {% block head %} {% endblock %} {% block body %}
+{% extends 'base.html' %} {% block head %} 
+<link
+  rel="stylesheet"
+  href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"
+/>
+{% endblock %} {% block body %}
+
+{% if file_train %}
+
+<style>
+  #jstext {
+    text-align: center;
+    /* font-size: 20px; */
+    font-size: 1.5rem;
+    color: rgb(0, 0, 0);
+    font: italic normal bold normal 1.2em/1.5 Helvetica, Arial, sans-serif;
+  }
+
+  #progressBar {
+    width: 100%;
+  }
+</style>
+
+<script>
+
+    function Redirect()
+    {
+        window.location="tonality_fit";
+    }
+    document.write('<p id="jstext">' + '&#9881;&#9881;&#9881; <br/>' + 'Процесс обучения модели тональности начался!' + '</p>');
+    setTimeout('Redirect()', 5000);
+</script>
+
+<progress value="0" max="10" id="progressBar"></progress>
+
+<script>
+  var timeleft = 10;
+  var downloadTimer = setInterval(function () {
+    if (timeleft <= 0) {
+      clearInterval(downloadTimer);
+    }
+    document.getElementById('progressBar').value = 11 - timeleft;
+    timeleft -= 1;
+  }, 500);
+</script>
+
+
+{% elif not file_train %}
 
 <style>
   .container {
@@ -53,7 +100,7 @@ name="filenames"
 
   </div>
   <div class="grid-item">
-    <h4>Выберите тему для обучения</h4>
+    <h4>Для какой темы обучается тональность</h4>
     <div class="container">
         <select name="file_choose">
           <option selected>select File</option>
@@ -73,4 +120,5 @@ name="filenames"
 </div>
 </form>
 
+{% endif %}
 {% endblock %}

@@ -1,5 +1,12 @@
 {% extends 'base.html' %} {% block head %}
 <title>Information Graph</title>
+
+<!-- <base href="https://itchief.ru" /> -->
+<!-- <link
+  href="/examples/libs/bootstrap-5/bootstrap.min.css"
+  rel="stylesheet"
+/> -->
+
 <link rel="stylesheet" href="/static/css/multi-checkbox-select.css" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.min.js"></script>
 
@@ -227,9 +234,19 @@
   .tooltip-inner {
     white-space: pre-line;
   }
+
+  .parent {
+    position: absolute;
+    right: 0;
+  }
 </style>
 
-{% endblock %} {% block body %} {% if data %}
+<!-- <base href="https://itchief.ru" /> -->
+<!-- <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script> -->
+
+{% endblock %} {% block body %} {% if data %} {{ js_resources|indent(4)|safe }}
+{{ css_resources|indent(4)|safe }} {{ plot_script|indent(4)|safe }}
 
 <figure>
   {% for message in get_flashed_messages() %}
@@ -249,10 +266,19 @@
   >
     <div class="input-group">
       <div class="input-group-prepend" style="height: 28px">
-        <select name="file_choose" class="form-select-sm">
-          <option selected>select File</option>
-          {% for i in range(0, len_files) %}
-          <option value="{{ files[i] }}">{{ files[i] }}</option>
+        <select class="custom-select" name="file_choose">
+          {% for key, val in folders_dict_files.items() %} {% if val|length != 0
+          %}
+          <optgroup label="{{ key }}">
+            {% for i in range(val|length) %}
+            <option style="font-family: Didot">{{ val[i] }}</option>
+            {% endfor %}
+          </optgroup>
+          {% elif val|length == 0 %}
+          <optgroup label="{{ key }}">
+            <option>{{ val[i] }}</option>
+            {% endif %}
+          </optgroup>
           {% endfor %}
         </select>
         <input type="text" name="daterange" value="01/01/2022 - 01/12/2022" />
@@ -288,7 +314,7 @@
             <option value="20" selected>Длина графа</option>
             <option value="50">50</option>
             <option value="100">100</option>
-            <option value="300">200</option>
+            <option value="100">200</option>
             <option value="300">300</option>
             <option value="500">500</option>
             <option value="1000">1000</option>
@@ -324,7 +350,6 @@
     <p style="scroll-margin-top: -10px">
       {{ data.len_messages }} текста(ов) и {{ data.authors_count }} автора(ов)
     </p>
-
     {% endif %}
   </form>
 
@@ -352,20 +377,6 @@
       );
     });
   </script>
-
-  <script src="https://code.jquery.com/jquery-3.6.0.slim.min.js"></script>
-  <script src="/static/js/multiCheckboxSelect.js"></script>
-  <!-- <script>
-    var data = JSON.parse('{{ data|tojson }}');
-    var options = {
-      placeholder: 'Выбрать источник',
-      entryName: 'Источник',
-      data: data.data_hub,
-      multiple: true,
-    };
-
-    $('#example').multiCheckboxSelect(options);
-  </script> -->
 
   <script>
     try {
@@ -434,6 +445,95 @@
     href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css"
   />
 
+  <!-- <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous"> -->
+  <script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+    crossorigin="anonymous"
+  ></script>
+
+  <div class="parent" style="margin-left: 0%">
+    <button
+      type="button"
+      class="btn btn-info"
+      data-bs-toggle="modal"
+      data-bs-target="#modal"
+      style="margin-left: 0%"
+    >
+      Скрыть / показать пояснения к графику
+    </button>
+  </div>
+  <br />
+
+  <div
+    class="modal fade"
+    id="modal"
+    tabindex="-1"
+    aria-labelledby="exampleModalLabel"
+    aria-hidden="true"
+  >
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLabel">
+            Цвета на графике учитывают аудиторию, число просмотров и тональность
+            упоминания
+          </h5>
+          <!-- <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="modal"
+            aria-label="Close"
+          ></button> -->
+        </div>
+        <div class="modal-body">
+          <!-- <p>Цвета показывают отношение просмотров поста к аудитории</p> -->
+          <div class="palette-card_colors">
+            <div style="background: #be28f6">
+              <span>первые 10 авторов с начала</span>
+            </div>
+            <div style="background: #007f5f">
+              <span>позитив + много просмотров (в % от аудитории, > 25%)</span>
+            </div>
+            <div style="background: #55a630">
+              <span
+                >позитив + не много просмотров (в % от аудитории, 5-25%)</span
+              >
+            </div>
+            <div style="background: #aacc00">
+              <span>позитив и мало просмотров (в % от аудитории, < 5%)</span>
+            </div>
+            <div style="background: #d00000">
+              <span>негатив + много просмотров (в % от аудитории, > 25%)</span>
+            </div>
+            <div class="is-light" style="background: #dc2f02">
+              <span
+                >негатив + не много просмотров (в % от аудитории, 5-25%)</span
+              >
+            </div>
+            <div class="is-light" style="background: #e85d04">
+              <span>негатив и мало просмотров (в % от аудитории, < 5%)</span>
+            </div>
+            <div class="is-light" style="background: #ea9010">
+              <span>нейтрал + много просмотров (в % от аудитории, > 25%)</span>
+            </div>
+            <div class="is-light" style="background: #ea9010">
+              <span>нет данных по просмотрам, но большая аудитория</span>
+            </div>
+            <div class="is-light" style="background: #c3c5c7">
+              <span>Остальные авторы</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <br />
+
+  <div class="container">{{ plot_div|indent(4)|safe }}</div>
+
+  <br />
   <div id="container"></div>
   <script>
 
@@ -498,35 +598,6 @@
           }
         };
 
-        // var node = [];
-        // node.push({
-        //   id: data.data_authors[0],
-        //   marker: {
-        //     radius: data.data_rep_audience_log[0],
-        //   },
-        //   hubs: data.all_hubs[0],
-        //   er: data.data_rep_er[0],
-        //   audience: data.data_rep_audience[0],
-        //   author_name: data.data_authors[0],
-        //   viewsCount: data.data_viewsCount[0],
-        //   color: dirDistLess10,
-        // });
-
-        // for (i = 1; i < data.data_rep_er.length; i++) {
-        //   node.push({
-        //     id: data.data_authors[i],
-        //     marker: {
-        //       radius: data.data_rep_audience_log[i]
-        //     },
-        //     hubs: data.all_hubs[i],
-        //     er: data.data_rep_er[i],
-        //     audience: data.data_rep_audience[i],
-        //     author_name: data.data_authors[i],
-        //     viewsCount: data.data_viewsCount[i],
-        //     color: dirDist10,
-        //   });
-        // }
-
         Highcharts.chart('container', {
           chart: {
             type: 'networkgraph',
@@ -534,7 +605,7 @@
           },
 
           title: {
-            text: 'Распространение информации',
+            text: 'Первые 20 авторов, размер шара - нормировка по аудитории среди всех найденных авторов',
           },
 
           tooltip: {
@@ -661,8 +732,6 @@
       ],
     });
 
-    // var date = JSON.parse('{{ multivalue_dict|tojson }}');
-
     var date = {{ multivalue_dict|safe }};
 
     const series = [];
@@ -695,7 +764,7 @@
       },
       colors,
       title: {
-        text: 'Динамика по авторам и источникам',
+        text: 'Динамика по авторам',
       },
 
       xAxis: {
@@ -791,43 +860,38 @@
   >
     <div class="input-group">
       <div class="input-group-prepend" style="height: 28px">
-        <select name="file_choose" class="form-select-sm">
-          <option selected>select File</option>
-          {% for i in range(0, len_files) %}
-          <option value="{{ files[i] }}">{{ files[i] }}</option>
+        <select class="custom-select" name="file_choose">
+          {% for key, val in folders_dict_files.items() %} {% if val|length != 0
+          %}
+          <optgroup label="{{ key }}">
+            {% for i in range(val|length) %}
+            <option style="font-family: Didot">{{ val[i] }}</option>
+            {% endfor %}
+          </optgroup>
+          {% elif val|length == 0 %}
+          <optgroup label="{{ key }}">
+            <option>{{ val[i] }}</option>
+            {% endif %}
+          </optgroup>
           {% endfor %}
         </select>
         <input type="text" name="daterange" value="01/01/2022 - 01/12/2022" />
-        <script>
-          $(function () {
-            $('input[name="daterange"]').daterangepicker(
-              {
-                opens: 'center',
-                singleDatePicker: false,
-                startDate: new Date(),
-                showDropdowns: true,
-                timePicker: true,
-                timePicker24Hour: true,
-                timePickerIncrement: 10,
-                autoUpdateInput: true,
-              },
-              function (start, end, label) {
-                console.log(
-                  'A new date selection was made: ' +
-                    start.format('YYYY-MM-DD') +
-                    ' to ' +
-                    end.format('YYYY-MM-DD')
-                );
-              }
-            );
-          });
-        </script>
         <input
           type="submit"
           href="{{ url_for('information_graph') }}"
           name="send"
           value="Запуск"
         />
+        <div class="tooltip">
+          Запрос
+          <span class="tooltiptext"
+            >Тема: {{filename}} <br />
+            Даты: {{date}} <br />
+            Поиск: {{text_search}} <br />
+            Фильтр: {{type_post}} <br />
+            Длина графа: {{reposts_len}}
+          </span>
+        </div>
       </div>
     </div>
     <div class="input-group">
@@ -844,12 +908,13 @@
             <option value="20" selected>Длина графа</option>
             <option value="50">50</option>
             <option value="100">100</option>
-            <option value="300">200</option>
+            <option value="100">200</option>
             <option value="300">300</option>
             <option value="500">500</option>
             <option value="1000">1000</option>
           </select>
         </div>
+
         <div style="margin-top: 4px">
           <input
             type="checkbox"
@@ -877,6 +942,31 @@
     </div>
   </form>
 </figure>
+
+<script>
+  $(function () {
+    $('input[name="daterange"]').daterangepicker(
+      {
+        opens: 'center',
+        singleDatePicker: false,
+        startDate: new Date(),
+        showDropdowns: true,
+        timePicker: true,
+        timePicker24Hour: true,
+        timePickerIncrement: 10,
+        autoUpdateInput: true,
+      },
+      function (start, end, label) {
+        console.log(
+          'A new date selection was made: ' +
+            start.format('YYYY-MM-DD') +
+            ' to ' +
+            end.format('YYYY-MM-DD')
+        );
+      }
+    );
+  });
+</script>
 
 <script
   type="text/javascript"

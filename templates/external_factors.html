@@ -1,7 +1,7 @@
 {% extends 'base.html' %} {% block head %}
 <meta charset="utf-8" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.min.js"></script>
-<title>External Factors</title>
+
 <script
   type="text/javascript"
   src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"
@@ -29,49 +29,62 @@
   href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
 />
 
-<title></title>
+<title>External Factors</title>
 
-{% endblock %} {% block body %} {% if data %}
+{% endblock %} {% block body %} {% if error_message %}
+
 <style>
-  html,
-  body {
-    height: 100%;
-    width: 100%;
+  #jstext {
+    text-align: center;
+    /* font-size: 20px; */
+    font-size: 1.5rem;
+    color: rgb(0, 0, 0);
+    font: italic normal bold normal 1.2em/1.5 Helvetica, Arial, sans-serif;
   }
 
-  #myChart {
-    height: 35%;
+  #progressBar {
     width: 100%;
-    min-height: 150px;
-  }
-  .zc-ref {
-    display: none;
-  }
-
-  #myChart2 {
-    height: 100%;
-    width: 100%;
-    min-height: 500px;
-  }
-  .zc-ref {
-    display: none;
   }
 </style>
 
+<script>
+  var error = {{ error_message|safe }};
+
+    function Redirect()
+    {
+        window.location="external_factors";
+    }
+    document.write('<p id="jstext">' + '&#10031;&#10031;&#10031; <br/>' + error.error_name + '</p>');
+    setTimeout('Redirect()', 5000);
+</script>
+
+<progress value="0" max="10" id="progressBar"></progress>
+
+<script>
+  var timeleft = 10;
+  var downloadTimer = setInterval(function () {
+    if (timeleft <= 0) {
+      clearInterval(downloadTimer);
+    }
+    document.getElementById('progressBar').value = 11 - timeleft;
+    timeleft -= 1;
+  }, 500);
+</script>
+
+{% elif not data %}
 <form action="/external_factors" method="POST" style="margin-left: 10px">
-  {% for message in get_flashed_messages() %}
-  <div
-    class="alert alert-warning alert-dismissible fade show"
-    role="alert"
-    style="color: red"
-  >
-    {{ message }}
-  </div>
-  {% endfor %}
-  <select name="file_choose" class="form-select-sm" style="margin-top: 10px">
-    <option selected>Выбрать файл</option>
-    {% for i in range(0, len_files) %}
-    <option value="{{ files[i] }}">{{ files[i] }}</option>
+  <select class="custom-select" name="file_choose" style="margin-top: 10px">
+    {% for key, val in folders_dict_files.items() %} {% if val|length != 0 %}
+    <optgroup label="{{ key }}">
+      {% for i in range(val|length) %}
+      <option style="font-family: Didot">{{ val[i] }}</option>
+      {% endfor %}
+    </optgroup>
+    {% elif val|length == 0 %}
+    <optgroup label="{{ key }}">
+      <option>{{ val[i] }}</option>
+      {% endif %}
+    </optgroup>
     {% endfor %}
   </select>
   <select
@@ -118,6 +131,146 @@
     name="send"
     value="Запуск"
   />
+</form>
+
+{% elif data %}
+<style>
+  html,
+  body {
+    height: 100%;
+    width: 100%;
+  }
+
+  #myChart {
+    height: 35%;
+    width: 100%;
+    min-height: 150px;
+  }
+  .zc-ref {
+    display: none;
+  }
+
+  #myChart2 {
+    height: 100%;
+    width: 100%;
+    min-height: 500px;
+  }
+  .zc-ref {
+    display: none;
+  }
+
+  .tooltip {
+    position: relative;
+    display: inline-block;
+    border-bottom: 1px dotted black;
+  }
+
+  .tooltip .tooltiptext {
+    visibility: hidden;
+    width: 750px;
+    height: 55px;
+    background-color: #555;
+    color: #fff;
+    text-align: left;
+    border-radius: 6px;
+    padding: -150px 0;
+    position: absolute;
+    z-index: 1;
+    bottom: -100%;
+    left: 50%;
+    margin-left: 60px;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .tooltip .tooltiptext::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 20%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: #555 transparent transparent transparent;
+  }
+
+  .tooltip:hover .tooltiptext {
+    visibility: visible;
+    opacity: 1;
+  }
+
+  .tooltip-inner {
+    white-space: pre-line;
+  }
+</style>
+
+<form action="/external_factors" method="POST" style="margin-left: 10px">
+  <select class="custom-select" name="file_choose" style="margin-top: 10px">
+    {% for key, val in folders_dict_files.items() %} {% if val|length != 0 %}
+    <optgroup label="{{ key }}">
+      {% for i in range(val|length) %}
+      <option style="font-family: Didot">{{ val[i] }}</option>
+      {% endfor %}
+    </optgroup>
+    {% elif val|length == 0 %}
+    <optgroup label="{{ key }}">
+      <option>{{ val[i] }}</option>
+      {% endif %}
+    </optgroup>
+    {% endfor %}
+  </select>
+  <select
+    name="external_factor"
+    class="form-select-sm"
+    aria-placeholder="Выбрать внешний фактор"
+    aria-label="Выбрать внешний фактор"
+  >
+    <option selected>Выбрать внешний фактор</option>
+    {% for key in df_name_active.keys() %}
+    <option value="{{ key }}">{{df_name_active[key]}}</option>
+    {% endfor %}
+  </select>
+
+  <input type="text" name="daterange" value="01/01/2022 - 01/12/2022" />
+
+  <script>
+    $(function () {
+      $('input[name="daterange"]').daterangepicker(
+        {
+          opens: 'center',
+          singleDatePicker: false,
+          startDate: new Date(),
+          showDropdowns: true,
+          timePicker: true,
+          timePicker24Hour: true,
+          timePickerIncrement: 10,
+          autoUpdateInput: true,
+        },
+        function (start, end, label) {
+          console.log(
+            'A new date selection was made: ' +
+              start.format('YYYY-MM-DD') +
+              ' to ' +
+              end.format('YYYY-MM-DD')
+          );
+        }
+      );
+    });
+  </script>
+  <input
+    type="submit"
+    class="btn btn-light"
+    href="{{ url_for('external_factors') }}"
+    name="send"
+    value="Запуск"
+  />
+  <div class="tooltip">
+    Запрос
+    <span class="tooltiptext"
+      >Тема: {{filename}} <br />
+      Дата: {{date}} <br />
+    </span>
+  </div>
 </form>
 
 <!-- https://app.zingsoft.com/demos/create/ZD8OGRK1?fork -->
@@ -516,68 +669,5 @@
     width: '100%',
   });
 </script>
-
-{% elif not data %}
-<form action="/external_factors" method="POST" style="margin-left: 10px">
-  {% for message in get_flashed_messages() %}
-  <div
-    class="alert alert-warning alert-dismissible fade show"
-    role="alert"
-    style="color: red"
-  >
-    {{ message }}
-  </div>
-  {% endfor %}
-  <select name="file_choose" class="form-select-sm" style="margin-top: 10px">
-    <option selected>Выбрать файл</option>
-    {% for i in range(0, len_files) %}
-    <option value="{{ files[i] }}">{{ files[i] }}</option>
-    {% endfor %}
-  </select>
-  <select
-    name="external_factor"
-    class="form-select-sm"
-    aria-placeholder="Выбрать внешний фактор"
-    aria-label="Выбрать внешний фактор"
-  >
-    <option selected>Выбрать внешний фактор</option>
-    {% for key in df_name_active.keys() %}
-    <option value="{{ key }}">{{df_name_active[key]}}</option>
-    {% endfor %}
-  </select>
-
-  <input type="text" name="daterange" value="01/01/2022 - 01/12/2022" />
-  <script>
-    $(function () {
-      $('input[name="daterange"]').daterangepicker(
-        {
-          opens: 'center',
-          singleDatePicker: false,
-          startDate: new Date(),
-          showDropdowns: true,
-          timePicker: true,
-          timePicker24Hour: true,
-          timePickerIncrement: 10,
-          autoUpdateInput: true,
-        },
-        function (start, end, label) {
-          console.log(
-            'A new date selection was made: ' +
-              start.format('YYYY-MM-DD') +
-              ' to ' +
-              end.format('YYYY-MM-DD')
-          );
-        }
-      );
-    });
-  </script>
-  <input
-    type="submit"
-    class="btn btn-light"
-    href="{{ url_for('external_factors') }}"
-    name="send"
-    value="Запуск"
-  />
-</form>
 
 {% endif %} {% endblock %}

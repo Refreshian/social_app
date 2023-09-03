@@ -5,17 +5,93 @@
 <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 
 
-<title>Кластеризация BERT</title>
+<title>BERT-Classification Texts</title>
 
 <!-- Add icon library -->
 <link
   rel="stylesheet"
   href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
 />
+<script src="http://code.jquery.com/jquery-2.0.2.min.js"></script>
 
 {% endblock %}
 
 {% block body %}
+
+{% if error_message %}
+
+<style>
+  #jstext {
+  text-align: center;
+  /* font-size: 20px; */
+  font-size: 1.5rem;
+  color: rgb(0, 0, 0);
+  font: italic normal bold normal 1.2em/1.5 Helvetica, Arial, sans-serif;
+}
+
+#progressBar { 
+  width: 100%; 
+ }
+
+</style>
+
+<script type="text/javascript"> 
+var error_message = 'Недостаточно данных для проведения BERT-классификации <br /> Пожалуйста, выберите другой способ или загрузите данные за больший период'
+  function Redirect() 
+  {  
+      window.location="BertTopic"; 
+  } 
+  document.write('<p id="jstext">' + '&#10031;&#10031;&#10031; <br/>' + error_message + '</p>'); 
+  setTimeout('Redirect()', 10000);   
+</script>
+
+<progress value="0" max="10" id="progressBar"></progress>
+
+<script>
+  var timeleft = 10;
+  var downloadTimer = setInterval(function(){
+    if(timeleft <= 0){
+      clearInterval(downloadTimer);
+    }
+    document.getElementById("progressBar").value = 10 - timeleft;
+    timeleft -= 1;
+  }, 1000);
+</script>
+
+
+
+{% elif not chart_topic_model_vis %}
+
+<figure class="highcharts-figure" class="center">
+  <div class="container" id="center2">
+    <form action="/BertTopic" method="POST" enctype="multipart/form-data" >
+      <select class="custom-select" name="file_choose">
+        {% for key, val in folders_dict_files.items() %} {% if val|length != 0
+        %}
+        <optgroup label="{{ key }}">
+          {% for i in range(val|length) %}
+          <option style="font-family: Didot">{{ val[i] }}</option>
+          {% endfor %}
+        </optgroup>
+        {% elif val|length == 0 %}
+        <optgroup label="{{ key }}">
+          <option>{{ val[i] }}</option>
+          {% endif %}
+        </optgroup>
+        {% endfor %}
+      </select>
+
+      <input
+        type="submit"
+        class="btn btn-light"
+        href="{{ url_for('BertTopic') }}"
+        name="send"
+        value="Запуск"
+      />
+    </form>
+
+  </div>
+</figure>
 
 <style>
   .center {
@@ -43,19 +119,162 @@
       margin: 3px; /* not needed unless you want centered */
   }
 
+  .tooltip {
+    position: relative;
+    display: inline-block;
+    border-bottom: 1px dotted black;
+}
+
+.tooltip .tooltiptext {
+    visibility: hidden;
+    width: 750px;
+    height: 30px;
+    background-color: #555;
+    color: #fff;
+    text-align: left;
+    border-radius: 6px;
+    padding: 0px;
+    position: absolute;
+    z-index: 1;
+    bottom: -80%;
+    left: 30%;
+    margin-left: 40px;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+.tooltip .tooltiptext::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 20%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: #555 transparent transparent transparent;
+}
+
+.tooltip:hover .tooltiptext {
+    visibility: visible;
+    opacity: 1;
+}
+
+.tooltip-inner {
+    white-space: pre-line;
+}
+
+.center {
+  margin: auto;
+  width: 50%;
+  /* border: 3px solid green; */
+  padding: 10px;
+}
+
 </style>
 
-{% if chart_topic_model_vis %}
+{% elif chart_topic_model_vis %}
 
-<figure class="highcharts-figure">
+<style>
+  .center {
+    margin: auto;
+    width: 50%;
+  }
+
+  #center {
+    margin: auto;
+    left: 50%;
+  }
+
+  #center2 {
+    margin: auto;
+    width: 50%;
+  }
+
+  figure .image {
+    width: 100%;
+  }
+
+  figure {
+      text-align: center;
+      display: inline;
+      margin: 3px; /* not needed unless you want centered */
+  }
+
+  .tooltip {
+    position: relative;
+    display: inline-block;
+    border-bottom: 1px dotted black;
+}
+
+.tooltip .tooltiptext {
+    visibility: hidden;
+    width: 750px;
+    height: 30px;
+    background-color: #555;
+    color: #fff;
+    text-align: left;
+    border-radius: 6px;
+    padding: 0px;
+    position: absolute;
+    z-index: 1;
+    bottom: -80%;
+    left: 30%;
+    margin-left: 40px;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+.tooltip .tooltiptext::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 20%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: #555 transparent transparent transparent;
+}
+
+.tooltip:hover .tooltiptext {
+    visibility: visible;
+    opacity: 1;
+}
+
+.tooltip-inner {
+    white-space: pre-line;
+}
+
+.center {
+  margin: auto;
+  width: 50%;
+  /* border: 3px solid green; */
+  padding: 10px;
+}
+
+</style>
+
+<!-- <figure class="highcharts-figure">
   <div class="container">
-    <form action="/BertTopic" method="POST" enctype="multipart/form-data">
-      <select name="file_choose" class="form-select-sm">
-        <option selected>select File</option>
-        {% for i in range(0, len_files) %}
-        <option value="{{ files[i] }}">{{ files[i] }}</option>
-        {% endfor %}
+    <form action="/BertTopic" method="POST" enctype="multipart/form-data"> -->
 
+  <figure class="highcharts-figure" class="center">
+    <div class="container" id="center2">
+      <form action="/BertTopic" method="POST" enctype="multipart/form-data" >
+        <select class="custom-select" name="file_choose">
+          {% for key, val in folders_dict_files.items() %} {% if val|length != 0
+          %}
+          <optgroup label="{{ key }}">
+            {% for i in range(val|length) %}
+            <option style="font-family: Didot">{{ val[i] }}</option>
+            {% endfor %}
+          </optgroup>
+          {% elif val|length == 0 %}
+          <optgroup label="{{ key }}">
+            <option>{{ val[i] }}</option>
+            {% endif %}
+          </optgroup>
+          {% endfor %}
+        </select>
       <input
         type="submit"
         class="btn btn-light"
@@ -63,9 +282,12 @@
         name="send"
         value="Запуск"
       />
-    </form>
+    <div class="tooltip">Запрос
+      <span class="tooltiptext">Тема: {{filename}}</span>
+    </div>
   </div>
-</figure>
+  </div>
+</form>
 
     <!-- https://stackoverflow.com/questions/36262748/save-plotly-plot-to-local-file-and-insert-into-html -->
     <!-- <div id="center">{{ chart_topic_model_vis }}</div> -->
@@ -77,29 +299,6 @@
     </div>
   </body>
 
-{% elif not chart_topic_model_vis %}
-
-<figure class="highcharts-figure">
-  <div class="container" id="center2">
-    <form action="/BertTopic" method="POST" enctype="multipart/form-data">
-      <select name="file_choose" class="form-select-sm">
-        <option selected>select File</option>
-        {% for i in range(0, len_files) %}
-        <option value="{{ files[i] }}">{{ files[i] }}</option>
-        {% endfor %}
-      </select>
-
-      <input
-        type="submit"
-        class="btn btn-light"
-        href="{{ url_for('BertTopic') }}"
-        name="send"
-        value="Запуск"
-      />
-    </form>
-
-  </div>
-</figure>
 
 
 {% endif %}

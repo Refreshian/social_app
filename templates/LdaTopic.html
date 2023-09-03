@@ -1,23 +1,68 @@
-{% extends 'base.html' %}
-{% block head %}
-<title>Кластеризация LDA</title>
+{% extends 'base.html' %} {% block head %}
+<title>LDA-Classification Texts</title>
 <link
   rel="stylesheet"
   href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
 />
-{% endblock %}
-
-{% block body %}
+{% endblock %} {% block body %}
 
 <style>
-
-
   figure {
-      text-align: center;
-      display: inline;
-      margin: 3px; /* not needed unless you want centered */
+    text-align: center;
+    display: inline;
+    margin: 3px; /* not needed unless you want centered */
   }
 
+  .tooltip {
+    position: relative;
+    display: inline-block;
+    border-bottom: 1px dotted black;
+  }
+
+  .tooltip .tooltiptext {
+    visibility: hidden;
+    width: 750px;
+    height: 30px;
+    background-color: #555;
+    color: #fff;
+    text-align: left;
+    border-radius: 6px;
+    padding: 0px;
+    position: absolute;
+    z-index: 1;
+    bottom: -80%;
+    left: 30%;
+    margin-left: 40px;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .tooltip .tooltiptext::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 20%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: #555 transparent transparent transparent;
+  }
+
+  .tooltip:hover .tooltiptext {
+    visibility: visible;
+    opacity: 1;
+  }
+
+  .tooltip-inner {
+    white-space: pre-line;
+  }
+
+  .center {
+    margin: auto;
+    width: 50%;
+    /* border: 3px solid green; */
+    padding: 10px;
+  }
 </style>
 
 {% if not LdaTopic %}
@@ -25,12 +70,21 @@
 <figure class="highcharts-figure">
   <div class="container">
     <form action="/LdaTopic" method="POST" enctype="multipart/form-data">
-      <select name="file_choose" class="form-select-sm">
-        <option selected>select File</option>
-        {% for i in range(0, len_files) %}
-        <option value="{{ files[i] }}">{{ files[i] }}</option>
+      <select class="custom-select" name="file_choose">
+        {% for key, val in folders_dict_files.items() %} {% if val|length != 0
+        %}
+        <optgroup label="{{ key }}">
+          {% for i in range(val|length) %}
+          <option style="font-family: Didot">{{ val[i] }}</option>
+          {% endfor %}
+        </optgroup>
+        {% elif val|length == 0 %}
+        <optgroup label="{{ key }}">
+          <option>{{ val[i] }}</option>
+          {% endif %}
+        </optgroup>
         {% endfor %}
-
+      </select>
       <input
         type="submit"
         class="btn btn-light"
@@ -47,10 +101,19 @@
 <figure class="highcharts-figure">
   <div class="container">
     <form action="/LdaTopic" method="POST">
-      <select name="file_choose" >
-        <option selected>select File</option>
-        {% for i in range(0, len_files) %}
-        <option value="{{ files[i] }}">{{ files[i] }}</option>
+      <select class="custom-select" name="file_choose">
+        {% for key, val in folders_dict_files.items() %} {% if val|length != 0
+        %}
+        <optgroup label="{{ key }}">
+          {% for i in range(val|length) %}
+          <option style="font-family: Didot">{{ val[i] }}</option>
+          {% endfor %}
+        </optgroup>
+        {% elif val|length == 0 %}
+        <optgroup label="{{ key }}">
+          <option>{{ val[i] }}</option>
+          {% endif %}
+        </optgroup>
         {% endfor %}
       </select>
 
@@ -61,14 +124,21 @@
         name="send"
         value="Запуск"
       />
+      <div class="tooltip">
+        Запрос
+        <span class="tooltiptext">Тема: {{filename}}</span>
+      </div>
     </form>
-
   </div>
-  <div >
-</div>
+  <div></div>
 </figure>
 
-<p style="text-align:center"><iframe src="{{ url_for('show') }}" onload="this.width=1250;this.height=900;" style="border: none;"></iframe></p>
+<p style="text-align: center">
+  <iframe
+    src="{{ url_for('show') }}"
+    onload="this.width=1250;this.height=900;"
+    style="border: none"
+  ></iframe>
+</p>
 
-{% endif %}
-{% endblock %}
+{% endif %} {% endblock %}

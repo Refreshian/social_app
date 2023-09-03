@@ -32,7 +32,9 @@ class Users(Base):
     email = Column(String)
     password = Column(String)
     company = Column(String)
+    files = Column(String)
     time_created = Column(DateTime(timezone=False), default=datetime.now().strftime("%m.%d.%Y %H:%M:%S"))
+
 
 
 if __name__ == "__main__":
